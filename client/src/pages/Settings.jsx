@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useData } from "../context/DataContext";
 import { useTheme } from "../context/ThemeContext";
@@ -6,43 +6,65 @@ import { useSMS } from "../context/SMSContext";
 import {
   Settings as SettingsIcon,
   User,
-  Bell,
   Palette,
   DollarSign,
   LogOut,
-  Save,
   Loader,
   Check,
   Smartphone,
   RefreshCw,
-  MessageSquare,
+  Tag,
+  Plus,
+  Trash2,
+  Edit2,
+  GripVertical,
+  X,
+  Save,
 } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 
 const Settings = () => {
   const { user: authUser, signOut } = useAuth();
-  const { user, settings, modifySettings, loading: dataLoading } = useData();
-  const { theme: currentTheme, setSpecificTheme } = useTheme();
+  const {
+    user,
+    settings,
+    modifySettings,
+    categories,
+    addCategory,
+    modifyCategory,
+    removeCategory,
+    reorderCategories,
+    loading: dataLoading,
+  } = useData();
+  const { setSpecificTheme } = useTheme();
   const {
     isSupported,
-    permissionGranted: smsGranted, // Mapped from legacy name
+    permissionGranted: smsGranted,
     notifPermissionGranted,
     requestSMSPermission,
     requestNotificationPermission,
     scanSMS,
     scanning,
-    lastScanTime,
   } = useSMS();
 
   const [formData, setFormData] = useState({
     currency: "INR",
     monthlyBudget: "",
-    enableNotifications: true,
     theme: "system",
   });
 
-  const [saving, setSaving] = useState(false);
-  const [saveMessage, setSaveMessage] = useState("");
+  const [saveStatus, setSaveStatus] = useState("");
   const [scanMessage, setScanMessage] = useState("");
+  const [draggedIndex, setDraggedIndex] = useState(null);
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [categoryForm, setCategoryForm] = useState({
+    name: "",
+    icon: "Tag",
+    color: "#6366f1",
+  });
+
+  const saveTimeoutRef = useRef(null);
 
   useEffect(() => {
     if (settings) {
@@ -51,39 +73,119 @@ const Settings = () => {
         monthlyBudget: settings.monthlyBudget
           ? settings.monthlyBudget.toString()
           : "",
-        enableNotifications: settings.enableNotifications ?? true,
         theme: settings.theme || "system",
       });
     }
   }, [settings]);
 
-  const handleChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    setSaveMessage("");
+  // Auto-save function with debounce
+  const autoSave = async (updates) => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    setSaveStatus("saving");
+
+    saveTimeoutRef.current = setTimeout(async () => {
+      try {
+        await modifySettings(updates);
+        if (updates.theme) {
+          setSpecificTheme(updates.theme);
+        }
+        setSaveStatus("saved");
+        setTimeout(() => setSaveStatus(""), 2000);
+      } catch (error) {
+        setSaveStatus("error");
+        setTimeout(() => setSaveStatus(""), 3000);
+      }
+    }, 800);
   };
 
-  const handleSave = async () => {
+  const handleChange = (field, value) => {
+    const newFormData = { ...formData, [field]: value };
+    setFormData(newFormData);
+
+    const updates = {
+      currency: newFormData.currency,
+      monthlyBudget: newFormData.monthlyBudget
+        ? parseFloat(newFormData.monthlyBudget)
+        : null,
+      theme: newFormData.theme,
+    };
+
+    autoSave(updates);
+  };
+
+  // Category Management
+  const handleDragStart = (index) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    const newCategories = [...categories];
+    const draggedItem = newCategories[draggedIndex];
+    newCategories.splice(draggedIndex, 1);
+    newCategories.splice(index, 0, draggedItem);
+
+    reorderCategories(newCategories);
+    setDraggedIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+  };
+
+  const openCategoryModal = (category = null) => {
+    if (category) {
+      setEditingCategory(category);
+      setCategoryForm({
+        name: category.name,
+        icon: category.icon || "Tag",
+        color: category.color || "#6366f1",
+      });
+    } else {
+      setEditingCategory(null);
+      setCategoryForm({
+        name: "",
+        icon: "Tag",
+        color: "#6366f1",
+      });
+    }
+    setShowCategoryModal(true);
+  };
+
+  const closeCategoryModal = () => {
+    setShowCategoryModal(false);
+    setEditingCategory(null);
+  };
+
+  const handleSaveCategory = async () => {
     try {
-      setSaving(true);
-      setSaveMessage("");
-
-      const updates = {
-        currency: formData.currency,
-        monthlyBudget: formData.monthlyBudget
-          ? parseFloat(formData.monthlyBudget)
-          : null,
-        enableNotifications: formData.enableNotifications,
-        theme: formData.theme,
-      };
-
-      await modifySettings(updates);
-      setSpecificTheme(formData.theme);
-      setSaveMessage("Settings saved successfully!");
-      setTimeout(() => setSaveMessage(""), 3000);
+      if (editingCategory) {
+        await modifyCategory(editingCategory.id, categoryForm);
+      } else {
+        await addCategory(categoryForm);
+      }
+      closeCategoryModal();
     } catch (error) {
-      setSaveMessage("Failed to save settings.");
-    } finally {
-      setSaving(false);
+      console.error("Error saving category:", error);
+    }
+  };
+
+  const handleDeleteCategory = async (id) => {
+    if (
+      window.confirm(
+        "Delete this category? Expenses will become uncategorized."
+      )
+    ) {
+      try {
+        await removeCategory(id);
+      } catch (error) {
+        console.error("Error deleting category:", error);
+      }
     }
   };
 
@@ -92,16 +194,13 @@ const Settings = () => {
     try {
       const granted = await requestSMSPermission();
       if (granted) {
-        setScanMessage("✓ SMS Permission granted! You can now scan messages.");
+        setScanMessage("✓ SMS Permission granted!");
       } else {
-        setScanMessage(
-          "⚠️ SMS Permission denied. Go to: Settings > Apps > MoneyManager > Permissions > SMS"
-        );
+        setScanMessage("⚠️ SMS Permission denied. Check app settings.");
       }
     } catch (e) {
-      console.error("SMS permission error:", e);
       setScanMessage(
-        `❌ Error: ${e.message || "Failed to request SMS permission"}`
+        `❌ Error: ${e.message || "Failed to request permission"}`
       );
     }
     setTimeout(() => setScanMessage(""), 5000);
@@ -110,26 +209,19 @@ const Settings = () => {
   const handleNotifRequest = async () => {
     try {
       await requestNotificationPermission();
-      setScanMessage(
-        "⚠️ Notification listener feature requires additional setup. This feature is coming soon!"
-      );
+      setScanMessage("✓ Opening settings. Please enable notification access.");
     } catch (e) {
-      console.error("Notification permission error:", e);
-      setScanMessage(
-        `❌ ${e.message || "Notification listener not available"}`
-      );
+      setScanMessage(`⚠️ ${e.message || "Please grant required permissions"}`);
     }
-    setTimeout(() => setScanMessage(""), 5000);
+    setTimeout(() => setScanMessage(""), 7000);
   };
 
   const handleManualScan = async () => {
     try {
       const results = await scanSMS(30);
-      setScanMessage(
-        `Scan complete! Found ${results.length} potential expenses.`
-      );
+      setScanMessage(`✓ Scan complete! Found ${results.length} expenses.`);
     } catch (err) {
-      setScanMessage("Scan failed.");
+      setScanMessage("❌ Scan failed.");
     }
     setTimeout(() => setScanMessage(""), 3000);
   };
@@ -154,6 +246,40 @@ const Settings = () => {
     { value: "system", label: "System", icon: "💻" },
   ];
 
+  const iconOptions = [
+    "Tag",
+    "Coffee",
+    "Car",
+    "ShoppingBag",
+    "Home",
+    "Film",
+    "Heart",
+    "BookOpen",
+    "Utensils",
+    "Plane",
+    "Smartphone",
+    "Shirt",
+    "Zap",
+    "Gift",
+    "Music",
+    "Dumbbell",
+  ];
+
+  const colorOptions = [
+    "#f59e0b",
+    "#3b82f6",
+    "#ec4899",
+    "#8b5cf6",
+    "#10b981",
+    "#ef4444",
+    "#f97316",
+    "#6366f1",
+    "#14b8a6",
+    "#f43f5e",
+    "#06b6d4",
+    "#a855f7",
+  ];
+
   if (dataLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -162,35 +288,50 @@ const Settings = () => {
     );
   }
 
+  const IconComponent = LucideIcons[categoryForm.icon] || Tag;
+
   return (
-    <div className="p-4 space-y-6 animate-fade-in">
-      <div className="flex items-center gap-3 mb-6">
-        <div
-          className="p-3 rounded-xl"
-          style={{ background: "var(--gradient-primary)" }}
-        >
-          <SettingsIcon className="text-white" size={24} />
+    <div className="p-4 space-y-6 animate-fade-in max-w-2xl mx-auto">
+      {/* Header with Save Status */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div
+            className="p-3 rounded-xl"
+            style={{ background: "var(--gradient-primary)" }}
+          >
+            <SettingsIcon className="text-white" size={24} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">Settings</h1>
+            <p className="text-sm text-tertiary">Manage your preferences</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold">Settings</h1>
-          <p className="text-sm text-tertiary">Manage preferences</p>
-        </div>
+        {saveStatus && (
+          <div className="flex items-center gap-2 text-sm">
+            {saveStatus === "saving" && (
+              <>
+                <Loader size={16} className="animate-spin text-primary" />
+                <span className="text-tertiary">Saving...</span>
+              </>
+            )}
+            {saveStatus === "saved" && (
+              <>
+                <Check size={16} className="text-success" />
+                <span className="text-success">Saved</span>
+              </>
+            )}
+            {saveStatus === "error" && (
+              <>
+                <X size={16} className="text-danger" />
+                <span className="text-danger">Error</span>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
-      {saveMessage && (
-        <div
-          className={`p-4 rounded-lg animate-fade-in ${
-            saveMessage.includes("success")
-              ? "bg-green-500/10 text-green-600"
-              : "bg-red-500/10 text-red-600"
-          }`}
-        >
-          <p className="text-sm font-medium">{saveMessage}</p>
-        </div>
-      )}
-
-      {/* Profile */}
-      <div className="card p-5 animate-slide-up">
+      {/* Profile Section */}
+      <div className="card p-6 animate-slide-up">
         <div className="flex items-center gap-2 mb-4">
           <User size={20} className="text-primary" />
           <h3 className="font-bold text-lg">Profile</h3>
@@ -200,10 +341,10 @@ const Settings = () => {
             className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white"
             style={{ background: "var(--gradient-primary)" }}
           >
-            {authUser?.user_metadata?.name?.charAt(0) || "U"}
+            {authUser?.user_metadata?.name?.charAt(0)?.toUpperCase() || "U"}
           </div>
           <div>
-            <p className="font-semibold">
+            <p className="font-semibold text-lg">
               {authUser?.user_metadata?.name || "User"}
             </p>
             <p className="text-sm text-tertiary">{authUser?.email}</p>
@@ -211,30 +352,88 @@ const Settings = () => {
         </div>
       </div>
 
-      {/* Automation Section */}
+      {/* Categories Management */}
       <div
-        className="card p-5 animate-slide-up"
+        className="card p-6 animate-slide-up"
         style={{ animationDelay: "0.05s" }}
       >
-        <div className="flex items-center gap-2 mb-2">
-          <Smartphone size={20} className="text-primary" />
-          <h3 className="font-bold text-lg">Expense Automation</h3>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Tag size={20} className="text-primary" />
+            <h3 className="font-bold text-lg">Categories</h3>
+          </div>
+          <button
+            onClick={() => openCategoryModal()}
+            className="flex items-center gap-2 px-3 py-2 bg-primary text-white rounded-lg hover:opacity-90 transition text-sm"
+          >
+            <Plus size={16} />
+            Add
+          </button>
         </div>
+        <p className="text-sm text-tertiary mb-4">
+          Drag to reorder, click to edit
+        </p>
+        <div className="space-y-2">
+          {categories.map((category, index) => {
+            const Icon = LucideIcons[category.icon] || Tag;
+            return (
+              <div
+                key={category.id}
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragEnd={handleDragEnd}
+                className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all cursor-move ${
+                  draggedIndex === index
+                    ? "border-primary bg-primary/10 opacity-50"
+                    : "border-border hover:border-primary/50 bg-bg-secondary"
+                }`}
+              >
+                <GripVertical size={20} className="text-tertiary" />
+                <div
+                  className="p-2 rounded-lg"
+                  style={{ backgroundColor: category.color + "20" }}
+                >
+                  <Icon size={20} style={{ color: category.color }} />
+                </div>
+                <span className="flex-1 font-medium">{category.name}</span>
+                <button
+                  onClick={() => openCategoryModal(category)}
+                  className="p-2 hover:bg-bg-primary rounded-lg transition"
+                >
+                  <Edit2 size={16} className="text-tertiary" />
+                </button>
+                <button
+                  onClick={() => handleDeleteCategory(category.id)}
+                  className="p-2 hover:bg-danger/10 rounded-lg transition"
+                >
+                  <Trash2 size={16} className="text-danger" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
-        {!isSupported ? (
-          <p className="text-sm text-tertiary">
-            Automation features are available on Android only.
-          </p>
-        ) : (
-          <div className="space-y-4 mt-4">
-            {scanMessage && (
-              <p className="text-sm font-medium text-primary bg-primary/10 p-2 rounded">
-                {scanMessage}
-              </p>
-            )}
+      {/* Automation Section */}
+      {isSupported && (
+        <div
+          className="card p-6 animate-slide-up"
+          style={{ animationDelay: "0.1s" }}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <Smartphone size={20} className="text-primary" />
+            <h3 className="font-bold text-lg">Expense Automation</h3>
+          </div>
 
-            {/* SMS Permission */}
-            <div className="flex justify-between items-center pb-3 border-b border-border">
+          {scanMessage && (
+            <div className="mb-4 p-3 rounded-lg bg-primary/10 text-primary text-sm font-medium">
+              {scanMessage}
+            </div>
+          )}
+
+          <div className="space-y-3">
+            <div className="flex justify-between items-center p-3 rounded-lg bg-bg-secondary">
               <div>
                 <p className="font-semibold text-sm">Read SMS Database</p>
                 <p className="text-xs text-tertiary">
@@ -242,21 +441,20 @@ const Settings = () => {
                 </p>
               </div>
               {smsGranted ? (
-                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded font-bold">
+                <span className="text-xs bg-success/20 text-success px-3 py-1.5 rounded-full font-bold">
                   Active
                 </span>
               ) : (
                 <button
                   onClick={handleSMSRequest}
-                  className="text-xs bg-primary text-white px-3 py-1.5 rounded"
+                  className="text-xs bg-primary text-white px-3 py-1.5 rounded-lg hover:opacity-90"
                 >
                   Enable
                 </button>
               )}
             </div>
 
-            {/* Notification Permission */}
-            <div className="flex justify-between items-center pb-3 border-b border-border">
+            <div className="flex justify-between items-center p-3 rounded-lg bg-bg-secondary">
               <div>
                 <p className="font-semibold text-sm">Read Notifications</p>
                 <p className="text-xs text-tertiary">
@@ -264,46 +462,90 @@ const Settings = () => {
                 </p>
               </div>
               {notifPermissionGranted ? (
-                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded font-bold">
+                <span className="text-xs bg-success/20 text-success px-3 py-1.5 rounded-full font-bold">
                   Active
                 </span>
               ) : (
                 <button
                   onClick={handleNotifRequest}
-                  className="text-xs bg-primary text-white px-3 py-1.5 rounded"
+                  className="text-xs bg-primary text-white px-3 py-1.5 rounded-lg hover:opacity-90"
                 >
                   Enable
                 </button>
               )}
             </div>
 
-            <div className="pt-2">
-              <button
-                onClick={handleManualScan}
-                disabled={scanning || !smsGranted}
-                className="btn btn-secondary w-full flex items-center justify-center gap-2"
-              >
-                {scanning ? (
-                  <Loader size={18} className="animate-spin" />
-                ) : (
-                  <RefreshCw size={18} />
-                )}
-                {scanning ? "Scanning..." : "Scan Past SMS (30 Days)"}
-              </button>
-              {!smsGranted && (
-                <p className="text-xs text-center text-red-500 mt-2">
-                  Enable SMS permission above to scan
-                </p>
+            <button
+              onClick={handleManualScan}
+              disabled={scanning || !smsGranted}
+              className="btn btn-secondary w-full flex items-center justify-center gap-2 mt-4"
+            >
+              {scanning ? (
+                <Loader size={18} className="animate-spin" />
+              ) : (
+                <RefreshCw size={18} />
               )}
-            </div>
+              {scanning ? "Scanning..." : "Scan Past SMS (30 Days)"}
+            </button>
+            {!smsGranted && (
+              <p className="text-xs text-center text-danger mt-2">
+                Enable SMS permission above to scan
+              </p>
+            )}
+
+            {/* Test Overlay Button */}
+            <button
+              onClick={async () => {
+                try {
+                  const NotificationListenerPlugin = (
+                    await import("../lib/notificationPlugin")
+                  ).default;
+                  const status =
+                    await NotificationListenerPlugin.getPermissionStatus();
+                  if (!status.overlayPermission) {
+                    setScanMessage(
+                      "⚠️ Please enable 'Display over other apps' permission first"
+                    );
+                    await NotificationListenerPlugin.requestOverlayPermission();
+                    return;
+                  }
+                  if (!status.notificationAccess) {
+                    setScanMessage(
+                      "⚠️ Please enable notification access first"
+                    );
+                    return;
+                  }
+                  const result = await NotificationListenerPlugin.testOverlay();
+                  if (result.success) {
+                    setScanMessage(
+                      "✓ Test popup triggered! Check your screen."
+                    );
+                  } else {
+                    setScanMessage(
+                      "❌ Failed: " + (result.error || "Unknown error")
+                    );
+                  }
+                } catch (e) {
+                  setScanMessage("❌ Error: " + e.message);
+                }
+                setTimeout(() => setScanMessage(""), 5000);
+              }}
+              className="btn w-full flex items-center justify-center gap-2 mt-2"
+              style={{
+                background: "var(--gradient-secondary)",
+                color: "white",
+              }}
+            >
+              🧪 Test Notification Popup
+            </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Currency */}
       <div
-        className="card p-5 animate-slide-up"
-        style={{ animationDelay: "0.1s" }}
+        className="card p-6 animate-slide-up"
+        style={{ animationDelay: "0.15s" }}
       >
         <div className="flex items-center gap-2 mb-4">
           <DollarSign size={20} className="text-primary" />
@@ -312,7 +554,7 @@ const Settings = () => {
         <select
           value={formData.currency}
           onChange={(e) => handleChange("currency", e.target.value)}
-          className="w-full p-3 rounded-lg border border-border bg-bg-secondary outline-none focus:border-primary transition"
+          className="w-full p-3 rounded-lg border-2 border-border bg-bg-secondary outline-none focus:border-primary transition"
         >
           {currencies.map((curr) => (
             <option key={curr.code} value={curr.code}>
@@ -324,7 +566,7 @@ const Settings = () => {
 
       {/* Budget */}
       <div
-        className="card p-5 animate-slide-up"
+        className="card p-6 animate-slide-up"
         style={{ animationDelay: "0.2s" }}
       >
         <div className="flex items-center gap-2 mb-4">
@@ -336,14 +578,14 @@ const Settings = () => {
           value={formData.monthlyBudget}
           onChange={(e) => handleChange("monthlyBudget", e.target.value)}
           placeholder="Enter monthly budget"
-          className="w-full p-3 rounded-lg border border-border bg-bg-secondary outline-none focus:border-primary transition"
+          className="w-full p-3 rounded-lg border-2 border-border bg-bg-secondary outline-none focus:border-primary transition"
         />
       </div>
 
       {/* Theme */}
       <div
-        className="card p-5 animate-slide-up"
-        style={{ animationDelay: "0.3s" }}
+        className="card p-6 animate-slide-up"
+        style={{ animationDelay: "0.25s" }}
       >
         <div className="flex items-center gap-2 mb-4">
           <Palette size={20} className="text-primary" />
@@ -382,32 +624,12 @@ const Settings = () => {
         </div>
       </div>
 
-      <button
-        onClick={handleSave}
-        disabled={saving}
-        className="btn btn-primary btn-block flex items-center justify-center gap-2 animate-slide-up"
-        style={{
-          animationDelay: "0.5s",
-          background: "var(--gradient-primary)",
-          border: "none",
-        }}
-      >
-        {saving ? (
-          <>
-            <Loader size={18} className="animate-spin" /> Saving...
-          </>
-        ) : (
-          <>
-            <Save size={18} /> Save Settings
-          </>
-        )}
-      </button>
-
+      {/* Sign Out */}
       <button
         onClick={handleSignOut}
         className="btn btn-block flex items-center justify-center gap-2 animate-slide-up"
         style={{
-          animationDelay: "0.6s",
+          animationDelay: "0.3s",
           background: "var(--gradient-danger)",
           border: "none",
           color: "white",
@@ -415,6 +637,116 @@ const Settings = () => {
       >
         <LogOut size={18} /> Sign Out
       </button>
+
+      {/* Category Modal */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-2xl p-6 max-w-md w-full animate-slide-up shadow-xl">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold">
+                {editingCategory ? "Edit Category" : "New Category"}
+              </h2>
+              <button
+                onClick={closeCategoryModal}
+                className="p-2 hover:bg-bg-secondary rounded-lg transition"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold mb-2">
+                  Category Name
+                </label>
+                <input
+                  type="text"
+                  value={categoryForm.name}
+                  onChange={(e) =>
+                    setCategoryForm({ ...categoryForm, name: e.target.value })
+                  }
+                  placeholder="e.g., Groceries"
+                  className="w-full p-3 rounded-lg border-2 border-border bg-bg-secondary outline-none focus:border-primary transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">Icon</label>
+                <div className="grid grid-cols-8 gap-2">
+                  {iconOptions.map((iconName) => {
+                    const Icon = LucideIcons[iconName] || Tag;
+                    const isSelected = categoryForm.icon === iconName;
+                    return (
+                      <button
+                        key={iconName}
+                        type="button"
+                        onClick={() =>
+                          setCategoryForm({ ...categoryForm, icon: iconName })
+                        }
+                        className={`p-3 rounded-lg border-2 transition ${
+                          isSelected
+                            ? "border-primary bg-primary/10"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <Icon size={20} />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">
+                  Color
+                </label>
+                <div className="grid grid-cols-6 gap-2">
+                  {colorOptions.map((color) => {
+                    const isSelected = categoryForm.color === color;
+                    return (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() =>
+                          setCategoryForm({ ...categoryForm, color })
+                        }
+                        className={`w-full h-12 rounded-lg border-2 transition ${
+                          isSelected
+                            ? "border-primary scale-110"
+                            : "border-border hover:scale-105"
+                        }`}
+                        style={{ backgroundColor: color }}
+                      >
+                        {isSelected && (
+                          <Check size={20} className="text-white mx-auto" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button
+                  onClick={closeCategoryModal}
+                  className="flex-1 btn btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveCategory}
+                  disabled={!categoryForm.name.trim()}
+                  className="flex-1 btn btn-primary flex items-center justify-center gap-2"
+                  style={{ background: "var(--gradient-primary)" }}
+                >
+                  <Save size={18} />
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div style={{ height: "20px" }} />
     </div>

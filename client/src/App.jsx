@@ -1,19 +1,31 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
-import { ThemeProvider, useTheme } from './context/ThemeContext';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { DataProvider } from './context/DataContext';
-import { SMSProvider } from './context/SMSContext';
-import { Smartphone, LayoutDashboard, PlusCircle, Settings as SettingsIcon, Wallet } from 'lucide-react';
-import Dashboard from './pages/Dashboard';
-import Login from './pages/Login';
-import AddExpense from './pages/AddExpense';
-import Settings from './pages/Settings';
-
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Link,
+  useLocation,
+  Navigate,
+} from "react-router-dom";
+import { ThemeProvider, useTheme } from "./context/ThemeContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { DataProvider } from "./context/DataContext";
+import { SMSProvider } from "./context/SMSContext";
+import {
+  Smartphone,
+  LayoutDashboard,
+  PlusCircle,
+  Settings as SettingsIcon,
+  Wallet,
+} from "lucide-react";
+import Dashboard from "./pages/Dashboard";
+import Login from "./pages/Login";
+import AddExpense from "./pages/AddExpense";
+import Settings from "./pages/Settings";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  
+
   // ===== AUTH DISABLED FOR TESTING =====
   // Uncomment below to re-enable:
   // if (loading) return <div className="flex justify-center items-center h-screen">Loading...</div>;
@@ -29,12 +41,12 @@ const Navigation = () => {
   const { theme, toggleTheme } = useTheme();
 
   // Hide nav on login page
-  if (location.pathname === '/login') return null;
+  if (location.pathname === "/login") return null;
 
   const navItems = [
-    { icon: LayoutDashboard, label: 'Home', path: '/' },
-    { icon: PlusCircle, label: 'Add', path: '/add' },
-    { icon: SettingsIcon, label: 'Settings', path: '/settings' },
+    { icon: LayoutDashboard, label: "Home", path: "/" },
+    { icon: PlusCircle, label: "Add", path: "/add" },
+    { icon: SettingsIcon, label: "Settings", path: "/settings" },
   ];
 
   return (
@@ -45,7 +57,9 @@ const Navigation = () => {
             key={item.path}
             to={item.path}
             className={`flex flex-col items-center p-2 rounded-lg transition-colors ${
-              location.pathname === item.path ? 'text-primary' : 'text-text-secondary'
+              location.pathname === item.path
+                ? "text-primary"
+                : "text-text-secondary"
             }`}
           >
             <item.icon size={24} />
@@ -58,24 +72,19 @@ const Navigation = () => {
 };
 
 const Header = () => {
-  const { theme, toggleTheme, getCurrentTheme } = useTheme();
-  const { user, signOut } = useAuth();
   const location = useLocation();
 
-  if (location.pathname === '/login') return null;
+  if (location.pathname === "/login") return null;
 
   return (
-    <header className="p-4 flex-between bg-card shadow-sm sticky top-0 z-10">
+    <header className="p-4 flex-between bg-card shadow-sm sticky top-0 z-10 backdrop-blur-lg bg-opacity-90">
       <div className="flex items-center gap-2">
-        <Wallet className="text-primary" size={28} />
+        <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-secondary">
+          <Wallet className="text-white" size={24} />
+        </div>
         <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
           Money Manager
         </h1>
-      </div>
-      <div className="flex gap-2">
-        <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-bg-secondary transition">
-            {getCurrentTheme() === 'dark' ? '🌞' : '🌙'}
-        </button>
       </div>
     </header>
   );
@@ -88,34 +97,36 @@ function App() {
         <DataProvider>
           <SMSProvider>
             <Router>
-              <div className="pb-20"> {/* Padding for bottom nav */}
+              <div className="pb-20">
+                {" "}
+                {/* Padding for bottom nav */}
                 <Header />
                 <main className="container mx-auto max-w-md">
                   <Routes>
                     <Route path="/login" element={<Login />} />
-                    <Route 
-                      path="/" 
+                    <Route
+                      path="/"
                       element={
                         <ProtectedRoute>
                           <Dashboard />
                         </ProtectedRoute>
-                      } 
+                      }
                     />
-                    <Route 
-                      path="/add" 
+                    <Route
+                      path="/add"
                       element={
                         <ProtectedRoute>
                           <AddExpense />
                         </ProtectedRoute>
-                      } 
+                      }
                     />
-                    <Route 
-                      path="/settings" 
+                    <Route
+                      path="/settings"
                       element={
                         <ProtectedRoute>
                           <Settings />
                         </ProtectedRoute>
-                      } 
+                      }
                     />
                   </Routes>
                 </main>
