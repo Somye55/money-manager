@@ -20,6 +20,19 @@ model User {
   
   expenses   Expense[]
   categories Category[]
+  settings   UserSettings?
+}
+
+model UserSettings {
+  id               Int      @id @default(autoincrement())
+  userId           Int      @unique
+  user             User     @relation(fields: [userId], references: [id])
+  currency         String   @default("INR")
+  monthlyBudget    Decimal? @db.Decimal(10, 2)
+  enableNotifications Boolean @default(true)
+  theme            String   @default("system") // "light", "dark", "system"
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model Category {

@@ -2,22 +2,23 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { Smartphone, LayoutDashboard, PlusCircle, Settings, Wallet } from 'lucide-react';
+import { DataProvider } from './context/DataContext';
+import { Smartphone, LayoutDashboard, PlusCircle, Settings as SettingsIcon, Wallet } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
+import AddExpense from './pages/AddExpense';
+import Settings from './pages/Settings';
 
-// Placeholders for now
-const AddExpense = () => <div className="p-4"><h1>Add Expense</h1></div>;
-const SettingsPage = () => <div className="p-4"><h1>Settings</h1></div>;
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   
-  if (loading) return <div className="flex justify-center items-center h-screen">Loading...</div>;
-  
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
+  // ===== AUTH DISABLED FOR TESTING =====
+  // Uncomment below to re-enable:
+  // if (loading) return <div className="flex justify-center items-center h-screen">Loading...</div>;
+  // if (!user) {
+  //   return <Navigate to="/login" replace />;
+  // }
 
   return children;
 };
@@ -32,7 +33,7 @@ const Navigation = () => {
   const navItems = [
     { icon: LayoutDashboard, label: 'Home', path: '/' },
     { icon: PlusCircle, label: 'Add', path: '/add' },
-    { icon: Settings, label: 'Settings', path: '/settings' },
+    { icon: SettingsIcon, label: 'Settings', path: '/settings' },
   ];
 
   return (
@@ -56,7 +57,7 @@ const Navigation = () => {
 };
 
 const Header = () => {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, getCurrentTheme } = useTheme();
   const { user, signOut } = useAuth();
   const location = useLocation();
 
@@ -71,8 +72,8 @@ const Header = () => {
         </h1>
       </div>
       <div className="flex gap-2">
-        <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-bg-secondary">
-            {theme === 'dark' ? '🌞' : '🌙'}
+        <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-bg-secondary transition">
+            {getCurrentTheme() === 'dark' ? '🌞' : '🌙'}
         </button>
       </div>
     </header>
@@ -82,42 +83,44 @@ const Header = () => {
 function App() {
   return (
     <ThemeProvider>
-        <AuthProvider>
-        <Router>
+      <AuthProvider>
+        <DataProvider>
+          <Router>
             <div className="pb-20"> {/* Padding for bottom nav */}
-            <Header />
-                <main className="container mx-auto max-w-md">
+              <Header />
+              <main className="container mx-auto max-w-md">
                 <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route 
-                        path="/" 
-                        element={
-                            <ProtectedRoute>
-                                <Dashboard />
-                            </ProtectedRoute>
-                        } 
-                    />
-                    <Route 
-                        path="/add" 
-                        element={
-                            <ProtectedRoute>
-                                <AddExpense />
-                            </ProtectedRoute>
-                        } 
-                    />
-                    <Route 
-                        path="/settings" 
-                        element={
-                            <ProtectedRoute>
-                                <SettingsPage />
-                            </ProtectedRoute>
-                        } 
-                    />
+                  <Route path="/login" element={<Login />} />
+                  <Route 
+                    path="/" 
+                    element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/add" 
+                    element={
+                      <ProtectedRoute>
+                        <AddExpense />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/settings" 
+                    element={
+                      <ProtectedRoute>
+                        <Settings />
+                      </ProtectedRoute>
+                    } 
+                  />
                 </Routes>
-                </main>
-            <Navigation />
+              </main>
+              <Navigation />
             </div>
-        </Router>
+          </Router>
+        </DataProvider>
       </AuthProvider>
     </ThemeProvider>
   );
