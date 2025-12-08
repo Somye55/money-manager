@@ -32,24 +32,6 @@ export const AuthProvider = ({ children }) => {
     if (error) throw error;
   };
 
-    const signInWithPhone = async (phone) => {
-        const { error } = await supabase.auth.signInWithOtp({
-            phone: phone
-        })
-        if(error) throw error;
-    }
-    
-    const verifyOtp = async (phone, token) => {
-        const {error, data} = await supabase.auth.verifyOtp({
-            phone,
-            token,
-            type: 'sms'
-        })
-        if(error) throw error
-        return data
-    }
-
-
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
@@ -58,8 +40,6 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     signInWithGoogle,
-    signInWithPhone,
-    verifyOtp,
     signOut,
     loading
   };
@@ -70,3 +50,4 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
