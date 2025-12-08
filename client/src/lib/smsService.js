@@ -1,6 +1,6 @@
 import { SMSInboxReader } from "capacitor-sms-inbox";
 import { Capacitor } from "@capacitor/core";
-// import { NotificationListener } from 'capacitor-notification-listener'; // Plugin not available
+import { App } from "@capacitor/app";
 
 /**
  * Service for reading SMS and System Notifications
@@ -108,24 +108,53 @@ class SMSService {
    */
   async checkNotificationPermission() {
     if (!this.isSupported) return false;
-    // Notification listener requires a separate plugin that's not currently installed
-    // This would require: npm install capacitor-notification-listener
-    // And additional Android configuration
+    // Cannot check programmatically - user must enable manually
     return false;
   }
 
   /**
-   * Opens the Android 'Notification Access' settings page
+   * Check if overlay permission is granted
+   */
+  async checkOverlayPermission() {
+    if (!this.isSupported) return false;
+    // Cannot check programmatically - user must enable manually
+    return false;
+  }
+
+  /**
+   * Opens the Android settings pages for notification access
    */
   async requestNotificationPermission() {
     if (!this.isSupported) {
       throw new Error("Notification listener is only available on Android");
     }
 
-    // Since the plugin isn't installed, we'll provide a helpful error message
-    throw new Error(
-      "Notification listener feature requires additional setup. This feature is coming soon!"
-    );
+    try {
+      console.log("Available plugins:", Object.keys(Capacitor.Plugins));
+      const SettingsHelper = Capacitor.Plugins.SettingsHelper;
+      console.log("SettingsHelper:", SettingsHelper);
+
+      if (!SettingsHelper) {
+        throw new Error("SettingsHelper plugin not found");
+      }
+
+      // Open notification listener settings
+      console.log("Opening notification settings...");
+      await SettingsHelper.openNotificationSettings();
+      console.log("Settings opened successfully");
+
+      throw new Error(
+        "✓ Settings opened! Please enable 'MoneyManager' in the notification access list, then return to the app"
+      );
+    } catch (error) {
+      if (error.message && error.message.includes("MoneyManager")) {
+        throw error;
+      }
+      console.error("Error opening notification settings:", error);
+      throw new Error(
+        "⚠️ Could not open settings automatically. Please manually go to:\nSettings → Apps → Special app access → Notification access → Enable MoneyManager"
+      );
+    }
   }
 
   /**
@@ -133,9 +162,8 @@ class SMSService {
    */
   async startNotificationListener(callback) {
     if (!this.isSupported) return;
-
-    // Notification listener plugin not implemented
-    console.warn("Notification listener not implemented");
+    // The NotificationListener service runs automatically in the background
+    console.log("Notification listener service is running in the background");
   }
 
   async stopNotificationListener() {

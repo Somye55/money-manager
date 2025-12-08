@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from './AuthContext';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { useAuth } from "./AuthContext";
 import {
   getOrCreateUser,
   getCategories,
@@ -9,13 +9,14 @@ import {
   createCategory,
   updateCategory,
   deleteCategory,
+  updateCategoryOrders,
   createExpense,
   updateExpense,
   deleteExpense,
   getCurrentMonthExpenses,
   getSpendingByCategory,
   getTotalSpending,
-} from '../lib/dataService';
+} from "../lib/dataService";
 
 const DataContext = createContext();
 
@@ -23,7 +24,7 @@ export const useData = () => useContext(DataContext);
 
 export const DataProvider = ({ children }) => {
   const { user: authUser } = useAuth();
-  
+
   const [user, setUser] = useState(null);
   const [categories, setCategories] = useState([]);
   const [expenses, setExpenses] = useState([]);
@@ -53,18 +54,19 @@ export const DataProvider = ({ children }) => {
 
         if (userData) {
           // Load all user data in parallel
-          const [categoriesData, expensesData, settingsData] = await Promise.all([
-            getCategories(userData.id),
-            getCurrentMonthExpenses(userData.id),
-            getUserSettings(userData.id),
-          ]);
+          const [categoriesData, expensesData, settingsData] =
+            await Promise.all([
+              getCategories(userData.id),
+              getCurrentMonthExpenses(userData.id),
+              getUserSettings(userData.id),
+            ]);
 
           setCategories(categoriesData);
           setExpenses(expensesData);
           setSettings(settingsData);
         }
       } catch (err) {
-        console.error('Error initializing user data:', err);
+        console.error("Error initializing user data:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -77,8 +79,11 @@ export const DataProvider = ({ children }) => {
   // Category operations
   const addCategory = async (categoryData) => {
     if (!user) return;
-    
-    const newCategory = await createCategory({ ...categoryData, userId: user.id });
+
+    const newCategory = await createCategory({
+      ...categoryData,
+      userId: user.id,
+    });
     setCategories([...categories, newCategory]);
     return newCategory;
   };
@@ -94,14 +99,19 @@ export const DataProvider = ({ children }) => {
     setCategories(categories.filter((cat) => cat.id !== id));
   };
 
+  const reorderCategories = async (reorderedCategories) => {
+    setCategories(reorderedCategories);
+    await updateCategoryOrders(reorderedCategories);
+  };
+
   // Expense operations
   const addExpense = async (expenseData) => {
     if (!user) return;
-    
-    const newExpense = await createExpense({ 
-      ...expenseData, 
+
+    const newExpense = await createExpense({
+      ...expenseData,
       userId: user.id,
-      source: expenseData.source || 'MANUAL',
+      source: expenseData.source || "MANUAL",
     });
     setExpenses([newExpense, ...expenses]);
     return newExpense;
@@ -120,8 +130,8 @@ export const DataProvider = ({ children }) => {
 
   const refreshExpenses = async (filters) => {
     if (!user) return;
-    
-    const data = filters 
+
+    const data = filters
       ? await getExpenses(user.id, filters)
       : await getCurrentMonthExpenses(user.id);
     setExpenses(data);
@@ -130,7 +140,7 @@ export const DataProvider = ({ children }) => {
   // Settings operations
   const modifySettings = async (updates) => {
     if (!user) return;
-    
+
     const updated = await updateUserSettings(user.id, updates);
     setSettings(updated);
     return updated;
@@ -158,28 +168,25 @@ export const DataProvider = ({ children }) => {
     settings,
     loading,
     error,
-    
+
     // Category methods
     addCategory,
     modifyCategory,
     removeCategory,
-    
+    reorderCategories,
+
     // Expense methods
     addExpense,
     modifyExpense,
     removeExpense,
     refreshExpenses,
-    
+
     // Settings methods
     modifySettings,
-    
+
     // Analytics
     getAnalytics,
   };
 
-  return (
-    <DataContext.Provider value={value}>
-      {children}
-    </DataContext.Provider>
-  );
+  return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 };
