@@ -17,11 +17,13 @@ import {
   PlusCircle,
   Settings as SettingsIcon,
   Wallet,
+  Receipt,
 } from "lucide-react";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import AddExpense from "./pages/AddExpense";
 import Settings from "./pages/Settings";
+import Expenses from "./pages/Expenses";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -45,6 +47,7 @@ const Navigation = () => {
 
   const navItems = [
     { icon: LayoutDashboard, label: "Home", path: "/" },
+    { icon: Receipt, label: "Expenses", path: "/expenses" },
     { icon: PlusCircle, label: "Add", path: "/add" },
     { icon: SettingsIcon, label: "Settings", path: "/settings" },
   ];
@@ -59,11 +62,14 @@ const Navigation = () => {
             className={`flex flex-col items-center p-2 rounded-lg transition-colors ${
               location.pathname === item.path
                 ? "text-primary"
-                : "text-text-secondary"
+                : "text-text-secondary opacity-100"
             }`}
+            style={{ textDecoration: "none" }}
           >
             <item.icon size={24} />
-            <span className="text-xs mt-1">{item.label}</span>
+            <span className="text-xs mt-1" style={{ textDecoration: "none" }}>
+              {item.label}
+            </span>
           </Link>
         ))}
       </div>
@@ -117,6 +123,14 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <AddExpense />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/expenses"
+                      element={
+                        <ProtectedRoute>
+                          <Expenses />
                         </ProtectedRoute>
                       }
                     />
