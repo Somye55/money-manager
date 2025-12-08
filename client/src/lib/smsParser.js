@@ -1,52 +1,35 @@
 /**
- * SMS Parser - Extracts expense information from SMS messages
+ * SMS Parser - Extracts expense information from SMS messages and Notifications
  */
 
-/**
- * Common bank and payment app patterns
- */
 const SMS_PATTERNS = {
-  // Debit/expense patterns
   debited: [
-    // Standard debit format
     /(?:debited|spent|paid).*?(?:rs\.?|inr|₹)\s*(\d+(?:,\d+)*(?:\.\d{2})?)/i,
-    // Reverse format (amount before keyword)
     /(?:rs\.?|inr|₹)\s*(\d+(?:,\d+)*(?:\.\d{2})?).*?(?:debited|spent|paid)/i,
-    // UPI payment
     /upi.*?(?:rs\.?|inr|₹)\s*(\d+(?:,\d+)*(?:\.\d{2})?)/i,
-    // Generic payment
     /payment.*?(?:rs\.?|inr|₹)\s*(\d+(?:,\d+)*(?:\.\d{2})?)/i,
+    /sent\s+(?:rs\.?|inr|₹)\s*(\d+(?:,\d+)*(?:\.\d{2})?)/i, // Common in GPay
   ],
-  
-  // Credit/income patterns
   credited: [
     /(?:credited|received).*?(?:rs\.?|inr|₹)\s*(\d+(?:,\d+)*(?:\.\d{2})?)/i,
     /(?:rs\.?|inr|₹)\s*(\d+(?:,\d+)*(?:\.\d{2})?).*?(?:credited|received)/i,
   ],
-  
-  // Merchants and purposes
   merchant: [
     /(?:at|to|from)\s+([A-Z][A-Z0-9\s&.-]{2,30})/,
     /(?:merchant|vendor):\s*([A-Za-z0-9\s&.-]+)/i,
     /on\s+([A-Z][A-Z0-9\s&.-]{2,30})/,
+    /paid\s+to\s+([A-Za-z0-9\s&.-]+)/i, // GPay/PhonePe format
   ],
-  
-  // Date patterns
   date: [
     /on\s+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/,
     /(\d{1,2}\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+\d{2,4})/i,
   ],
-  
-  // Card patterns (last 4 digits)
   card: [
     /card\s+(?:ending\s+)?(?:xx|x{2,4})?(\d{4})/i,
     /a\/c\s+(?:xx|x{2,4})?(\d{4})/i,
   ],
 };
 
-/**
- * Category mapping based on keywords in SMS
- */
 const CATEGORY_KEYWORDS = {
   'Food & Dining': ['swiggy', 'zomato', 'uber eats', 'food', 'restaurant', 'cafe', 'dominos', 'mcdonald', 'kfc', 'pizza', 'burger'],
   'Transportation': ['uber', 'ola', 'rapido', 'metro', 'bus', 'taxi', 'fuel', 'petrol', 'diesel', 'parking'],
@@ -58,130 +41,96 @@ const CATEGORY_KEYWORDS = {
   'Education': ['course', 'book', 'education', 'school', 'college', 'university', 'tuition', 'udemy', 'coursera'],
 };
 
-/**
- * Extract amount from SMS text
- */
+// Known App Package Names
+const APP_PACKAGES = {
+    'com.whatsapp': 'WhatsApp',
+    'com.google.android.apps.nbu.paisa.user': 'GPay',
+    'com.phonepe.app': 'PhonePe',
+    'net.one97.paytm': 'Paytm',
+    'com.amazon.mShop.android.shopping': 'Amazon',
+    'com.freecharge.android': 'Freecharge',
+};
+
 function extractAmount(text, type = 'debited') {
   const patterns = SMS_PATTERNS[type] || SMS_PATTERNS.debited;
-  
   for (const pattern of patterns) {
     const match = text.match(pattern);
     if (match && match[1]) {
-      // Remove commas and parse as float
       const amount = parseFloat(match[1].replace(/,/g, ''));
-      if (!isNaN(amount) && amount > 0) {
-        return amount;
-      }
+      if (!isNaN(amount) && amount > 0) return amount;
     }
   }
-  
   return null;
 }
 
-/**
- * Extract merchant/vendor name from SMS
- */
 function extractMerchant(text) {
   for (const pattern of SMS_PATTERNS.merchant) {
     const match = text.match(pattern);
     if (match && match[1]) {
-      // Clean up the merchant name
       let merchant = match[1].trim();
-      // Remove common suffixes
       merchant = merchant.replace(/\s+(pvt\.?|ltd\.?|inc\.?|llc)$/i, '');
       return merchant;
     }
   }
-  
   return null;
 }
 
-/**
- * Extract date from SMS (if mentioned, otherwise use SMS date)
- */
 function extractDate(text, defaultDate) {
   for (const pattern of SMS_PATTERNS.date) {
     const match = text.match(pattern);
     if (match && match[1]) {
       try {
         const date = new Date(match[1]);
-        if (!isNaN(date.getTime())) {
-          return date;
-        }
-      } catch (e) {
-        // Continue to next pattern
-      }
+        if (!isNaN(date.getTime())) return date;
+      } catch (e) {}
     }
   }
-  
   return defaultDate;
 }
 
-/**
- * Determine category based on merchant name and SMS content
- */
 function determineCategory(text, merchant) {
   const lowerText = text.toLowerCase();
   const lowerMerchant = (merchant || '').toLowerCase();
-  
   let bestMatch = null;
   let maxMatches = 0;
-  
   for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
     const matches = keywords.filter(keyword => 
       lowerText.includes(keyword) || lowerMerchant.includes(keyword)
     ).length;
-    
     if (matches > maxMatches) {
       maxMatches = matches;
       bestMatch = category;
     }
   }
-  
   return bestMatch || 'Other';
 }
 
-/**
- * Determine if SMS is a debit (expense) or credit (income)
- */
 function getTransactionType(text) {
   const lowerText = text.toLowerCase();
-  
-  // Check for debit keywords
-  if (/debited|spent|paid|purchase|withdrawn/i.test(lowerText)) {
-    return 'expense';
-  }
-  
-  // Check for credit keywords
-  if (/credited|received|refund|deposit/i.test(lowerText)) {
-    return 'income';
-  }
-  
-  // Default to expense if amount is found
+  if (/debited|spent|paid|purchase|withdrawn|sent/i.test(lowerText)) return 'expense';
+  if (/credited|received|refund|deposit/i.test(lowerText)) return 'income';
   return 'expense';
 }
 
-/**
- * Parse a single SMS message and extract expense information
- * @param {Object} sms - SMS object with body, address, date
- * @returns {Object|null} Parsed expense data or null if not parseable
- */
+function calculateConfidence(amount, merchant, category) {
+  let score = 0;
+  if (amount > 0) score += 40;
+  if (merchant) score += 30;
+  if (category && category !== 'Other') score += 30;
+  return score;
+}
+
+// ============ EXPORTS ============
+
 export function parseSMS(sms) {
-  if (!sms || !sms.body) {
-    return null;
-  }
+  if (!sms || !sms.body) return null;
 
   const text = sms.body;
   const transactionType = getTransactionType(text);
-  
-  // Extract amount based on transaction type
   const amount = extractAmount(text, transactionType === 'expense' ? 'debited' : 'credited');
   
-  if (!amount) {
-    return null; // Not a financial SMS or amount not found
-  }
+  if (!amount) return null;
 
-  // Extract other information
   const merchant = extractMerchant(text);
   const smsDate = sms.date ? new Date(sms.date) : new Date();
   const date = extractDate(text, smsDate);
@@ -189,8 +138,8 @@ export function parseSMS(sms) {
 
   return {
     amount,
-    description: merchant || `Transaction from ${sms.address || 'Unknown'}`,
-    date: date.toISOString().split('T')[0], // Format as YYYY-MM-DD
+    description: merchant || `Transaction`,
+    date: date.toISOString().split('T')[0],
     source: 'SMS',
     transactionType,
     rawSMS: text,
@@ -202,31 +151,50 @@ export function parseSMS(sms) {
   };
 }
 
-/**
- * Calculate confidence score for the parsed data
- */
-function calculateConfidence(amount, merchant, category) {
-  let score = 0;
-  
-  if (amount > 0) score += 40;
-  if (merchant) score += 30;
-  if (category && category !== 'Other') score += 30;
-  
-  return score;
+export function parseNotification(notification) {
+    if (!notification || !notification.text) return null;
+
+    const text = notification.text;
+    const title = notification.title || '';
+    const pkg = notification.package || '';
+    
+    // Filter out common non-transaction notifications
+    if (text.includes('checking for new messages') || 
+        text.includes('running in background') ||
+        text.includes('Backup in progress')) {
+        return null;
+    }
+
+    const transactionType = getTransactionType(text);
+    const amount = extractAmount(text, transactionType === 'expense' ? 'debited' : 'credited');
+
+    if (!amount) return null;
+
+    // Determine source app
+    let sourceApp = APP_PACKAGES[pkg] || 'App';
+    if (pkg.includes('messaging') || pkg.includes('sms')) sourceApp = 'SMS';
+
+    const merchant = extractMerchant(text) || title; // In notifs, title is often sender
+    const suggestedCategory = determineCategory(text, merchant);
+    const date = new Date(); // Notification received now
+
+    return {
+        amount,
+        description: merchant || `Transaction via ${sourceApp}`,
+        date: date.toISOString().split('T')[0],
+        source: sourceApp === 'SMS' ? 'SMS' : 'NOTIFICATION',
+        transactionType,
+        rawSMS: `${title}: ${text}`,
+        sender: title,
+        smsDate: date.toISOString(),
+        suggestedCategory,
+        merchant,
+        confidence: calculateConfidence(amount, merchant, suggestedCategory),
+    };
 }
 
-/**
- * Parse multiple SMS messages
- * @param {Array} smsList - Array of SMS objects
- * @param {Object} options - Parsing options
- * @returns {Array} Array of parsed expense data
- */
 export function parseSMSList(smsList, options = {}) {
-  const {
-    filterDuplicates = true,
-    minConfidence = 50,
-    onlyExpenses = true,
-  } = options;
+  const { filterDuplicates = true, minConfidence = 50, onlyExpenses = true } = options;
 
   const parsed = smsList
     .map(sms => parseSMS(sms))
@@ -234,65 +202,13 @@ export function parseSMSList(smsList, options = {}) {
     .filter(data => data.confidence >= minConfidence)
     .filter(data => !onlyExpenses || data.transactionType === 'expense');
 
-  if (!filterDuplicates) {
-    return parsed;
-  }
+  if (!filterDuplicates) return parsed;
 
-  // Remove duplicates based on amount, date, and merchant
   const seen = new Set();
   return parsed.filter(data => {
     const key = `${data.amount}-${data.date}-${data.merchant}`;
-    if (seen.has(key)) {
-      return false;
-    }
+    if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
-}
-
-/**
- * Get statistics from parsed SMS data
- */
-export function getSMSStatistics(parsedList) {
-  if (!parsedList || parsedList.length === 0) {
-    return {
-      total: 0,
-      totalAmount: 0,
-      byCategory: {},
-      byDay: {},
-    };
-  }
-
-  const stats = {
-    total: parsedList.length,
-    totalAmount: 0,
-    byCategory: {},
-    byDay: {},
-  };
-
-  parsedList.forEach(data => {
-    stats.totalAmount += data.amount;
-
-    // Group by category
-    if (!stats.byCategory[data.suggestedCategory]) {
-      stats.byCategory[data.suggestedCategory] = {
-        count: 0,
-        amount: 0,
-      };
-    }
-    stats.byCategory[data.suggestedCategory].count++;
-    stats.byCategory[data.suggestedCategory].amount += data.amount;
-
-    // Group by day
-    if (!stats.byDay[data.date]) {
-      stats.byDay[data.date] = {
-        count: 0,
-        amount: 0,
-      };
-    }
-    stats.byDay[data.date].count++;
-    stats.byDay[data.date].amount += data.amount;
-  });
-
-  return stats;
 }

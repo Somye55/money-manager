@@ -2,5 +2,5 @@
 include ':capacitor-android'
 project(':capacitor-android').projectDir = new File('../node_modules/@capacitor/android/capacitor')
 
-include ':solimanware-capacitor-sms-reader'
-project(':solimanware-capacitor-sms-reader').projectDir = new File('../node_modules/@solimanware/capacitor-sms-reader/android')
+include ':capacitor-sms-inbox'
+project(':capacitor-sms-inbox').projectDir = new File('../node_modules/capacitor-sms-inbox/android')
