@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } f
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
+import { SMSProvider } from './context/SMSContext';
 import { Smartphone, LayoutDashboard, PlusCircle, Settings as SettingsIcon, Wallet } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
@@ -37,7 +38,7 @@ const Navigation = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-2 safe-area-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-2 safe-area-bottom z-20">
       <div className="flex justify-around items-center">
         {navItems.map((item) => (
           <Link
@@ -85,41 +86,43 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <DataProvider>
-          <Router>
-            <div className="pb-20"> {/* Padding for bottom nav */}
-              <Header />
-              <main className="container mx-auto max-w-md">
-                <Routes>
-                  <Route path="/login" element={<Login />} />
-                  <Route 
-                    path="/" 
-                    element={
-                      <ProtectedRoute>
-                        <Dashboard />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/add" 
-                    element={
-                      <ProtectedRoute>
-                        <AddExpense />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/settings" 
-                    element={
-                      <ProtectedRoute>
-                        <Settings />
-                      </ProtectedRoute>
-                    } 
-                  />
-                </Routes>
-              </main>
-              <Navigation />
-            </div>
-          </Router>
+          <SMSProvider>
+            <Router>
+              <div className="pb-20"> {/* Padding for bottom nav */}
+                <Header />
+                <main className="container mx-auto max-w-md">
+                  <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route 
+                      path="/" 
+                      element={
+                        <ProtectedRoute>
+                          <Dashboard />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/add" 
+                      element={
+                        <ProtectedRoute>
+                          <AddExpense />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/settings" 
+                      element={
+                        <ProtectedRoute>
+                          <Settings />
+                        </ProtectedRoute>
+                      } 
+                    />
+                  </Routes>
+                </main>
+                <Navigation />
+              </div>
+            </Router>
+          </SMSProvider>
         </DataProvider>
       </AuthProvider>
     </ThemeProvider>

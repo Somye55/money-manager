@@ -10,9 +10,11 @@ import {
   ArcElement
 } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
-import { Wallet, TrendingUp, Loader } from 'lucide-react';
+import { Wallet, TrendingUp, Loader, Smartphone, RefreshCw } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import { useSMS } from '../context/SMSContext';
 import * as Icons from 'lucide-react';
+import SMSExpenseCard from '../components/SMSExpenseCard';
 
 ChartJS.register(
   CategoryScale,
@@ -26,7 +28,16 @@ ChartJS.register(
 
 const Dashboard = () => {
   const { expenses, categories, settings, loading } = useData();
+  const { extractedExpenses, scanSMS, importExpense, dismissExpense, isSupported, permissionGranted } = useSMS();
   const [analytics, setAnalytics] = useState(null);
+  const [importingId, setImportingId] = useState(null);
+
+  // Auto-scan on load if permitted
+  useEffect(() => {
+    if (isSupported && permissionGranted) {
+        scanSMS(10); // Look back 10 days
+    }
+  }, [isSupported, permissionGranted]);
 
   // Calculate analytics from expenses
   useEffect(() => {
@@ -60,6 +71,15 @@ const Dashboard = () => {
 
     setAnalytics({ categoryTotals, totalExpense });
   }, [expenses]);
+
+  const handleImport = async (expense) => {
+      setImportingId(expense.rawSMS); // Use rawSMS as temp ID since we don't have a unique ID
+      try {
+          await importExpense(expense);
+      } finally {
+          setImportingId(null);
+      }
+  };
 
   const totalExpense = analytics?.totalExpense || 0;
   const monthlyBudget = settings?.monthlyBudget ? parseFloat(settings.monthlyBudget) : 50000; // Default budget
@@ -160,6 +180,42 @@ const Dashboard = () => {
 
   return (
     <div className="p-4 space-y-6 animate-fade-in">
+      
+      {/* SMS Suggestions Section - Only if items exist */}
+      {extractedExpenses.length > 0 && (
+        <div className="animate-slide-up">
+            <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                    <Smartphone className="text-primary" size={20} />
+                    <h3 className="text-lg font-bold">New Expenses Found</h3>
+                </div>
+                <span className="bg-primary text-white text-xs px-2 py-1 rounded-full font-bold">
+                    {extractedExpenses.length}
+                </span>
+            </div>
+            
+            <div className="space-y-2">
+                {extractedExpenses.slice(0, 3).map((expense, idx) => (
+                    <SMSExpenseCard 
+                        key={idx} 
+                        expense={expense} 
+                        onImport={handleImport}
+                        onDismiss={dismissExpense}
+                        saving={importingId === expense.rawSMS}
+                    />
+                ))}
+                {extractedExpenses.length > 3 && (
+                     <div className="text-center">
+                        <button className="text-sm text-primary font-medium hover:underline">
+                            View all {extractedExpenses.length} pending expenses
+                        </button>
+                     </div>
+                )}
+            </div>
+            <div className="h-4"></div> {/* Spacer */}
+        </div>
+      )}
+
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-4">
         <div className="card p-4 animate-slide-up" style={{

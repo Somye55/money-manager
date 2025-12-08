@@ -9,7 +9,7 @@ android {
 
 apply from: "../capacitor-cordova-android-plugins/cordova.variables.gradle"
 dependencies {
-    implementation project(':solimanware-capacitor-sms-reader')
+    implementation project(':capacitor-sms-inbox')
 
 }
 
