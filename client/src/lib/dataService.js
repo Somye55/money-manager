@@ -8,42 +8,68 @@ import { supabase } from "./supabase";
 export const getOrCreateUser = async (authUser) => {
   if (!authUser) return null;
 
-  // Check if user exists
-  const { data: existingUser, error: fetchError } = await supabase
-    .from("User")
-    .select("*")
-    .eq("email", authUser.email)
-    .single();
+  try {
+    // Check if user exists
+    const { data: existingUser, error: fetchError } = await supabase
+      .from("User")
+      .select("*")
+      .eq("email", authUser.email)
+      .single();
 
-  if (existingUser) {
-    return existingUser;
+    if (fetchError && fetchError.code !== "PGRST116") {
+      console.error("Error fetching user:", fetchError);
+      throw fetchError;
+    }
+
+    if (existingUser) {
+      console.log("✅ User found:", existingUser.email);
+      return existingUser;
+    }
+
+    console.log("🔄 Creating new user for:", authUser.email);
+
+    // Create new user
+    const { data: newUser, error: createError } = await supabase
+      .from("User")
+      .insert([
+        {
+          email: authUser.email,
+          name:
+            authUser.user_metadata?.full_name ||
+            authUser.user_metadata?.name ||
+            authUser.email.split("@")[0],
+          googleId: authUser.id,
+        },
+      ])
+      .select()
+      .single();
+
+    if (createError) {
+      console.error("❌ Error creating user:", createError);
+      throw createError;
+    }
+
+    console.log("✅ User created successfully:", newUser.email);
+
+    // Initialize default categories and settings for new user
+    if (newUser) {
+      try {
+        await Promise.all([
+          initializeDefaultCategories(newUser.id),
+          initializeDefaultSettings(newUser.id),
+        ]);
+        console.log("✅ Default data initialized for user");
+      } catch (initError) {
+        console.error("⚠️ Error initializing default data:", initError);
+        // Don't throw here, user is created successfully
+      }
+    }
+
+    return newUser;
+  } catch (error) {
+    console.error("❌ Error in getOrCreateUser:", error);
+    throw error;
   }
-
-  // Create new user
-  const { data: newUser, error: createError } = await supabase
-    .from("User")
-    .insert([
-      {
-        email: authUser.email,
-        name: authUser.user_metadata?.full_name || authUser.user_metadata?.name,
-        googleId: authUser.id,
-      },
-    ])
-    .select()
-    .single();
-
-  if (createError) {
-    console.error("Error creating user:", createError);
-    throw createError;
-  }
-
-  // Initialize default categories for new user
-  if (newUser) {
-    await initializeDefaultCategories(newUser.id);
-    await initializeDefaultSettings(newUser.id);
-  }
-
-  return newUser;
 };
 
 // ============= SETTINGS OPERATIONS =============
@@ -172,37 +198,148 @@ export const getCategories = async (userId) => {
  * Create a new category
  */
 export const createCategory = async (category) => {
-  const { data, error } = await supabase
-    .from("Category")
-    .insert([category])
-    .select()
-    .single();
+  try {
+    console.log("🔄 createCategory called with:", category);
 
-  if (error) {
-    console.error("Error creating category:", error);
+    // Validate required fields
+    if (!category.name || !category.userId) {
+      console.error("❌ Missing required fields:", {
+        name: category.name,
+        userId: category.userId,
+      });
+      throw new Error("Category name and user ID are required");
+    }
+
+    // Sanitize and validate data
+    const sanitizedCategory = {
+      ...category,
+      name: category.name.trim(),
+      icon: category.icon || "Tag",
+      color: category.color || "#6366f1",
+      order: category.order || 0,
+    };
+
+    console.log("🔄 Sanitized category data:", sanitizedCategory);
+
+    // Check for duplicate names for this user
+    console.log("🔄 Checking for duplicate names...");
+    const { data: existingCategories, error: duplicateError } = await supabase
+      .from("Category")
+      .select("name")
+      .eq("userId", category.userId)
+      .ilike("name", sanitizedCategory.name);
+
+    if (duplicateError) {
+      console.error("❌ Error checking duplicates:", duplicateError);
+      throw new Error("Failed to check for duplicate categories");
+    }
+
+    console.log("🔄 Existing categories check result:", existingCategories);
+
+    if (existingCategories && existingCategories.length > 0) {
+      throw new Error("A category with this name already exists");
+    }
+
+    console.log("🔄 Inserting category into database...");
+
+    // Check current user session
+    const {
+      data: { user: currentUser },
+    } = await supabase.auth.getUser();
+    console.log("🔄 Current Supabase user:", currentUser);
+
+    const { data, error } = await supabase
+      .from("Category")
+      .insert([sanitizedCategory])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("❌ Database error creating category:", error);
+      console.error("❌ Error details:", {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      });
+
+      // Handle specific database errors
+      if (error.code === "23505") {
+        throw new Error("A category with this name already exists");
+      }
+
+      throw new Error(error.message || "Failed to create category");
+    }
+
+    console.log("✅ Category created successfully:", data);
+    return data;
+  } catch (error) {
+    console.error("❌ Error in createCategory:", error);
     throw error;
   }
-
-  return data;
 };
 
 /**
  * Update a category
  */
 export const updateCategory = async (id, updates) => {
-  const { data, error } = await supabase
-    .from("Category")
-    .update(updates)
-    .eq("id", id)
-    .select()
-    .single();
+  try {
+    if (!id) {
+      throw new Error("Category ID is required");
+    }
 
-  if (error) {
-    console.error("Error updating category:", error);
+    // Sanitize updates
+    const sanitizedUpdates = { ...updates };
+    if (sanitizedUpdates.name) {
+      sanitizedUpdates.name = sanitizedUpdates.name.trim();
+    }
+
+    // If updating name, check for duplicates
+    if (sanitizedUpdates.name) {
+      const { data: category } = await supabase
+        .from("Category")
+        .select("userId")
+        .eq("id", id)
+        .single();
+
+      if (category) {
+        const { data: existingCategories } = await supabase
+          .from("Category")
+          .select("id, name")
+          .eq("userId", category.userId)
+          .ilike("name", sanitizedUpdates.name)
+          .neq("id", id);
+
+        if (existingCategories && existingCategories.length > 0) {
+          throw new Error("A category with this name already exists");
+        }
+      }
+    }
+
+    const { data, error } = await supabase
+      .from("Category")
+      .update(sanitizedUpdates)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error updating category:", error);
+
+      // Handle specific database errors
+      if (error.code === "23505") {
+        throw new Error("A category with this name already exists");
+      }
+
+      throw new Error(error.message || "Failed to update category");
+    }
+
+    console.log("✅ Category updated successfully:", data);
+    return data;
+  } catch (error) {
+    console.error("❌ Error in updateCategory:", error);
     throw error;
   }
-
-  return data;
 };
 
 /**
@@ -309,23 +446,31 @@ export const getCurrentMonthExpenses = async (userId) => {
  * Create a new expense
  */
 export const createExpense = async (expense) => {
-  const { data, error } = await supabase
-    .from("Expense")
-    .insert([expense])
-    .select(
-      `
-      *,
-      category:Category(*)
-    `
-    )
-    .single();
+  try {
+    console.log("🔄 Creating expense:", expense);
 
-  if (error) {
-    console.error("Error creating expense:", error);
+    const { data, error } = await supabase
+      .from("Expense")
+      .insert([expense])
+      .select(
+        `
+        *,
+        category:Category(*)
+      `
+      )
+      .single();
+
+    if (error) {
+      console.error("❌ Error creating expense:", error);
+      throw error;
+    }
+
+    console.log("✅ Expense created successfully:", data);
+    return data;
+  } catch (error) {
+    console.error("❌ Error in createExpense:", error);
     throw error;
   }
-
-  return data;
 };
 
 /**

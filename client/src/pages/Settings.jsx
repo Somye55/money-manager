@@ -65,6 +65,9 @@ const Settings = () => {
     icon: "Tag",
     color: "#6366f1",
   });
+  const [categoryFormErrors, setCategoryFormErrors] = useState({});
+  const [savingCategory, setSavingCategory] = useState(false);
+  const [categorySuccessMessage, setCategorySuccessMessage] = useState("");
 
   const saveTimeoutRef = useRef(null);
 
@@ -156,29 +159,89 @@ const Settings = () => {
         color: "#6366f1",
       });
     }
+    setCategoryFormErrors({});
+    setSavingCategory(false);
     setShowCategoryModal(true);
   };
 
   const closeCategoryModal = () => {
     setShowCategoryModal(false);
     setEditingCategory(null);
+    setCategoryFormErrors({});
+    setSavingCategory(false);
+  };
+
+  const validateCategoryForm = () => {
+    const errors = {};
+
+    if (!categoryForm.name.trim()) {
+      errors.name = "Category name is required";
+    } else if (categoryForm.name.trim().length < 2) {
+      errors.name = "Category name must be at least 2 characters";
+    } else if (categoryForm.name.trim().length > 30) {
+      errors.name = "Category name must be less than 30 characters";
+    }
+
+    // Check for duplicate names (excluding current category if editing)
+    const existingCategory = categories.find(
+      (cat) =>
+        cat.name.toLowerCase() === categoryForm.name.trim().toLowerCase() &&
+        (!editingCategory || cat.id !== editingCategory.id)
+    );
+
+    if (existingCategory) {
+      errors.name = "A category with this name already exists";
+    }
+
+    setCategoryFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSaveCategory = async () => {
-    if (!categoryForm.name.trim()) {
+    if (!validateCategoryForm()) {
       return;
     }
 
+    setSavingCategory(true);
+    setCategoryFormErrors({});
+
     try {
+      const categoryData = {
+        ...categoryForm,
+        name: categoryForm.name.trim(),
+      };
+
+      console.log("🔄 Attempting to save category:", categoryData);
+      console.log("🔄 Current user:", user);
+      console.log("🔄 Auth user:", authUser);
+
       if (editingCategory) {
-        await modifyCategory(editingCategory.id, categoryForm);
+        await modifyCategory(editingCategory.id, categoryData);
+        setCategorySuccessMessage(
+          `✓ "${categoryData.name}" updated successfully!`
+        );
       } else {
-        await addCategory(categoryForm);
+        // Set order for new category
+        const maxOrder = Math.max(...categories.map((c) => c.order || 0), -1);
+        categoryData.order = maxOrder + 1;
+        console.log("🔄 Final category data with order:", categoryData);
+        await addCategory(categoryData);
+        setCategorySuccessMessage(
+          `✓ "${categoryData.name}" created successfully!`
+        );
       }
+
       closeCategoryModal();
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setCategorySuccessMessage(""), 3000);
     } catch (error) {
-      console.error("Error saving category:", error);
-      alert("Failed to save category. Please try again.");
+      console.error("❌ Error saving category in UI:", error);
+      setCategoryFormErrors({
+        general: error.message || "Failed to save category. Please try again.",
+      });
+    } finally {
+      setSavingCategory(false);
     }
   };
 
@@ -387,60 +450,85 @@ const Settings = () => {
           </div>
           <button
             onClick={() => openCategoryModal()}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-semibold transition hover:opacity-90"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-semibold transition-all duration-200 hover:opacity-90 hover:scale-105 active:scale-95"
             style={{ background: "var(--gradient-primary)" }}
+            title="Create a new category"
           >
             <Plus size={18} />
             Add Category
           </button>
         </div>
-        <p className="text-sm text-tertiary mb-4">Drag to reorder categories</p>
+
+        {/* Success Message */}
+        {categorySuccessMessage && (
+          <div className="mb-4 p-3 rounded-lg bg-success/10 text-success text-sm font-medium animate-slide-up">
+            {categorySuccessMessage}
+          </div>
+        )}
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm text-tertiary">Drag to reorder categories</p>
+          <p className="text-xs text-tertiary">
+            {categories.length} categories
+          </p>
+        </div>
         <div className="space-y-2">
-          {categories.map((category, index) => {
-            const Icon = LucideIcons[category.icon] || Tag;
-            return (
-              <div
-                key={category.id}
-                draggable
-                onDragStart={() => handleDragStart(index)}
-                onDragOver={(e) => handleDragOver(e, index)}
-                onDragEnd={handleDragEnd}
-                className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all cursor-move ${
-                  draggedIndex === index
-                    ? "border-primary bg-primary/10 opacity-50 scale-105"
-                    : "border-border hover:border-primary/50 bg-bg-secondary hover:shadow-md"
-                }`}
-              >
-                <GripVertical
-                  size={20}
-                  className="text-tertiary flex-shrink-0"
-                />
-                <div
-                  className="p-2.5 rounded-lg flex-shrink-0"
-                  style={{ backgroundColor: category.color + "20" }}
-                >
-                  <Icon size={22} style={{ color: category.color }} />
-                </div>
-                <span className="flex-1 font-semibold text-base">
-                  {category.name}
-                </span>
-                <button
-                  onClick={() => openCategoryModal(category)}
-                  className="p-2 hover:bg-primary/10 rounded-lg transition flex-shrink-0"
-                  title="Edit category"
-                >
-                  <Edit2 size={18} className="text-primary" />
-                </button>
-                <button
-                  onClick={() => handleDeleteCategory(category.id)}
-                  className="p-2 hover:bg-danger/10 rounded-lg transition flex-shrink-0"
-                  title="Delete category"
-                >
-                  <Trash2 size={18} className="text-danger" />
-                </button>
+          {categories.length === 0 && !dataLoading ? (
+            <div className="text-center py-8">
+              <div className="p-4 rounded-lg bg-bg-secondary border-2 border-dashed border-border">
+                <Tag size={32} className="mx-auto mb-2 text-tertiary" />
+                <p className="text-tertiary mb-2">No categories yet</p>
+                <p className="text-xs text-tertiary">
+                  Create your first category to get started
+                </p>
               </div>
-            );
-          })}
+            </div>
+          ) : (
+            categories.map((category, index) => {
+              const Icon = LucideIcons[category.icon] || Tag;
+              return (
+                <div
+                  key={category.id}
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragEnd={handleDragEnd}
+                  className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all cursor-move ${
+                    draggedIndex === index
+                      ? "border-primary bg-primary/10 opacity-50 scale-105"
+                      : "border-border hover:border-primary/50 bg-bg-secondary hover:shadow-md"
+                  }`}
+                >
+                  <GripVertical
+                    size={20}
+                    className="text-tertiary flex-shrink-0"
+                  />
+                  <div
+                    className="p-2.5 rounded-lg flex-shrink-0"
+                    style={{ backgroundColor: category.color + "20" }}
+                  >
+                    <Icon size={22} style={{ color: category.color }} />
+                  </div>
+                  <span className="flex-1 font-semibold text-base">
+                    {category.name}
+                  </span>
+                  <button
+                    onClick={() => openCategoryModal(category)}
+                    className="p-2 hover:bg-primary/10 rounded-lg transition flex-shrink-0"
+                    title="Edit category"
+                  >
+                    <Edit2 size={18} className="text-primary" />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteCategory(category.id)}
+                    className="p-2 hover:bg-danger/10 rounded-lg transition flex-shrink-0"
+                    title="Delete category"
+                  >
+                    <Trash2 size={18} className="text-danger" />
+                  </button>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 
@@ -746,6 +834,42 @@ const Settings = () => {
         </div>
       </div>
 
+      {/* Database Test */}
+      <div
+        className="card p-6 animate-slide-up"
+        style={{ animationDelay: "0.28s" }}
+      >
+        <div className="flex items-center gap-2 mb-4">
+          <div
+            className="p-2 rounded-lg"
+            style={{ background: "var(--gradient-primary)" }}
+          >
+            <Check size={16} className="text-white" />
+          </div>
+          <h3 className="font-bold text-lg">Database Status</h3>
+        </div>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between p-3 rounded-lg bg-bg-secondary">
+            <span className="text-sm font-medium">Connection</span>
+            <span className="text-xs bg-success/20 text-success px-2 py-1 rounded-full font-bold">
+              ✓ Connected
+            </span>
+          </div>
+          <div className="flex items-center justify-between p-3 rounded-lg bg-bg-secondary">
+            <span className="text-sm font-medium">User Profile</span>
+            <span className="text-xs bg-success/20 text-success px-2 py-1 rounded-full font-bold">
+              ✓ {user ? "Loaded" : "Loading..."}
+            </span>
+          </div>
+          <div className="flex items-center justify-between p-3 rounded-lg bg-bg-secondary">
+            <span className="text-sm font-medium">Categories</span>
+            <span className="text-xs bg-success/20 text-success px-2 py-1 rounded-full font-bold">
+              ✓ {categories.length} loaded
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* Sign Out */}
       <button
         onClick={handleSignOut}
@@ -771,19 +895,28 @@ const Settings = () => {
               backdropFilter: "blur(4px)",
             }}
             onClick={(e) => {
-              if (e.target === e.currentTarget) {
+              if (e.target === e.currentTarget && !savingCategory) {
                 closeCategoryModal();
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Escape" && !savingCategory) {
+                closeCategoryModal();
+              }
+              if (e.key === "Enter" && e.ctrlKey && categoryForm.name.trim()) {
+                handleSaveCategory();
               }
             }}
           >
             <div
-              className="rounded-2xl p-6 w-full animate-slide-up shadow-2xl"
+              className="rounded-2xl p-4 sm:p-6 w-full animate-slide-up shadow-2xl"
               style={{
                 backgroundColor: "var(--bg-card)",
                 border: "1px solid var(--border)",
                 maxWidth: "32rem",
                 maxHeight: "90vh",
                 overflowY: "auto",
+                margin: "0 1rem",
               }}
             >
               <div className="flex items-center justify-between mb-6">
@@ -794,12 +927,22 @@ const Settings = () => {
                   >
                     <IconComponent size={24} style={{ color: "white" }} />
                   </div>
-                  <h2
-                    className="text-2xl font-bold"
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    {editingCategory ? "Edit Category" : "Create Category"}
-                  </h2>
+                  <div>
+                    <h2
+                      className="text-2xl font-bold"
+                      style={{ color: "var(--text-primary)" }}
+                    >
+                      {editingCategory ? "Edit Category" : "Create Category"}
+                    </h2>
+                    <p
+                      className="text-sm mt-1"
+                      style={{ color: "var(--text-tertiary)" }}
+                    >
+                      {editingCategory
+                        ? "Update your category details"
+                        : "Add a new category to organize your expenses"}
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={closeCategoryModal}
@@ -864,22 +1007,60 @@ const Settings = () => {
                   >
                     <FileText size={16} style={{ color: "var(--primary)" }} />
                     Category Name
+                    <span style={{ color: "var(--danger)" }}>*</span>
                   </label>
                   <input
                     type="text"
                     value={categoryForm.name}
-                    onChange={(e) =>
-                      setCategoryForm({ ...categoryForm, name: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setCategoryForm({
+                        ...categoryForm,
+                        name: e.target.value,
+                      });
+                      // Clear errors on change
+                      if (categoryFormErrors.name) {
+                        setCategoryFormErrors({
+                          ...categoryFormErrors,
+                          name: null,
+                        });
+                      }
+                    }}
                     placeholder="e.g., Groceries, Transport, Entertainment"
                     className="w-full p-3 rounded-lg outline-none transition text-base"
                     style={{
-                      border: "2px solid var(--border)",
+                      border: `2px solid ${
+                        categoryFormErrors.name
+                          ? "var(--danger)"
+                          : "var(--border)"
+                      }`,
                       backgroundColor: "var(--bg-secondary)",
                       color: "var(--text-primary)",
                     }}
                     autoFocus
+                    maxLength={30}
                   />
+                  {categoryFormErrors.name && (
+                    <p
+                      className="text-sm mt-1"
+                      style={{ color: "var(--danger)" }}
+                    >
+                      {categoryFormErrors.name}
+                    </p>
+                  )}
+                  <div className="flex justify-between items-center mt-1">
+                    <p
+                      className="text-xs"
+                      style={{ color: "var(--text-tertiary)" }}
+                    >
+                      {categoryForm.name.length}/30 characters
+                    </p>
+                    <p
+                      className="text-xs"
+                      style={{ color: "var(--text-tertiary)" }}
+                    >
+                      Press Ctrl+Enter to save
+                    </p>
+                  </div>
                 </div>
 
                 {/* Icon Selection */}
@@ -892,16 +1073,10 @@ const Settings = () => {
                     Choose Icon
                   </label>
                   <div
+                    className="grid grid-cols-6 sm:grid-cols-8 gap-2 p-2 max-h-48 overflow-y-auto rounded-lg border"
                     style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(8, minmax(0, 1fr))",
-                      gap: "0.5rem",
-                      padding: "0.5rem",
-                      maxHeight: "12rem",
-                      overflowY: "auto",
                       backgroundColor: "var(--bg-secondary)",
-                      borderRadius: "0.5rem",
-                      border: "1px solid var(--border)",
+                      borderColor: "var(--border)",
                     }}
                   >
                     {iconOptions.map((iconName) => {
@@ -950,13 +1125,7 @@ const Settings = () => {
                     <Palette size={16} style={{ color: "var(--primary)" }} />
                     Choose Color
                   </label>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
-                      gap: "0.75rem",
-                    }}
-                  >
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
                     {colorOptions.map((color) => {
                       const isSelected = categoryForm.color === color;
                       return (
@@ -1003,6 +1172,21 @@ const Settings = () => {
                   </div>
                 </div>
 
+                {/* Error Message */}
+                {categoryFormErrors.general && (
+                  <div
+                    className="p-3 rounded-lg text-sm"
+                    style={{
+                      backgroundColor:
+                        "var(--danger-bg, rgba(239, 68, 68, 0.1))",
+                      color: "var(--danger)",
+                      border: "1px solid var(--danger)",
+                    }}
+                  >
+                    {categoryFormErrors.general}
+                  </div>
+                )}
+
                 {/* Action Buttons */}
                 <div
                   style={{
@@ -1013,6 +1197,7 @@ const Settings = () => {
                 >
                   <button
                     onClick={closeCategoryModal}
+                    disabled={savingCategory}
                     style={{
                       flex: 1,
                       padding: "0.875rem 1rem",
@@ -1021,8 +1206,10 @@ const Settings = () => {
                       fontWeight: 600,
                       backgroundColor: "var(--bg-secondary)",
                       border: "2px solid var(--border)",
-                      color: "var(--text-primary)",
-                      cursor: "pointer",
+                      color: savingCategory
+                        ? "var(--text-tertiary)"
+                        : "var(--text-primary)",
+                      cursor: savingCategory ? "not-allowed" : "pointer",
                       transition: "all 0.2s ease",
                     }}
                   >
@@ -1030,21 +1217,23 @@ const Settings = () => {
                   </button>
                   <button
                     onClick={handleSaveCategory}
-                    disabled={!categoryForm.name.trim()}
+                    disabled={!categoryForm.name.trim() || savingCategory}
                     style={{
                       flex: 1,
                       padding: "0.875rem 1rem",
                       borderRadius: "0.75rem",
                       fontSize: "1rem",
                       fontWeight: 600,
-                      background: !categoryForm.name.trim()
-                        ? "var(--border)"
-                        : "var(--gradient-primary)",
+                      background:
+                        !categoryForm.name.trim() || savingCategory
+                          ? "var(--border)"
+                          : "var(--gradient-primary)",
                       color: "white",
                       border: "none",
-                      cursor: !categoryForm.name.trim()
-                        ? "not-allowed"
-                        : "pointer",
+                      cursor:
+                        !categoryForm.name.trim() || savingCategory
+                          ? "not-allowed"
+                          : "pointer",
                       transition: "all 0.2s ease",
                       display: "flex",
                       alignItems: "center",
@@ -1052,8 +1241,17 @@ const Settings = () => {
                       gap: "0.5rem",
                     }}
                   >
-                    <Save size={20} />
-                    {editingCategory ? "Update" : "Create"}
+                    {savingCategory ? (
+                      <>
+                        <Loader size={20} className="animate-spin" />
+                        {editingCategory ? "Updating..." : "Creating..."}
+                      </>
+                    ) : (
+                      <>
+                        <Save size={20} />
+                        {editingCategory ? "Update" : "Create"}
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
