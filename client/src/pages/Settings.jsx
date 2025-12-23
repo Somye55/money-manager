@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
 import { useAuth } from "../context/AuthContext";
 import { useData } from "../context/DataContext";
-import { useTheme } from "../context/ThemeContext";
+import { useTheme as useOldTheme } from "../context/ThemeContext";
 import { useSMS } from "../context/SMSContext";
 import {
   Settings as SettingsIcon,
@@ -24,6 +24,16 @@ import {
   FileText,
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
+import {
+  Button,
+  Card,
+  Input,
+  Modal,
+  Typography,
+  ThemeSettings,
+  ThemeToggle,
+} from "../design-system";
+import DebugSupabase from "../components/DebugSupabase";
 
 const Settings = () => {
   const { user: authUser, signOut } = useAuth();
@@ -38,7 +48,7 @@ const Settings = () => {
     reorderCategories,
     loading: dataLoading,
   } = useData();
-  const { setSpecificTheme } = useTheme();
+  const { setSpecificTheme } = useOldTheme();
   const {
     isSupported,
     permissionGranted: smsGranted,
@@ -378,6 +388,9 @@ const Settings = () => {
 
   return (
     <div className="p-4 space-y-6 animate-fade-in max-w-2xl mx-auto">
+      {/* Debug Component - Remove this after fixing the issue */}
+      <DebugSupabase />
+
       {/* Header with Save Status */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -388,39 +401,50 @@ const Settings = () => {
             <SettingsIcon className="text-white" size={24} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Settings</h1>
-            <p className="text-sm text-tertiary">Manage your preferences</p>
+            <Typography variant="h1">Settings</Typography>
+            <Typography variant="body2" color="tertiary">
+              Manage your preferences
+            </Typography>
           </div>
         </div>
-        {saveStatus && (
-          <div className="flex items-center gap-2 text-sm">
-            {saveStatus === "saving" && (
-              <>
-                <Loader size={16} className="animate-spin text-primary" />
-                <span className="text-tertiary">Saving...</span>
-              </>
-            )}
-            {saveStatus === "saved" && (
-              <>
-                <Check size={16} className="text-success" />
-                <span className="text-success">Saved</span>
-              </>
-            )}
-            {saveStatus === "error" && (
-              <>
-                <X size={16} className="text-danger" />
-                <span className="text-danger">Error</span>
-              </>
-            )}
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          <ThemeToggle size="md" />
+          {saveStatus && (
+            <div className="flex items-center gap-2 text-sm">
+              {saveStatus === "saving" && (
+                <>
+                  <Loader size={16} className="animate-spin text-primary" />
+                  <Typography variant="caption" color="tertiary">
+                    Saving...
+                  </Typography>
+                </>
+              )}
+              {saveStatus === "saved" && (
+                <>
+                  <Check size={16} className="text-success" />
+                  <Typography variant="caption" color="success">
+                    Saved
+                  </Typography>
+                </>
+              )}
+              {saveStatus === "error" && (
+                <>
+                  <X size={16} className="text-danger" />
+                  <Typography variant="caption" color="error">
+                    Error
+                  </Typography>
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Profile Section */}
-      <div className="card p-6 animate-slide-up">
+      <Card padding="lg" className="animate-slide-up">
         <div className="flex items-center gap-2 mb-4">
           <User size={20} className="text-primary" />
-          <h3 className="font-bold text-lg">Profile</h3>
+          <Typography variant="h3">Profile</Typography>
         </div>
         <div className="flex items-center gap-4">
           <div
@@ -430,33 +454,35 @@ const Settings = () => {
             {authUser?.user_metadata?.name?.charAt(0)?.toUpperCase() || "U"}
           </div>
           <div>
-            <p className="font-semibold text-lg">
+            <Typography variant="h4">
               {authUser?.user_metadata?.name || "User"}
-            </p>
-            <p className="text-sm text-tertiary">{authUser?.email}</p>
+            </Typography>
+            <Typography variant="body2" color="tertiary">
+              {authUser?.email}
+            </Typography>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Categories Management */}
-      <div
-        className="card p-6 animate-slide-up"
+      <Card
+        padding="lg"
+        className="animate-slide-up"
         style={{ animationDelay: "0.05s" }}
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Tag size={20} className="text-primary" />
-            <h3 className="font-bold text-lg">Categories</h3>
+            <Typography variant="h3">Categories</Typography>
           </div>
-          <button
+          <Button
+            variant="primary"
+            size="sm"
             onClick={() => openCategoryModal()}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-semibold transition-all duration-200 hover:opacity-90 hover:scale-105 active:scale-95"
-            style={{ background: "var(--gradient-primary)" }}
-            title="Create a new category"
           >
             <Plus size={18} />
             Add Category
-          </button>
+          </Button>
         </div>
 
         {/* Success Message */}
@@ -466,10 +492,12 @@ const Settings = () => {
           </div>
         )}
         <div className="flex items-center justify-between mb-4">
-          <p className="text-sm text-tertiary">Drag to reorder categories</p>
-          <p className="text-xs text-tertiary">
+          <Typography variant="body2" color="tertiary">
+            Drag to reorder categories
+          </Typography>
+          <Typography variant="caption" color="tertiary">
             {categories.length} categories
-          </p>
+          </Typography>
         </div>
         <div className="space-y-2">
           {categories.length === 0 && !dataLoading ? (
@@ -530,7 +558,7 @@ const Settings = () => {
             })
           )}
         </div>
-      </div>
+      </Card>
 
       {/* Automation Section */}
       {isSupported && (
@@ -753,13 +781,14 @@ const Settings = () => {
       )}
 
       {/* Currency */}
-      <div
-        className="card p-6 animate-slide-up"
+      <Card
+        padding="lg"
+        className="animate-slide-up"
         style={{ animationDelay: "0.15s" }}
       >
         <div className="flex items-center gap-2 mb-4">
           <DollarSign size={20} className="text-primary" />
-          <h3 className="font-bold text-lg">Currency</h3>
+          <Typography variant="h3">Currency</Typography>
         </div>
         <select
           value={formData.currency}
@@ -772,71 +801,36 @@ const Settings = () => {
             </option>
           ))}
         </select>
-      </div>
+      </Card>
 
       {/* Budget */}
-      <div
-        className="card p-6 animate-slide-up"
+      <Card
+        padding="lg"
+        className="animate-slide-up"
         style={{ animationDelay: "0.2s" }}
       >
         <div className="flex items-center gap-2 mb-4">
           <DollarSign size={20} className="text-primary" />
-          <h3 className="font-bold text-lg">Monthly Budget</h3>
+          <Typography variant="h3">Monthly Budget</Typography>
         </div>
-        <input
+        <Input
           type="number"
           value={formData.monthlyBudget}
           onChange={(e) => handleChange("monthlyBudget", e.target.value)}
           placeholder="Enter monthly budget"
-          className="w-full p-3 rounded-lg border-2 border-border bg-bg-secondary outline-none focus:border-primary transition"
+          fullWidth
         />
-      </div>
+      </Card>
 
-      {/* Theme */}
-      <div
-        className="card p-6 animate-slide-up"
-        style={{ animationDelay: "0.25s" }}
-      >
-        <div className="flex items-center gap-2 mb-4">
-          <Palette size={20} className="text-primary" />
-          <h3 className="font-bold text-lg">Appearance</h3>
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          {themes.map((themeOption) => {
-            const isSelected = formData.theme === themeOption.value;
-            return (
-              <button
-                key={themeOption.value}
-                type="button"
-                onClick={() => handleChange("theme", themeOption.value)}
-                className={`relative p-4 rounded-lg border-2 transition-all duration-200 ${
-                  isSelected
-                    ? "border-primary bg-primary/10 shadow-lg"
-                    : "border-border hover:border-primary/50"
-                }`}
-              >
-                {isSelected && (
-                  <div className="absolute top-2 right-2 bg-primary text-white rounded-full p-1">
-                    <Check size={12} strokeWidth={3} />
-                  </div>
-                )}
-                <div className="text-2xl mb-1">{themeOption.icon}</div>
-                <div
-                  className={`text-sm font-semibold ${
-                    isSelected ? "text-primary" : "text-text-secondary"
-                  }`}
-                >
-                  {themeOption.label}
-                </div>
-              </button>
-            );
-          })}
-        </div>
+      {/* Theme Settings */}
+      <div className="animate-slide-up" style={{ animationDelay: "0.25s" }}>
+        <ThemeSettings />
       </div>
 
       {/* Database Test */}
-      <div
-        className="card p-6 animate-slide-up"
+      <Card
+        padding="lg"
+        className="animate-slide-up"
         style={{ animationDelay: "0.28s" }}
       >
         <div className="flex items-center gap-2 mb-4">
@@ -846,34 +840,36 @@ const Settings = () => {
           >
             <Check size={16} className="text-white" />
           </div>
-          <h3 className="font-bold text-lg">Database Status</h3>
+          <Typography variant="h3">Database Status</Typography>
         </div>
         <div className="space-y-3">
           <div className="flex items-center justify-between p-3 rounded-lg bg-bg-secondary">
-            <span className="text-sm font-medium">Connection</span>
+            <Typography variant="body2">Connection</Typography>
             <span className="text-xs bg-success/20 text-success px-2 py-1 rounded-full font-bold">
               ✓ Connected
             </span>
           </div>
           <div className="flex items-center justify-between p-3 rounded-lg bg-bg-secondary">
-            <span className="text-sm font-medium">User Profile</span>
+            <Typography variant="body2">User Profile</Typography>
             <span className="text-xs bg-success/20 text-success px-2 py-1 rounded-full font-bold">
               ✓ {user ? "Loaded" : "Loading..."}
             </span>
           </div>
           <div className="flex items-center justify-between p-3 rounded-lg bg-bg-secondary">
-            <span className="text-sm font-medium">Categories</span>
+            <Typography variant="body2">Categories</Typography>
             <span className="text-xs bg-success/20 text-success px-2 py-1 rounded-full font-bold">
               ✓ {categories.length} loaded
             </span>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Sign Out */}
-      <button
+      <Button
+        variant="primary"
+        fullWidth
         onClick={handleSignOut}
-        className="btn btn-block flex items-center justify-center gap-2 animate-slide-up"
+        className="animate-slide-up"
         style={{
           animationDelay: "0.3s",
           background: "var(--gradient-danger)",
@@ -882,383 +878,262 @@ const Settings = () => {
         }}
       >
         <LogOut size={18} /> Sign Out
-      </button>
+      </Button>
 
       {/* Category Modal */}
-      {showCategoryModal &&
-        ReactDOM.createPortal(
-          <div
-            className="fixed inset-0 flex items-center justify-center p-4 animate-fade-in"
-            style={{
-              zIndex: 9999,
-              backgroundColor: "rgba(0, 0, 0, 0.6)",
-              backdropFilter: "blur(4px)",
-            }}
-            onClick={(e) => {
-              if (e.target === e.currentTarget && !savingCategory) {
-                closeCategoryModal();
-              }
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Escape" && !savingCategory) {
-                closeCategoryModal();
-              }
-              if (e.key === "Enter" && e.ctrlKey && categoryForm.name.trim()) {
-                handleSaveCategory();
-              }
-            }}
-          >
-            <div
-              className="rounded-2xl p-4 sm:p-6 w-full animate-slide-up shadow-2xl"
-              style={{
-                backgroundColor: "var(--bg-card)",
-                border: "1px solid var(--border)",
-                maxWidth: "32rem",
-                maxHeight: "90vh",
-                overflowY: "auto",
-                margin: "0 1rem",
-              }}
-            >
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="p-2.5 rounded-xl"
-                    style={{ background: "var(--gradient-primary)" }}
-                  >
-                    <IconComponent size={24} style={{ color: "white" }} />
-                  </div>
-                  <div>
-                    <h2
-                      className="text-2xl font-bold"
-                      style={{ color: "var(--text-primary)" }}
-                    >
-                      {editingCategory ? "Edit Category" : "Create Category"}
-                    </h2>
-                    <p
-                      className="text-sm mt-1"
-                      style={{ color: "var(--text-tertiary)" }}
-                    >
-                      {editingCategory
-                        ? "Update your category details"
-                        : "Add a new category to organize your expenses"}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={closeCategoryModal}
-                  className="p-2 rounded-lg transition"
-                  style={{
-                    backgroundColor: "transparent",
-                    color: "var(--text-primary)",
-                  }}
-                  title="Close"
-                >
-                  <X size={22} />
-                </button>
-              </div>
-
+      <Modal
+        isOpen={showCategoryModal}
+        onClose={closeCategoryModal}
+        size="md"
+        closeOnBackdrop={!savingCategory}
+        closeOnEscape={!savingCategory}
+      >
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
               <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "1.25rem",
-                }}
+                className="p-2.5 rounded-xl"
+                style={{ background: "var(--gradient-primary)" }}
               >
-                {/* Preview */}
-                <div
-                  className="p-4 rounded-lg"
-                  style={{
-                    backgroundColor: "var(--bg-secondary)",
-                    border: "2px solid var(--border)",
-                  }}
-                >
-                  <p
-                    className="text-xs font-semibold mb-2 uppercase tracking-wide"
-                    style={{ color: "var(--text-tertiary)" }}
-                  >
-                    Preview
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="p-3 rounded-xl"
-                      style={{ backgroundColor: categoryForm.color + "20" }}
-                    >
-                      <IconComponent
-                        size={32}
-                        style={{ color: categoryForm.color }}
-                      />
-                    </div>
-                    <div>
-                      <p
-                        className="font-bold text-xl"
-                        style={{ color: "var(--text-primary)" }}
-                      >
-                        {categoryForm.name || "Category Name"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Name Input */}
-                <div>
-                  <label
-                    className="flex items-center gap-2 mb-2 font-semibold text-sm"
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    <FileText size={16} style={{ color: "var(--primary)" }} />
-                    Category Name
-                    <span style={{ color: "var(--danger)" }}>*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={categoryForm.name}
-                    onChange={(e) => {
-                      setCategoryForm({
-                        ...categoryForm,
-                        name: e.target.value,
-                      });
-                      // Clear errors on change
-                      if (categoryFormErrors.name) {
-                        setCategoryFormErrors({
-                          ...categoryFormErrors,
-                          name: null,
-                        });
-                      }
-                    }}
-                    placeholder="e.g., Groceries, Transport, Entertainment"
-                    className="w-full p-3 rounded-lg outline-none transition text-base"
-                    style={{
-                      border: `2px solid ${
-                        categoryFormErrors.name
-                          ? "var(--danger)"
-                          : "var(--border)"
-                      }`,
-                      backgroundColor: "var(--bg-secondary)",
-                      color: "var(--text-primary)",
-                    }}
-                    autoFocus
-                    maxLength={30}
-                  />
-                  {categoryFormErrors.name && (
-                    <p
-                      className="text-sm mt-1"
-                      style={{ color: "var(--danger)" }}
-                    >
-                      {categoryFormErrors.name}
-                    </p>
-                  )}
-                  <div className="flex justify-between items-center mt-1">
-                    <p
-                      className="text-xs"
-                      style={{ color: "var(--text-tertiary)" }}
-                    >
-                      {categoryForm.name.length}/30 characters
-                    </p>
-                    <p
-                      className="text-xs"
-                      style={{ color: "var(--text-tertiary)" }}
-                    >
-                      Press Ctrl+Enter to save
-                    </p>
-                  </div>
-                </div>
-
-                {/* Icon Selection */}
-                <div>
-                  <label
-                    className="flex items-center gap-2 mb-3 font-semibold text-sm"
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    <Tag size={16} style={{ color: "var(--primary)" }} />
-                    Choose Icon
-                  </label>
-                  <div
-                    className="grid grid-cols-6 sm:grid-cols-8 gap-2 p-2 max-h-48 overflow-y-auto rounded-lg border"
-                    style={{
-                      backgroundColor: "var(--bg-secondary)",
-                      borderColor: "var(--border)",
-                    }}
-                  >
-                    {iconOptions.map((iconName) => {
-                      const Icon = LucideIcons[iconName] || Tag;
-                      const isSelected = categoryForm.icon === iconName;
-                      return (
-                        <button
-                          key={iconName}
-                          type="button"
-                          onClick={() =>
-                            setCategoryForm({ ...categoryForm, icon: iconName })
-                          }
-                          style={{
-                            width: "100%",
-                            minHeight: "3rem",
-                            padding: "0.5rem",
-                            borderRadius: "0.5rem",
-                            border: isSelected
-                              ? "2px solid var(--primary)"
-                              : "2px solid transparent",
-                            backgroundColor: isSelected
-                              ? "rgba(99, 102, 241, 0.15)"
-                              : "var(--bg-card)",
-                            color: "var(--text-primary)",
-                            cursor: "pointer",
-                            transition: "all 0.2s ease",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                          title={iconName}
-                        >
-                          <Icon size={22} style={{ flexShrink: 0 }} />
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Color Selection */}
-                <div>
-                  <label
-                    className="flex items-center gap-2 mb-3 font-semibold text-sm"
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    <Palette size={16} style={{ color: "var(--primary)" }} />
-                    Choose Color
-                  </label>
-                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
-                    {colorOptions.map((color) => {
-                      const isSelected = categoryForm.color === color;
-                      return (
-                        <button
-                          key={color}
-                          type="button"
-                          onClick={() =>
-                            setCategoryForm({ ...categoryForm, color })
-                          }
-                          style={{
-                            width: "100%",
-                            height: "3.5rem",
-                            borderRadius: "0.75rem",
-                            backgroundColor: color,
-                            border: isSelected
-                              ? "3px solid var(--primary)"
-                              : "2px solid var(--border)",
-                            cursor: "pointer",
-                            transition: "all 0.2s ease",
-                            transform: isSelected ? "scale(1.05)" : "scale(1)",
-                            boxShadow: isSelected
-                              ? "0 8px 16px rgba(0, 0, 0, 0.2)"
-                              : "0 2px 4px rgba(0, 0, 0, 0.1)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                          title={color}
-                        >
-                          {isSelected && (
-                            <Check
-                              size={24}
-                              style={{
-                                color: "white",
-                                filter:
-                                  "drop-shadow(0 2px 4px rgba(0,0,0,0.5))",
-                              }}
-                              strokeWidth={3}
-                            />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Error Message */}
-                {categoryFormErrors.general && (
-                  <div
-                    className="p-3 rounded-lg text-sm"
-                    style={{
-                      backgroundColor:
-                        "var(--danger-bg, rgba(239, 68, 68, 0.1))",
-                      color: "var(--danger)",
-                      border: "1px solid var(--danger)",
-                    }}
-                  >
-                    {categoryFormErrors.general}
-                  </div>
-                )}
-
-                {/* Action Buttons */}
-                <div
-                  style={{
-                    paddingTop: "1.5rem",
-                    display: "flex",
-                    gap: "0.75rem",
-                  }}
-                >
-                  <button
-                    onClick={closeCategoryModal}
-                    disabled={savingCategory}
-                    style={{
-                      flex: 1,
-                      padding: "0.875rem 1rem",
-                      borderRadius: "0.75rem",
-                      fontSize: "1rem",
-                      fontWeight: 600,
-                      backgroundColor: "var(--bg-secondary)",
-                      border: "2px solid var(--border)",
-                      color: savingCategory
-                        ? "var(--text-tertiary)"
-                        : "var(--text-primary)",
-                      cursor: savingCategory ? "not-allowed" : "pointer",
-                      transition: "all 0.2s ease",
-                    }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSaveCategory}
-                    disabled={!categoryForm.name.trim() || savingCategory}
-                    style={{
-                      flex: 1,
-                      padding: "0.875rem 1rem",
-                      borderRadius: "0.75rem",
-                      fontSize: "1rem",
-                      fontWeight: 600,
-                      background:
-                        !categoryForm.name.trim() || savingCategory
-                          ? "var(--border)"
-                          : "var(--gradient-primary)",
-                      color: "white",
-                      border: "none",
-                      cursor:
-                        !categoryForm.name.trim() || savingCategory
-                          ? "not-allowed"
-                          : "pointer",
-                      transition: "all 0.2s ease",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "0.5rem",
-                    }}
-                  >
-                    {savingCategory ? (
-                      <>
-                        <Loader size={20} className="animate-spin" />
-                        {editingCategory ? "Updating..." : "Creating..."}
-                      </>
-                    ) : (
-                      <>
-                        <Save size={20} />
-                        {editingCategory ? "Update" : "Create"}
-                      </>
-                    )}
-                  </button>
-                </div>
+                <IconComponent size={24} style={{ color: "white" }} />
+              </div>
+              <div>
+                <Typography variant="h2">
+                  {editingCategory ? "Edit Category" : "Create Category"}
+                </Typography>
+                <Typography variant="body2" color="tertiary" className="mt-1">
+                  {editingCategory
+                    ? "Update your category details"
+                    : "Add a new category to organize your expenses"}
+                </Typography>
               </div>
             </div>
-          </div>,
-          document.getElementById("modal-root") || document.body
-        )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={closeCategoryModal}
+              className="p-2"
+            >
+              <X size={22} />
+            </Button>
+          </div>
+
+          <div className="space-y-5">
+            {/* Preview */}
+            <Card variant="outlined" padding="md">
+              <Typography
+                variant="caption"
+                color="tertiary"
+                className="mb-2 uppercase tracking-wide"
+              >
+                Preview
+              </Typography>
+              <div className="flex items-center gap-3">
+                <div
+                  className="p-3 rounded-xl"
+                  style={{ backgroundColor: categoryForm.color + "20" }}
+                >
+                  <IconComponent
+                    size={32}
+                    style={{ color: categoryForm.color }}
+                  />
+                </div>
+                <div>
+                  <Typography variant="h4">
+                    {categoryForm.name || "Category Name"}
+                  </Typography>
+                </div>
+              </div>
+            </Card>
+
+            {/* Name Input */}
+            <div>
+              <Input
+                label={
+                  <div className="flex items-center gap-2">
+                    <FileText size={16} className="text-primary" />
+                    Category Name
+                    <span className="text-danger">*</span>
+                  </div>
+                }
+                value={categoryForm.name}
+                onChange={(e) => {
+                  setCategoryForm({
+                    ...categoryForm,
+                    name: e.target.value,
+                  });
+                  // Clear errors on change
+                  if (categoryFormErrors.name) {
+                    setCategoryFormErrors({
+                      ...categoryFormErrors,
+                      name: null,
+                    });
+                  }
+                }}
+                placeholder="e.g., Groceries, Transport, Entertainment"
+                error={categoryFormErrors.name}
+                fullWidth
+                maxLength={30}
+              />
+              <div className="flex justify-between items-center mt-1">
+                <Typography variant="caption" color="tertiary">
+                  {categoryForm.name.length}/30 characters
+                </Typography>
+                <Typography variant="caption" color="tertiary">
+                  Press Ctrl+Enter to save
+                </Typography>
+              </div>
+            </div>
+
+            {/* Icon Selection */}
+            <div>
+              <label
+                className="flex items-center gap-2 mb-3 font-semibold text-sm"
+                style={{ color: "var(--text-primary)" }}
+              >
+                <Tag size={16} style={{ color: "var(--primary)" }} />
+                Choose Icon
+              </label>
+              <div
+                className="grid grid-cols-6 sm:grid-cols-8 gap-2 p-2 max-h-48 overflow-y-auto rounded-lg border"
+                style={{
+                  backgroundColor: "var(--bg-secondary)",
+                  borderColor: "var(--border)",
+                }}
+              >
+                {iconOptions.map((iconName) => {
+                  const Icon = LucideIcons[iconName] || Tag;
+                  const isSelected = categoryForm.icon === iconName;
+                  return (
+                    <button
+                      key={iconName}
+                      type="button"
+                      onClick={() =>
+                        setCategoryForm({ ...categoryForm, icon: iconName })
+                      }
+                      style={{
+                        width: "100%",
+                        minHeight: "3rem",
+                        padding: "0.5rem",
+                        borderRadius: "0.5rem",
+                        border: isSelected
+                          ? "2px solid var(--primary)"
+                          : "2px solid transparent",
+                        backgroundColor: isSelected
+                          ? "rgba(99, 102, 241, 0.15)"
+                          : "var(--bg-card)",
+                        color: "var(--text-primary)",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                      title={iconName}
+                    >
+                      <Icon size={22} style={{ flexShrink: 0 }} />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Color Selection */}
+            <div>
+              <label
+                className="flex items-center gap-2 mb-3 font-semibold text-sm"
+                style={{ color: "var(--text-primary)" }}
+              >
+                <Palette size={16} style={{ color: "var(--primary)" }} />
+                Choose Color
+              </label>
+              <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+                {colorOptions.map((color) => {
+                  const isSelected = categoryForm.color === color;
+                  return (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() =>
+                        setCategoryForm({ ...categoryForm, color })
+                      }
+                      style={{
+                        width: "100%",
+                        height: "3.5rem",
+                        borderRadius: "0.75rem",
+                        backgroundColor: color,
+                        border: isSelected
+                          ? "3px solid var(--primary)"
+                          : "2px solid var(--border)",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease",
+                        transform: isSelected ? "scale(1.05)" : "scale(1)",
+                        boxShadow: isSelected
+                          ? "0 8px 16px rgba(0, 0, 0, 0.2)"
+                          : "0 2px 4px rgba(0, 0, 0, 0.1)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                      title={color}
+                    >
+                      {isSelected && (
+                        <Check
+                          size={24}
+                          style={{
+                            color: "white",
+                            filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.5))",
+                          }}
+                          strokeWidth={3}
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {categoryFormErrors.general && (
+              <div className="p-3 rounded-lg text-sm bg-red-500/10 border border-red-500/30 text-red-600">
+                {categoryFormErrors.general}
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-6">
+              <Button
+                variant="secondary"
+                fullWidth
+                onClick={closeCategoryModal}
+                disabled={savingCategory}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                fullWidth
+                onClick={handleSaveCategory}
+                disabled={!categoryForm.name.trim() || savingCategory}
+                loading={savingCategory}
+              >
+                {savingCategory ? (
+                  editingCategory ? (
+                    "Updating..."
+                  ) : (
+                    "Creating..."
+                  )
+                ) : (
+                  <>
+                    <Save size={20} />
+                    {editingCategory ? "Update" : "Create"}
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Modal>
 
       <div style={{ height: "20px" }} />
     </div>

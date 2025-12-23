@@ -8,6 +8,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
+import { DesignSystemThemeProvider } from "./design-system";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { DataProvider } from "./context/DataContext";
 import { SMSProvider } from "./context/SMSContext";
@@ -21,12 +22,14 @@ import {
   Wallet,
   Receipt,
 } from "lucide-react";
+import { Typography, Card } from "./design-system";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import AddExpense from "./pages/AddExpense";
 import Settings from "./pages/Settings";
 import Expenses from "./pages/Expenses";
 import AuthDebug from "./components/AuthDebug";
+import ThemeDebug from "./components/ThemeDebug";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -90,12 +93,13 @@ const Navigation = () => {
               size={22}
               strokeWidth={location.pathname === item.path ? 2.5 : 2}
             />
-            <span
-              className="text-xs mt-1 font-medium truncate"
+            <Typography
+              variant="caption"
+              className="mt-1 truncate"
               style={{ textDecoration: "none" }}
             >
               {item.label}
-            </span>
+            </Typography>
           </Link>
         ))}
       </div>
@@ -109,16 +113,23 @@ const Header = () => {
   if (location.pathname === "/login") return null;
 
   return (
-    <header className="p-4 flex-between bg-card shadow-sm sticky top-0 z-10 backdrop-blur-lg bg-opacity-90">
+    <Card
+      variant="elevated"
+      padding="md"
+      className="flex-between sticky top-0 z-10 backdrop-blur-lg bg-opacity-90"
+    >
       <div className="flex items-center gap-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-secondary">
           <Wallet className="text-white" size={24} />
         </div>
-        <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
+        <Typography
+          variant="h3"
+          className="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent"
+        >
           Money Manager
-        </h1>
+        </Typography>
       </div>
-    </header>
+    </Card>
   );
 };
 
@@ -133,58 +144,61 @@ function App() {
 
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <DataProvider>
-          <SMSProvider>
-            <Router>
-              <div className="pb-20">
-                {" "}
-                {/* Padding for bottom nav */}
-                <Header />
-                <main className="container mx-auto max-w-md">
-                  <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route
-                      path="/"
-                      element={
-                        <ProtectedRoute>
-                          <Dashboard />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/add"
-                      element={
-                        <ProtectedRoute>
-                          <AddExpense />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/expenses"
-                      element={
-                        <ProtectedRoute>
-                          <Expenses />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/settings"
-                      element={
-                        <ProtectedRoute>
-                          <Settings />
-                        </ProtectedRoute>
-                      }
-                    />
-                  </Routes>
-                </main>
-                <Navigation />
-                <AuthDebug />
-              </div>
-            </Router>
-          </SMSProvider>
-        </DataProvider>
-      </AuthProvider>
+      <DesignSystemThemeProvider>
+        <AuthProvider>
+          <DataProvider>
+            <SMSProvider>
+              <Router>
+                <div className="pb-20">
+                  {" "}
+                  {/* Padding for bottom nav */}
+                  <Header />
+                  <main className="container mx-auto max-w-md">
+                    <Routes>
+                      <Route path="/login" element={<Login />} />
+                      <Route
+                        path="/"
+                        element={
+                          <ProtectedRoute>
+                            <Dashboard />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/add"
+                        element={
+                          <ProtectedRoute>
+                            <AddExpense />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/expenses"
+                        element={
+                          <ProtectedRoute>
+                            <Expenses />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/settings"
+                        element={
+                          <ProtectedRoute>
+                            <Settings />
+                          </ProtectedRoute>
+                        }
+                      />
+                    </Routes>
+                  </main>
+                  <Navigation />
+                  <AuthDebug />
+                  <ThemeDebug />
+                </div>
+              </Router>
+            </SMSProvider>
+          </DataProvider>
+        </AuthProvider>
+      </DesignSystemThemeProvider>
     </ThemeProvider>
   );
 }
