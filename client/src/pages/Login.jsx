@@ -1,74 +1,128 @@
-import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { Wallet, Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
+import { Wallet, Sparkles } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
 
 const Login = () => {
-  const { signInWithGoogle } = useAuth();
+  const { signInWithGoogle, user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+
+  // Reset loading state when user changes (successful auth)
+  useEffect(() => {
+    if (user) {
+      setLoading(false);
+    }
+  }, [user]);
+
+  // Reset loading state when app becomes active (for Capacitor)
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      const handleAppStateChange = () => {
+        // Reset loading after a delay when app becomes active
+        setTimeout(() => {
+          setLoading(false);
+        }, 2000);
+      };
+
+      // Listen for app state changes
+      document.addEventListener("visibilitychange", handleAppStateChange);
+
+      return () => {
+        document.removeEventListener("visibilitychange", handleAppStateChange);
+      };
+    }
+  }, []);
 
   const handleGoogleLogin = async () => {
     try {
       setLoading(true);
-      setError('');
+      setError("");
+      console.log("🚀 Starting Google OAuth...");
+
       await signInWithGoogle();
-      // Redirect happens automatically
+
+      // For web, redirect happens automatically
+      // For native, we'll return to the app via deep link
+      if (!Capacitor.isNativePlatform()) {
+        // Reset loading after timeout for web
+        setTimeout(() => setLoading(false), 5000);
+      }
     } catch (err) {
-      setError(err.message || 'Failed to sign in with Google. Please ensure Google auth is enabled in Supabase.');
+      console.error("❌ Login error:", err);
+      setError(
+        err.message ||
+          "Failed to sign in with Google. Please ensure Google auth is enabled in Supabase."
+      );
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ 
-      background: 'var(--bg-secondary)',
-      position: 'relative',
-      overflow: 'hidden'
-    }}>
+    <div
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{
+        background: "var(--bg-secondary)",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
       {/* Animated Background Gradients */}
-      <div style={{
-        position: 'absolute',
-        top: '-50%',
-        right: '-20%',
-        width: '600px',
-        height: '600px',
-        background: 'radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)',
-        borderRadius: '50%',
-        filter: 'blur(60px)',
-        animation: 'pulse 4s ease-in-out infinite'
-      }} />
-      <div style={{
-        position: 'absolute',
-        bottom: '-30%',
-        left: '-10%',
-        width: '500px',
-        height: '500px',
-        background: 'radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, transparent 70%)',
-        borderRadius: '50%',
-        filter: 'blur(60px)',
-        animation: 'pulse 5s ease-in-out infinite'
-      }} />
+      <div
+        style={{
+          position: "absolute",
+          top: "-50%",
+          right: "-20%",
+          width: "600px",
+          height: "600px",
+          background:
+            "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
+          borderRadius: "50%",
+          filter: "blur(60px)",
+          animation: "pulse 4s ease-in-out infinite",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          bottom: "-30%",
+          left: "-10%",
+          width: "500px",
+          height: "500px",
+          background:
+            "radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, transparent 70%)",
+          borderRadius: "50%",
+          filter: "blur(60px)",
+          animation: "pulse 5s ease-in-out infinite",
+        }}
+      />
 
       <div className="container max-w-md mx-auto relative z-10">
         {/* Header Section */}
         <div className="text-center mb-8 animate-fade-in">
           <div className="flex justify-center mb-6">
-            <div style={{
-              background: 'var(--gradient-primary)',
-              padding: '1.5rem',
-              borderRadius: '2rem',
-              boxShadow: '0 10px 40px rgba(99, 102, 241, 0.3)',
-              animation: 'slideUp 0.8s ease-out'
-            }}>
+            <div
+              style={{
+                background: "var(--gradient-primary)",
+                padding: "1.5rem",
+                borderRadius: "2rem",
+                boxShadow: "0 10px 40px rgba(99, 102, 241, 0.3)",
+                animation: "slideUp 0.8s ease-out",
+              }}
+            >
               <Wallet className="w-12 h-12 text-white" strokeWidth={2.5} />
             </div>
           </div>
-          <h1 className="text-4xl font-extrabold mb-3" style={{
-            background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
-          }}>
+          <h1
+            className="text-4xl font-extrabold mb-3"
+            style={{
+              background:
+                "linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
             Welcome Back
           </h1>
           <p className="text-secondary text-lg font-medium flex items-center justify-center gap-2">
@@ -78,23 +132,48 @@ const Login = () => {
         </div>
 
         {/* Main Card */}
-        <div className="card animate-slide-up" style={{ animationDelay: '0.2s' }}>
+        <div
+          className="card animate-slide-up"
+          style={{ animationDelay: "0.2s" }}
+        >
           {error && (
-            <div className="mb-6 p-4 rounded-lg animate-fade-in" style={{
-              background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(252, 165, 165, 0.1) 100%)',
-              border: '2px solid rgba(239, 68, 68, 0.3)',
-              color: 'var(--danger)'
-            }}>
+            <div
+              className="mb-6 p-4 rounded-lg animate-fade-in"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(252, 165, 165, 0.1) 100%)",
+                border: "2px solid rgba(239, 68, 68, 0.3)",
+                color: "var(--danger)",
+              }}
+            >
               <div className="flex items-start gap-3">
                 <div className="bg-danger text-white rounded-full p-1 mt-0.5">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M8 0a8 8 0 100 16A8 8 0 008 0zM7 4h2v5H7V4zm0 6h2v2H7v-2z"/>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                  >
+                    <path d="M8 0a8 8 0 100 16A8 8 0 008 0zM7 4h2v5H7V4zm0 6h2v2H7v-2z" />
                   </svg>
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold text-sm">{error}</p>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Debug Info */}
+          {process.env.NODE_ENV === "development" && (
+            <div className="mb-4 p-3 rounded-lg bg-gray-100 text-xs">
+              <p>
+                <strong>Debug Info:</strong>
+              </p>
+              <p>User: {user ? user.email : "Not authenticated"}</p>
+              <p>Loading: {loading ? "Yes" : "No"}</p>
+              <p>Platform: {Capacitor.isNativePlatform() ? "Native" : "Web"}</p>
+              <p>URL: {window.location.href}</p>
             </div>
           )}
 
@@ -112,16 +191,21 @@ const Login = () => {
             className="btn btn-primary btn-block group"
             disabled={loading}
             style={{
-              background: 'var(--gradient-primary)',
-              border: 'none',
-              boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)'
+              background: "var(--gradient-primary)",
+              border: "none",
+              boxShadow: "0 4px 12px rgba(99, 102, 241, 0.3)",
             }}
           >
             {loading ? (
               <div className="animate-pulse">Signing in...</div>
             ) : (
               <>
-                <svg width="18" height="18" className="transition-transform group-hover:scale-110" viewBox="0 0 24 24">
+                <svg
+                  width="18"
+                  height="18"
+                  className="transition-transform group-hover:scale-110"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                     fill="#4285F4"
@@ -145,10 +229,13 @@ const Login = () => {
           </button>
 
           {/* Info Footer */}
-          <div className="mt-6 p-4 rounded-lg" style={{
-            background: 'var(--gradient-bg)',
-            border: '1px solid var(--border-light)'
-          }}>
+          <div
+            className="mt-6 p-4 rounded-lg"
+            style={{
+              background: "var(--gradient-bg)",
+              border: "1px solid var(--border-light)",
+            }}
+          >
             <p className="text-xs text-center text-tertiary">
               🔒 Your data is secure and encrypted
             </p>
@@ -157,10 +244,14 @@ const Login = () => {
 
         {/* Footer Text */}
         <p className="text-center text-sm text-tertiary mt-6">
-          By continuing, you agree to our{' '}
-          <a href="#" className="text-primary font-semibold hover:underline">Terms</a>
-          {' '}and{' '}
-          <a href="#" className="text-primary font-semibold hover:underline">Privacy Policy</a>
+          By continuing, you agree to our{" "}
+          <a href="#" className="text-primary font-semibold hover:underline">
+            Terms
+          </a>{" "}
+          and{" "}
+          <a href="#" className="text-primary font-semibold hover:underline">
+            Privacy Policy
+          </a>
         </p>
       </div>
     </div>
@@ -168,4 +259,3 @@ const Login = () => {
 };
 
 export default Login;
-

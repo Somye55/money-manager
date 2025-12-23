@@ -35,7 +35,13 @@ export const DataProvider = ({ children }) => {
   // Initialize user data when auth user changes
   useEffect(() => {
     const initializeUserData = async () => {
+      console.log(
+        "🔄 DataContext: Auth user changed:",
+        authUser?.email || "no user"
+      );
+
       if (!authUser) {
+        console.log("🔄 DataContext: No auth user, clearing data");
         setUser(null);
         setCategories([]);
         setExpenses([]);
@@ -45,14 +51,25 @@ export const DataProvider = ({ children }) => {
       }
 
       try {
+        console.log(
+          "🔄 DataContext: Initializing user data for:",
+          authUser.email
+        );
         setLoading(true);
         setError(null);
 
         // Get or create user profile
         const userData = await getOrCreateUser(authUser);
+        console.log(
+          "🔄 DataContext: User data retrieved:",
+          userData?.email || "no user data"
+        );
         setUser(userData);
 
         if (userData) {
+          console.log(
+            "🔄 DataContext: Loading user data (categories, expenses, settings)"
+          );
           // Load all user data in parallel
           const [categoriesData, expensesData, settingsData] =
             await Promise.all([
@@ -61,12 +78,18 @@ export const DataProvider = ({ children }) => {
               getUserSettings(userData.id),
             ]);
 
+          console.log("🔄 DataContext: Data loaded:", {
+            categories: categoriesData?.length || 0,
+            expenses: expensesData?.length || 0,
+            settings: settingsData ? "loaded" : "none",
+          });
+
           setCategories(categoriesData);
           setExpenses(expensesData);
           setSettings(settingsData);
         }
       } catch (err) {
-        console.error("Error initializing user data:", err);
+        console.error("❌ DataContext: Error initializing user data:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -78,14 +101,26 @@ export const DataProvider = ({ children }) => {
 
   // Category operations
   const addCategory = async (categoryData) => {
-    if (!user) return;
+    if (!user) {
+      console.error("❌ No user found when trying to add category");
+      return;
+    }
 
-    const newCategory = await createCategory({
-      ...categoryData,
-      userId: user.id,
-    });
-    setCategories([...categories, newCategory]);
-    return newCategory;
+    console.log("🔄 Adding category with data:", categoryData);
+    console.log("🔄 User ID:", user.id);
+
+    try {
+      const newCategory = await createCategory({
+        ...categoryData,
+        userId: user.id,
+      });
+      console.log("✅ Category created successfully:", newCategory);
+      setCategories([...categories, newCategory]);
+      return newCategory;
+    } catch (error) {
+      console.error("❌ Error in addCategory context:", error);
+      throw error;
+    }
   };
 
   const modifyCategory = async (id, updates) => {
@@ -106,15 +141,23 @@ export const DataProvider = ({ children }) => {
 
   // Expense operations
   const addExpense = async (expenseData) => {
-    if (!user) return;
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
 
-    const newExpense = await createExpense({
-      ...expenseData,
-      userId: user.id,
-      source: expenseData.source || "MANUAL",
-    });
-    setExpenses([newExpense, ...expenses]);
-    return newExpense;
+    try {
+      const newExpense = await createExpense({
+        ...expenseData,
+        userId: user.id,
+        source: expenseData.source || "MANUAL",
+      });
+      setExpenses([newExpense, ...expenses]);
+      console.log("✅ Expense added successfully to context");
+      return newExpense;
+    } catch (error) {
+      console.error("❌ Failed to add expense:", error);
+      throw error;
+    }
   };
 
   const modifyExpense = async (id, updates) => {

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -11,6 +11,8 @@ import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { DataProvider } from "./context/DataContext";
 import { SMSProvider } from "./context/SMSContext";
+import { Capacitor } from "@capacitor/core";
+import { initializeDeepLinks } from "./lib/deepLinks";
 import {
   Smartphone,
   LayoutDashboard,
@@ -24,16 +26,22 @@ import Login from "./pages/Login";
 import AddExpense from "./pages/AddExpense";
 import Settings from "./pages/Settings";
 import Expenses from "./pages/Expenses";
+import AuthDebug from "./components/AuthDebug";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
-  // ===== AUTH DISABLED FOR TESTING =====
-  // Uncomment below to re-enable:
-  // if (loading) return <div className="flex justify-center items-center h-screen">Loading...</div>;
-  // if (!user) {
-  //   return <Navigate to="/login" replace />;
-  // }
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
   return children;
 };
@@ -53,21 +61,39 @@ const Navigation = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-2 safe-area-bottom z-20">
-      <div className="flex justify-around items-center">
+    <nav
+      className="fixed bottom-0 left-0 right-0 bg-card border-t border-border safe-area-bottom z-20"
+      style={{
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+      }}
+    >
+      <div className="flex justify-around items-center px-2 py-1">
         {navItems.map((item) => (
           <Link
             key={item.path}
             to={item.path}
-            className={`flex flex-col items-center p-2 rounded-lg transition-colors ${
+            className={`flex flex-col items-center p-3 rounded-xl transition-all duration-200 min-w-0 flex-1 ${
               location.pathname === item.path
                 ? "text-primary"
-                : "text-text-secondary opacity-100"
+                : "text-text-secondary"
             }`}
-            style={{ textDecoration: "none" }}
+            style={{
+              textDecoration: "none",
+              background:
+                location.pathname === item.path
+                  ? "rgba(99, 102, 241, 0.1)"
+                  : "transparent",
+            }}
           >
-            <item.icon size={24} />
-            <span className="text-xs mt-1" style={{ textDecoration: "none" }}>
+            <item.icon
+              size={22}
+              strokeWidth={location.pathname === item.path ? 2.5 : 2}
+            />
+            <span
+              className="text-xs mt-1 font-medium truncate"
+              style={{ textDecoration: "none" }}
+            >
               {item.label}
             </span>
           </Link>
@@ -97,6 +123,14 @@ const Header = () => {
 };
 
 function App() {
+  useEffect(() => {
+    // Initialize deep links for Capacitor
+    if (Capacitor.isNativePlatform()) {
+      console.log("🚀 Initializing deep links for native platform");
+      initializeDeepLinks();
+    }
+  }, []);
+
   return (
     <ThemeProvider>
       <AuthProvider>
@@ -145,6 +179,7 @@ function App() {
                   </Routes>
                 </main>
                 <Navigation />
+                <AuthDebug />
               </div>
             </Router>
           </SMSProvider>

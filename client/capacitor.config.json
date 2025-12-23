@@ -1,5 +1,13 @@
 {
   "appId": "com.moneymanager.app",
   "appName": "MoneyManager",
-  "webDir": "dist"
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
 }
