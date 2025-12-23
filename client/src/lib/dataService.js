@@ -9,20 +9,70 @@ export const getOrCreateUser = async (authUser) => {
   if (!authUser) return null;
 
   try {
-    // Check if user exists
-    const { data: existingUser, error: fetchError } = await supabase
+    console.log("🔄 Getting or creating user for:", authUser.email);
+    console.log("🔄 Auth user ID:", authUser.id);
+
+    // Check if user exists by googleId first, then by email
+    let existingUser = null;
+    let fetchError = null;
+
+    // Try to find by googleId first
+    const { data: userByGoogleId, error: googleIdError } = await supabase
       .from("User")
       .select("*")
-      .eq("email", authUser.email)
+      .eq("googleId", authUser.id)
       .single();
 
-    if (fetchError && fetchError.code !== "PGRST116") {
-      console.error("Error fetching user:", fetchError);
+    if (googleIdError && googleIdError.code !== "PGRST116") {
+      console.error("Error fetching user by googleId:", googleIdError);
+    } else if (userByGoogleId) {
+      existingUser = userByGoogleId;
+      console.log("✅ User found by googleId:", existingUser.email);
+    }
+
+    // If not found by googleId, try by email
+    if (!existingUser) {
+      const { data: userByEmail, error: emailError } = await supabase
+        .from("User")
+        .select("*")
+        .eq("email", authUser.email)
+        .single();
+
+      if (emailError && emailError.code !== "PGRST116") {
+        console.error("Error fetching user by email:", emailError);
+        fetchError = emailError;
+      } else if (userByEmail) {
+        existingUser = userByEmail;
+        console.log("✅ User found by email:", existingUser.email);
+
+        // Update the googleId if it's missing
+        if (!existingUser.googleId) {
+          console.log("🔄 Updating user with googleId");
+          const { data: updatedUser, error: updateError } = await supabase
+            .from("User")
+            .update({
+              googleId: authUser.id,
+              updatedAt: new Date().toISOString(),
+            })
+            .eq("id", existingUser.id)
+            .select()
+            .single();
+
+          if (updateError) {
+            console.error("❌ Error updating user googleId:", updateError);
+          } else {
+            existingUser = updatedUser;
+            console.log("✅ User googleId updated");
+          }
+        }
+      }
+    }
+
+    if (fetchError && !existingUser) {
       throw fetchError;
     }
 
     if (existingUser) {
-      console.log("✅ User found:", existingUser.email);
       return existingUser;
     }
 
@@ -39,6 +89,8 @@ export const getOrCreateUser = async (authUser) => {
             authUser.user_metadata?.name ||
             authUser.email.split("@")[0],
           googleId: authUser.id,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         },
       ])
       .select()
@@ -46,6 +98,12 @@ export const getOrCreateUser = async (authUser) => {
 
     if (createError) {
       console.error("❌ Error creating user:", createError);
+      console.error("❌ Create error details:", {
+        code: createError.code,
+        message: createError.message,
+        details: createError.details,
+        hint: createError.hint,
+      });
       throw createError;
     }
 
@@ -210,6 +268,50 @@ export const createCategory = async (category) => {
       throw new Error("Category name and user ID are required");
     }
 
+    // Check current user session
+    const {
+      data: { user: currentUser },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError) {
+      console.error("❌ Auth error:", authError);
+      throw new Error("Authentication error: " + authError.message);
+    }
+
+    if (!currentUser) {
+      console.error("❌ No authenticated user");
+      throw new Error("User not authenticated");
+    }
+
+    console.log("🔄 Current Supabase user:", {
+      id: currentUser.id,
+      email: currentUser.email,
+    });
+
+    // Verify the user exists in our database
+    const { data: dbUser, error: dbUserError } = await supabase
+      .from("User")
+      .select("id, email, googleId")
+      .eq("id", category.userId)
+      .single();
+
+    if (dbUserError) {
+      console.error("❌ Database user lookup error:", dbUserError);
+      throw new Error("User not found in database");
+    }
+
+    console.log("🔄 Database user:", dbUser);
+
+    // Verify the authenticated user matches the database user
+    if (dbUser.googleId !== currentUser.id) {
+      console.error("❌ User ID mismatch:", {
+        dbUserGoogleId: dbUser.googleId,
+        currentUserId: currentUser.id,
+      });
+      throw new Error("User authentication mismatch");
+    }
+
     // Sanitize and validate data
     const sanitizedCategory = {
       ...category,
@@ -242,12 +344,6 @@ export const createCategory = async (category) => {
 
     console.log("🔄 Inserting category into database...");
 
-    // Check current user session
-    const {
-      data: { user: currentUser },
-    } = await supabase.auth.getUser();
-    console.log("🔄 Current Supabase user:", currentUser);
-
     const { data, error } = await supabase
       .from("Category")
       .insert([sanitizedCategory])
@@ -266,6 +362,10 @@ export const createCategory = async (category) => {
       // Handle specific database errors
       if (error.code === "23505") {
         throw new Error("A category with this name already exists");
+      }
+
+      if (error.code === "42501") {
+        throw new Error("Permission denied. Please check your authentication.");
       }
 
       throw new Error(error.message || "Failed to create category");

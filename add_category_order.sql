@@ -14,8 +14,9 @@ ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP;
 
 -- Update existing categories to have sequential order based on their current order
 WITH ordered_categories AS (
-  SELECT id, ROW_NUMBER() OVER (PARTITION BY "userId" ORDER BY id) - 1 as new_order
+  SELECT id, ROW_NUMBER() OVER (PARTITION BY "userId" ORDER BY "createdAt", id) - 1 as new_order
   FROM "Category"
+  WHERE "order" IS NULL OR "order" = 0
 )
 UPDATE "Category" c
 SET "order" = oc.new_order
