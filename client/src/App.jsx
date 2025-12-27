@@ -73,12 +73,12 @@ const Navigation = () => {
         boxShadow: "0 -4px 12px rgba(0, 0, 0, 0.05)",
       }}
     >
-      <div className="flex justify-around items-center px-2 py-2">
+      <div className="flex justify-around items-center px-3 py-3">
         {navItems.map((item) => (
           <Link
             key={item.path}
             to={item.path}
-            className={`flex flex-col items-center p-2.5 rounded-xl transition-all duration-200 min-w-0 flex-1 ${
+            className={`flex flex-col items-center p-3 rounded-xl transition-all duration-200 min-w-0 flex-1 min-h-[48px] ${
               location.pathname === item.path
                 ? "text-primary"
                 : "text-text-secondary"
@@ -131,7 +131,7 @@ const Header = () => {
       style={{
         borderRadius: "0",
         borderBottom: "1px solid var(--border)",
-        padding: "1rem",
+        padding: "1rem 1.5rem",
       }}
     >
       <div className="flex items-center gap-3">
@@ -198,7 +198,7 @@ function App() {
                   {" "}
                   {/* Padding for bottom nav */}
                   <Header />
-                  <main className="container mx-auto max-w-md">
+                  <main className="container mx-auto max-w-sm sm:max-w-md px-4 sm:px-6">
                     <Routes>
                       <Route path="/login" element={<Login />} />
                       <Route
