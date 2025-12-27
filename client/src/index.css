@@ -824,11 +824,11 @@ button:active:not(:disabled),
 /* Mobile-specific improvements */
 @media (max-width: 768px) {
   .container {
-    padding: 0 0.75rem;
+    padding: 0 1rem;
   }
 
   .card {
-    padding: 1rem;
+    padding: 1.25rem;
     border-radius: 1.25rem;
   }
 
@@ -860,26 +860,37 @@ button:active:not(:disabled),
 
   /* Better spacing for mobile */
   .space-y-6 > * + * {
-    margin-top: 1rem;
+    margin-top: 1.25rem;
   }
 
   .space-y-4 > * + * {
-    margin-top: 0.75rem;
+    margin-top: 1rem;
   }
 
   .space-y-3 > * + * {
-    margin-top: 0.5rem;
+    margin-top: 0.75rem;
   }
 
   /* Improved button sizing for mobile */
   button {
-    min-height: 44px;
-    min-width: 44px;
+    min-height: 48px;
+    min-width: 48px;
   }
 
   /* Better card spacing */
   .card + .card {
-    margin-top: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  /* Responsive container for very small screens */
+  @media (max-width: 375px) {
+    .container {
+      padding: 0 0.75rem;
+    }
+
+    .card {
+      padding: 1rem;
+    }
   }
 }
 

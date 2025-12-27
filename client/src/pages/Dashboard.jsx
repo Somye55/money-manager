@@ -320,17 +320,17 @@ const Dashboard = () => {
   });
 
   return (
-    <div className="p-4 pb-24 space-y-4 animate-fade-in">
+    <div className="p-4 pb-24 space-y-6 animate-fade-in">
       {/* Balance and Expenses Cards */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div
-          className="card p-4 animate-slide-up"
+          className="card p-5 animate-slide-up"
           style={{
             background: "linear-gradient(135deg, #0ea5e9 0%, #10b981 100%)",
             border: "none",
             boxShadow: "0 8px 24px rgba(16, 185, 129, 0.25)",
             borderRadius: "1.25rem",
-            minHeight: "120px",
+            minHeight: "140px",
           }}
         >
           <div className="flex flex-col h-full justify-between">
@@ -360,13 +360,13 @@ const Dashboard = () => {
         </div>
 
         <div
-          className="card p-4 animate-slide-up"
+          className="card p-5 animate-slide-up"
           style={{
             background: "linear-gradient(135deg, #f43f5e 0%, #ec4899 100%)",
             border: "none",
             boxShadow: "0 8px 24px rgba(239, 68, 68, 0.25)",
             borderRadius: "1.25rem",
-            minHeight: "120px",
+            minHeight: "140px",
             animationDelay: "0.05s",
           }}
         >
@@ -553,12 +553,12 @@ const Dashboard = () => {
 
       {/* Quick Actions */}
       <div
-        className="grid grid-cols-2 gap-3 animate-slide-up"
+        className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-slide-up"
         style={{ animationDelay: "0.15s" }}
       >
         <button
           onClick={() => navigate("/expenses")}
-          className="card p-4 flex flex-col items-start hover:shadow-lg transition"
+          className="card p-5 flex flex-col items-start hover:shadow-lg transition min-h-[120px]"
           style={{ borderRadius: "1.25rem" }}
         >
           <div
@@ -578,7 +578,7 @@ const Dashboard = () => {
 
         <button
           onClick={() => navigate("/add")}
-          className="card p-4 flex flex-col items-start hover:shadow-lg transition"
+          className="card p-5 flex flex-col items-start hover:shadow-lg transition min-h-[120px]"
           style={{ borderRadius: "1.25rem" }}
         >
           <div
@@ -599,7 +599,7 @@ const Dashboard = () => {
 
       {expenses.length === 0 && (
         <div
-          className="card p-8 text-center animate-slide-up"
+          className="card p-6 sm:p-8 text-center animate-slide-up"
           style={{ animationDelay: "0.2s", borderRadius: "1.25rem" }}
         >
           <div
