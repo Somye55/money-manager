@@ -1,0 +1,253 @@
+/**
+ * Theme System CSS
+ * Modern theming with smooth transitions and accessibility compliance.
+ */
+
+/* Theme transition system for smooth switching */
+.theme-transitioning,
+.theme-transitioning *,
+.theme-transitioning *::before,
+.theme-transitioning *::after {
+  transition: background-color 0.3s ease, border-color 0.3s ease,
+    color 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+/* Disable transitions for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .theme-transitioning,
+  .theme-transitioning *,
+  .theme-transitioning *::before,
+  .theme-transitioning *::after {
+    transition: none !important;
+  }
+}
+
+/* Theme-aware navigation */
+.theme-nav {
+  background-color: hsl(var(--card) / 0.95);
+  border-top: 1px solid hsl(var(--border));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.theme-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  color: hsl(var(--muted-foreground));
+  text-decoration: none;
+  transition: all 0.2s ease;
+  min-height: 44px;
+  min-width: 44px;
+  border-radius: 0.75rem;
+}
+
+.theme-nav-item:hover {
+  color: hsl(var(--primary));
+  background-color: hsl(var(--muted) / 0.5);
+}
+
+.theme-nav-item--active {
+  color: hsl(var(--primary));
+  background-color: hsl(var(--primary) / 0.1);
+}
+
+/* Theme-aware buttons */
+.theme-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  font-size: 1rem;
+  line-height: 1.5;
+  border: none;
+  cursor: pointer;
+  min-height: 44px;
+  min-width: 44px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.2s ease;
+}
+
+.theme-button:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+.theme-button--primary {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.theme-button--primary:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.theme-button--ghost {
+  background-color: transparent;
+  color: hsl(var(--foreground));
+}
+
+.theme-button--ghost:hover:not(:disabled) {
+  background-color: hsl(var(--muted));
+}
+
+.theme-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Theme-aware cards */
+.theme-card {
+  background-color: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-md);
+  transition: all 0.2s ease;
+}
+
+.theme-card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+/* Theme-aware inputs */
+.theme-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  background-color: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  color: hsl(var(--foreground));
+  min-height: 44px;
+  transition: all 0.2s ease;
+}
+
+.theme-input::placeholder {
+  color: hsl(var(--muted-foreground));
+}
+
+.theme-input:focus {
+  outline: none;
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
+}
+
+.theme-input:disabled {
+  background-color: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  cursor: not-allowed;
+}
+
+/* Theme-aware backgrounds */
+.theme-bg-primary {
+  background-color: hsl(var(--background));
+}
+
+.theme-bg-secondary {
+  background-color: hsl(var(--muted));
+}
+
+.theme-bg-elevated {
+  background-color: hsl(var(--card));
+}
+
+/* Theme-aware text */
+.theme-text--secondary {
+  color: hsl(var(--muted-foreground));
+}
+
+/* Theme-aware borders */
+.theme-border {
+  border-color: hsl(var(--border));
+}
+
+/* System theme indicator */
+.theme-system-indicator {
+  position: relative;
+}
+
+.theme-system-indicator::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 6px;
+  height: 6px;
+  background-color: hsl(var(--secondary));
+  border-radius: 50%;
+  border: 1px solid hsl(var(--background));
+}
+
+/* Loading states */
+.theme-skeleton {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 25%,
+    hsl(var(--muted-foreground) / 0.1) 50%,
+    hsl(var(--muted)) 75%
+  );
+  background-size: 200% 100%;
+  animation: theme-shimmer 1.5s infinite;
+  border-radius: 0.25rem;
+}
+
+@keyframes theme-shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.theme-spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid hsl(var(--border));
+  border-top-color: hsl(var(--primary));
+  border-radius: 50%;
+  animation: theme-spin 1s linear infinite;
+}
+
+@keyframes theme-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mobile-specific optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .theme-button:hover,
+  .theme-card:hover,
+  .theme-nav-item:hover {
+    transform: none;
+    background-color: initial;
+  }
+
+  .theme-button:active,
+  .theme-card:active {
+    transform: scale(0.98);
+  }
+
+  .theme-nav-item:active {
+    background-color: hsl(var(--muted) / 0.5);
+  }
+}
+
+/* Dark mode specific adjustments */
+.dark .theme-card {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 2px 4px -1px rgba(0, 0, 0, 0.2);
+}
+
+.dark .theme-nav {
+  background-color: hsl(var(--card) / 0.98);
+}

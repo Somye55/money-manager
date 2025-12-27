@@ -1,8 +1,8 @@
 import React from "react";
-import { useTheme } from "../design-system";
+import { useTheme } from "@/lib/theme-provider";
 
 const ThemeDebug = () => {
-  const theme = useTheme();
+  const { theme } = useTheme();
 
   // Only show in development
   if (process.env.NODE_ENV !== "development") {
@@ -27,15 +27,8 @@ const ThemeDebug = () => {
       }}
     >
       <h4>Theme Debug</h4>
-      <p>Mode: {theme.mode}</p>
-      <p>Effective: {theme.effectiveMode}</p>
-      <p>Primary: {theme.colors?.primary || "undefined"}</p>
-      <p>Background: {theme.colors?.background || "undefined"}</p>
-      <p>Text Primary: {theme.colors?.textPrimary || "undefined"}</p>
-      <p>Tokens loaded: {theme.tokens ? "Yes" : "No"}</p>
-      {!theme.colors?.primary && (
-        <p style={{ color: "red" }}>⚠️ Theme colors not loaded!</p>
-      )}
+      <p>Mode: {theme}</p>
+      <p>Available themes: light, dark, system</p>
     </div>
   );
 };
