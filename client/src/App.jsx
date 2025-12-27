@@ -11,7 +11,7 @@ import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import { DesignSystemThemeProvider } from "./design-system";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { DataProvider } from "./context/DataContext";
-import { SMSProvider } from "./context/SMSContext";
+import { SMSProvider, useSMS } from "./context/SMSContext";
 import { Capacitor } from "@capacitor/core";
 import { initializeDeepLinks } from "./lib/deepLinks";
 import {
@@ -30,6 +30,7 @@ import Settings from "./pages/Settings";
 import Expenses from "./pages/Expenses";
 import AuthDebug from "./components/AuthDebug";
 import ThemeDebug from "./components/ThemeDebug";
+import CategorySelectionModal from "./components/CategorySelectionModal";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -69,14 +70,15 @@ const Navigation = () => {
       style={{
         backdropFilter: "blur(10px)",
         WebkitBackdropFilter: "blur(10px)",
+        boxShadow: "0 -4px 12px rgba(0, 0, 0, 0.05)",
       }}
     >
-      <div className="flex justify-around items-center px-2 py-1">
+      <div className="flex justify-around items-center px-2 py-2">
         {navItems.map((item) => (
           <Link
             key={item.path}
             to={item.path}
-            className={`flex flex-col items-center p-3 rounded-xl transition-all duration-200 min-w-0 flex-1 ${
+            className={`flex flex-col items-center p-2.5 rounded-xl transition-all duration-200 min-w-0 flex-1 ${
               location.pathname === item.path
                 ? "text-primary"
                 : "text-text-secondary"
@@ -85,21 +87,30 @@ const Navigation = () => {
               textDecoration: "none",
               background:
                 location.pathname === item.path
-                  ? "rgba(99, 102, 241, 0.1)"
+                  ? "rgba(99, 102, 241, 0.12)"
                   : "transparent",
             }}
           >
             <item.icon
-              size={22}
+              size={24}
               strokeWidth={location.pathname === item.path ? 2.5 : 2}
             />
             <Typography
               variant="caption"
-              className="mt-1 truncate"
+              className="mt-1 truncate text-xs font-medium"
               style={{ textDecoration: "none" }}
             >
               {item.label}
             </Typography>
+            {location.pathname === item.path && (
+              <div
+                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 rounded-t-full"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                }}
+              />
+            )}
           </Link>
         ))}
       </div>
@@ -117,19 +128,53 @@ const Header = () => {
       variant="elevated"
       padding="md"
       className="flex-between sticky top-0 z-10 backdrop-blur-lg bg-opacity-90"
+      style={{
+        borderRadius: "0",
+        borderBottom: "1px solid var(--border)",
+        padding: "1rem",
+      }}
     >
-      <div className="flex items-center gap-2">
-        <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-secondary">
+      <div className="flex items-center gap-3">
+        <div
+          className="p-2.5 rounded-xl"
+          style={{
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          }}
+        >
           <Wallet className="text-white" size={24} />
         </div>
         <Typography
           variant="h3"
-          className="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent"
+          className="text-xl font-bold"
+          style={{
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
         >
           Money Manager
         </Typography>
       </div>
     </Card>
+  );
+};
+
+const NotificationPopup = () => {
+  const {
+    pendingExpense,
+    showCategoryModal,
+    handleCategoryConfirm,
+    handleCategoryModalClose,
+  } = useSMS();
+
+  return (
+    <CategorySelectionModal
+      expense={pendingExpense}
+      isOpen={showCategoryModal}
+      onClose={handleCategoryModalClose}
+      onConfirm={handleCategoryConfirm}
+    />
   );
 };
 
@@ -191,6 +236,7 @@ function App() {
                     </Routes>
                   </main>
                   <Navigation />
+                  <NotificationPopup />
                   <AuthDebug />
                   <ThemeDebug />
                 </div>

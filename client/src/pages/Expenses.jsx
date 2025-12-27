@@ -202,18 +202,20 @@ const Expenses = () => {
   }
 
   return (
-    <div className="p-4 space-y-4 animate-fade-in">
+    <div className="p-4 pb-24 space-y-4 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 mb-2">
         <div
           className="p-3 rounded-xl"
-          style={{ background: "var(--gradient-primary)" }}
+          style={{
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          }}
         >
           <Receipt className="text-white" size={24} />
         </div>
         <div>
           <h1 className="text-2xl font-bold">Expenses</h1>
-          <p className="text-sm text-tertiary">
+          <p className="text-xs text-tertiary">
             {filteredExpenses.length} transactions
           </p>
         </div>
@@ -257,17 +259,18 @@ const Expenses = () => {
       <div
         className="card p-4"
         style={{
-          background: "var(--gradient-danger)",
+          background: "linear-gradient(135deg, #f43f5e 0%, #ec4899 100%)",
           border: "none",
-          boxShadow: "0 10px 30px rgba(239, 68, 68, 0.3)",
+          boxShadow: "0 8px 24px rgba(239, 68, 68, 0.25)",
+          borderRadius: "1.25rem",
         }}
       >
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-white opacity-90 font-medium">
+            <p className="text-xs text-white opacity-90 font-medium mb-1">
               Total Expenses
             </p>
-            <h2 className="text-3xl font-extrabold text-white mt-1">
+            <h2 className="text-3xl font-extrabold text-white">
               {currencySymbol}{" "}
               {totalAmount.toLocaleString("en-IN", {
                 minimumFractionDigits: 2,
@@ -277,48 +280,48 @@ const Expenses = () => {
           </div>
           <div
             className="p-3 rounded-xl"
-            style={{ background: "rgba(255, 255, 255, 0.2)" }}
+            style={{ background: "rgba(255, 255, 255, 0.25)" }}
           >
-            <TrendingDown size={32} className="text-white" />
+            <TrendingDown size={28} className="text-white" />
           </div>
         </div>
       </div>
 
       {/* Search and Filter */}
-      <div className="space-y-3">
-        <div className="relative">
+      <div className="space-y-2.5">
+        <div className="relative flex items-center">
           <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-tertiary"
-            size={20}
+            className="absolute left-3.5 text-tertiary pointer-events-none"
+            size={18}
           />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search expenses..."
-            className="w-full pl-10 pr-4 py-3 rounded-lg border-2 border-border bg-bg-secondary outline-none focus:border-primary transition"
+            className="w-full pl-11 pr-4 py-3 rounded-xl border-0 bg-bg-secondary outline-none focus:ring-2 focus:ring-primary/20 transition text-sm"
+            style={{ color: "var(--text-primary)" }}
           />
         </div>
 
         <div className="flex gap-2">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition ${
-              showFilters ? "border-primary bg-primary/10" : "border-border"
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition text-sm font-medium ${
+              showFilters
+                ? "bg-primary/10 text-primary border-2 border-primary/30"
+                : "bg-bg-secondary text-text-secondary border-2 border-transparent"
             }`}
           >
-            <Filter size={18} />
+            <Filter size={16} />
             Filters
-            <ChevronDown
-              size={16}
-              className={`transition ${showFilters ? "rotate-180" : ""}`}
-            />
           </button>
 
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="flex-1 px-4 py-2 rounded-lg border-2 border-border bg-bg-secondary outline-none focus:border-primary transition"
+            className="flex-1 px-4 py-2.5 rounded-xl border-0 bg-bg-secondary outline-none focus:ring-2 focus:ring-primary/20 transition text-sm font-medium"
+            style={{ color: "var(--text-primary)" }}
           >
             <option value="date-desc">Newest First</option>
             <option value="date-asc">Oldest First</option>
@@ -328,15 +331,19 @@ const Expenses = () => {
         </div>
 
         {showFilters && (
-          <div className="card p-4 space-y-3 animate-slide-up">
+          <div
+            className="card p-4 space-y-3 animate-slide-up"
+            style={{ borderRadius: "1.25rem" }}
+          >
             <div>
-              <label className="block text-sm font-semibold mb-2">
+              <label className="block text-xs font-semibold mb-2 text-primary">
                 Category
               </label>
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full p-3 rounded-lg border-2 border-border bg-bg-secondary outline-none focus:border-primary transition"
+                className="w-full p-3 rounded-xl border-0 bg-bg-secondary outline-none focus:ring-2 focus:ring-primary/20 transition text-sm"
+                style={{ color: "var(--text-primary)" }}
               >
                 <option value="all">All Categories</option>
                 {categories.map((cat) => (
@@ -352,26 +359,39 @@ const Expenses = () => {
 
       {/* Expenses List */}
       {filteredExpenses.length === 0 ? (
-        <div className="card p-8 text-center">
-          <Receipt size={48} className="mx-auto text-tertiary mb-3" />
-          <p className="text-tertiary">No expenses found</p>
+        <div
+          className="card p-8 text-center"
+          style={{ borderRadius: "1.25rem" }}
+        >
+          <div
+            className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center"
+            style={{ background: "var(--bg-secondary)" }}
+          >
+            <Receipt size={32} className="text-tertiary" />
+          </div>
+          <p className="text-tertiary text-sm mb-4">No expenses found</p>
           <button
             onClick={() => navigate("/add")}
-            className="btn btn-primary mt-4"
-            style={{ background: "var(--gradient-primary)" }}
+            className="btn btn-primary"
+            style={{
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              border: "none",
+              padding: "0.875rem 1.75rem",
+              borderRadius: "0.75rem",
+            }}
           >
             Add Your First Expense
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {Object.entries(groupedExpenses).map(([date, dayExpenses]) => (
             <div key={date} className="space-y-2">
-              <div className="flex items-center gap-2 px-2">
-                <Calendar size={16} className="text-tertiary" />
-                <h3 className="text-sm font-bold text-tertiary">{date}</h3>
+              <div className="flex items-center gap-2 px-1">
+                <Calendar size={14} className="text-tertiary" />
+                <h3 className="text-xs font-bold text-tertiary">{date}</h3>
                 <div className="flex-1 h-px bg-border"></div>
-                <span className="text-sm font-bold text-tertiary">
+                <span className="text-xs font-bold text-tertiary">
                   {currencySymbol}{" "}
                   {dayExpenses
                     .reduce((sum, e) => sum + parseFloat(e.amount), 0)
@@ -389,39 +409,40 @@ const Expenses = () => {
                 return (
                   <div
                     key={expense.id}
-                    className="card p-4 transition hover:shadow-lg"
+                    className="card p-3.5 transition hover:shadow-lg"
+                    style={{ borderRadius: "1.25rem" }}
                   >
                     <div className="flex items-center gap-3">
                       <div
                         className="rounded-xl flex items-center justify-center flex-shrink-0"
                         style={{
-                          width: "48px",
-                          height: "48px",
+                          width: "44px",
+                          height: "44px",
                           background: `${categoryColor}20`,
                         }}
                       >
                         <IconComponent
-                          size={22}
+                          size={20}
                           style={{ color: categoryColor }}
                         />
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-base truncate">
+                        <p className="font-semibold text-sm truncate">
                           {expense.description}
                         </p>
-                        <div className="flex items-center gap-2 text-sm text-tertiary">
+                        <div className="flex items-center gap-1.5 text-xs text-tertiary">
                           {category && <span>{category.name}</span>}
-                          <span>•</span>
+                          {category && <span>•</span>}
                           <span className="capitalize">
                             {expense.source.toLowerCase()}
                           </span>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
                         <div className="text-right">
-                          <p className="font-bold text-base text-danger whitespace-nowrap">
+                          <p className="font-bold text-sm text-danger whitespace-nowrap">
                             - {currencySymbol}
                             {parseFloat(expense.amount).toLocaleString(
                               "en-IN",
@@ -430,12 +451,12 @@ const Expenses = () => {
                           </p>
                         </div>
 
-                        <div className="flex gap-1">
+                        <div className="flex gap-0.5">
                           <button
                             onClick={() => handleEdit(expense)}
                             className="p-2 hover:bg-primary/10 rounded-lg transition"
                           >
-                            <Edit2 size={16} className="text-primary" />
+                            <Edit2 size={14} className="text-primary" />
                           </button>
                           <button
                             onClick={() => handleDelete(expense.id)}
@@ -444,11 +465,11 @@ const Expenses = () => {
                           >
                             {deleting === expense.id ? (
                               <Loader
-                                size={16}
+                                size={14}
                                 className="animate-spin text-danger"
                               />
                             ) : (
-                              <Trash2 size={16} className="text-danger" />
+                              <Trash2 size={14} className="text-danger" />
                             )}
                           </button>
                         </div>
@@ -482,8 +503,8 @@ const Expenses = () => {
                   <DollarSign size={16} className="text-primary" />
                   Amount
                 </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-tertiary">
+                <div className="relative flex items-center">
+                  <span className="absolute left-3 font-bold text-tertiary pointer-events-none">
                     {currencySymbol}
                   </span>
                   <input
