@@ -11,24 +11,18 @@ import {
   Legend,
   ArcElement,
 } from "chart.js";
-import { Doughnut, Bar } from "react-chartjs-2";
-import {
-  Wallet,
-  TrendingUp,
-  Loader,
-  Smartphone,
-  RefreshCw,
-  ArrowRight,
-  Receipt,
-  Calendar,
-  TrendingDown,
-  PieChart,
-} from "lucide-react";
 import { useData } from "../context/DataContext";
 import { useSMS } from "../context/SMSContext";
 import { useNavigate } from "react-router-dom";
-import * as Icons from "lucide-react";
 import SMSExpenseCard from "../components/SMSExpenseCard";
+import {
+  BalanceCard,
+  ExpenseSummaryCard,
+  CategoryBreakdownCard,
+  SpendingTrendCard,
+  QuickActionsCard,
+  EmptyStateCard,
+} from "../components/dashboard";
 
 ChartJS.register(
   CategoryScale,
@@ -308,8 +302,11 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader className="animate-spin text-primary" size={32} />
+      <div className="page-container flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -320,296 +317,76 @@ const Dashboard = () => {
   });
 
   return (
-    <div className="p-4 space-y-6 animate-fade-in">
-      <div className="grid grid-cols-2 gap-4">
-        <div
-          className="card p-4 animate-slide-up"
-          style={{
-            background: "var(--gradient-success)",
-            border: "none",
-            boxShadow: "0 10px 30px rgba(16, 185, 129, 0.3)",
-          }}
-        >
-          <div className="flex flex-col h-full">
-            <div className="flex items-center gap-2 mb-2">
-              <div
-                style={{
-                  background: "rgba(255, 255, 255, 0.2)",
-                  padding: "0.5rem",
-                  borderRadius: "0.75rem",
-                }}
-              >
-                <Wallet size={20} className="text-white" />
-              </div>
-            </div>
-            <p className="text-sm text-white opacity-90 font-medium">Balance</p>
-            <h2 className="text-2xl font-extrabold text-white mt-auto">
-              {currencySymbol}{" "}
-              {balance.toLocaleString("en-IN", {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0,
-              })}
-            </h2>
-          </div>
-        </div>
+    <div className="page-container fade-in">
+      {/* Hero Section - Balance and Expense Summary */}
+      <div className="stack section">
+        <BalanceCard
+          balance={balance}
+          monthlyBudget={monthlyBudget}
+          totalExpense={totalExpense}
+          currencySymbol={currencySymbol}
+        />
 
-        <div
-          className="card p-4 animate-slide-up"
-          style={{
-            background: "var(--gradient-danger)",
-            border: "none",
-            boxShadow: "0 10px 30px rgba(239, 68, 68, 0.3)",
-            animationDelay: "0.1s",
-          }}
-        >
-          <div className="flex flex-col h-full">
-            <div className="flex items-center gap-2 mb-2">
-              <div
-                style={{
-                  background: "rgba(255, 255, 255, 0.2)",
-                  padding: "0.5rem",
-                  borderRadius: "0.75rem",
-                }}
-              >
-                <TrendingDown size={20} className="text-white" />
-              </div>
-            </div>
-            <p className="text-sm text-white opacity-90 font-medium">
-              Expenses
-            </p>
-            <h2 className="text-2xl font-extrabold text-white mt-auto">
-              {currencySymbol}{" "}
-              {totalExpense.toLocaleString("en-IN", {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0,
-              })}
-            </h2>
-          </div>
-        </div>
+        <ExpenseSummaryCard
+          totalExpense={totalExpense}
+          expenseCount={expenses.length}
+          currencySymbol={currencySymbol}
+          currentMonth={currentMonth}
+        />
       </div>
 
-      <div
-        className="card p-4 animate-slide-up"
-        style={{ animationDelay: "0.2s" }}
-      >
-        <div className="flex items-center justify-between mb-1">
-          <h3 className="text-lg font-bold">Monthly Overview</h3>
-          <TrendingUp size={20} className="text-primary" />
+      {/* SMS Expense Cards */}
+      {extractedExpenses.length > 0 && (
+        <div className="stack section slide-up delay-1">
+          <h3 className="heading-3 px-1">SMS Expenses Found</h3>
+          {extractedExpenses.map((expense, index) => (
+            <SMSExpenseCard
+              key={expense.rawSMS}
+              expense={expense}
+              onImport={() => handleImport(expense)}
+              onDismiss={() => dismissExpense(expense.rawSMS)}
+              isImporting={importingId === expense.rawSMS}
+            />
+          ))}
         </div>
-        <p className="text-sm text-tertiary mb-4">{currentMonth}</p>
+      )}
 
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 flex-1">
-              <div className="w-full bg-bg-secondary rounded-full h-2 overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{
-                    width: `${Math.min(
-                      (totalExpense / monthlyBudget) * 100,
-                      100
-                    )}%`,
-                    background:
-                      totalExpense > monthlyBudget
-                        ? "var(--gradient-danger)"
-                        : "var(--gradient-primary)",
-                  }}
+      {/* Analytics Section */}
+      {expenses.length > 0 ? (
+        <>
+          {/* Spending Trend */}
+          {dailySpending.length > 0 &&
+            dailySpending.some((d) => d.total > 0) && (
+              <div className="section slide-up delay-2">
+                <SpendingTrendCard
+                  dailySpending={dailySpending}
+                  currencySymbol={currencySymbol}
                 />
               </div>
-            </div>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-tertiary font-medium">
-              {((totalExpense / monthlyBudget) * 100).toFixed(1)}% of budget
-              spent
-            </span>
-            <span
-              className={`font-bold ${
-                balance >= 0 ? "text-success" : "text-danger"
-              }`}
-            >
-              {currencySymbol}{" "}
-              {Math.abs(balance).toLocaleString("en-IN", {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0,
-              })}{" "}
-              {balance >= 0 ? "left" : "over"}
-            </span>
-          </div>
-        </div>
-      </div>
+            )}
 
-      {dailySpending.length > 0 && dailySpending.some((d) => d.total > 0) && (
-        <div
-          className="card p-4 animate-slide-up"
-          style={{ animationDelay: "0.3s" }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-lg font-bold">Last 7 Days</h3>
-              <p className="text-sm text-tertiary">Daily spending trend</p>
-            </div>
-            <Calendar size={20} className="text-primary" />
+          {/* Category Breakdown */}
+          <div className="section slide-up delay-3">
+            <CategoryBreakdownCard
+              categoryTotals={analytics?.categoryTotals || {}}
+              totalExpense={totalExpense}
+              currencySymbol={currencySymbol}
+              categories={categories}
+            />
           </div>
-          <div style={{ height: "220px" }}>
-            <Bar data={barData} options={barOptions} />
+
+          {/* Quick Actions */}
+          <div className="section slide-up delay-4">
+            <QuickActionsCard
+              onNavigate={navigate}
+              expenseCount={expenses.length}
+            />
           </div>
-        </div>
+        </>
+      ) : (
+        /* Empty State */
+        <EmptyStateCard onAddExpense={() => navigate("/add")} />
       )}
-
-      {analytics?.categoryTotals &&
-        Object.keys(analytics.categoryTotals).length > 0 && (
-          <div
-            className="card p-4 animate-slide-up"
-            style={{ animationDelay: "0.4s" }}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-bold">Category Breakdown</h3>
-                <p className="text-sm text-tertiary">Spending by category</p>
-              </div>
-              <PieChart size={20} className="text-primary" />
-            </div>
-            <div style={{ height: "280px" }}>
-              <Doughnut data={doughnutData} options={doughnutOptions} />
-            </div>
-          </div>
-        )}
-
-      {analytics?.categoryTotals &&
-        Object.keys(analytics.categoryTotals).length > 0 && (
-          <div
-            className="card p-4 animate-slide-up"
-            style={{ animationDelay: "0.5s" }}
-          >
-            <h3 className="text-lg font-bold mb-4">Top Categories</h3>
-            <div className="space-y-3">
-              {Object.entries(analytics.categoryTotals)
-                .sort((a, b) => b[1].total - a[1].total)
-                .slice(0, 5)
-                .map(([name, data], index) => {
-                  const percentage = (
-                    (data.total / totalExpense) *
-                    100
-                  ).toFixed(1);
-                  const category = categories.find((c) => c.name === name);
-                  const IconComponent = category?.icon
-                    ? Icons[category.icon]
-                    : Icons.Circle;
-
-                  return (
-                    <div key={name} className="flex items-center gap-3">
-                      <div
-                        className="rounded-lg flex items-center justify-center flex-shrink-0"
-                        style={{
-                          width: "40px",
-                          height: "40px",
-                          background: `${data.color}20`,
-                        }}
-                      >
-                        <IconComponent
-                          size={20}
-                          style={{ color: data.color }}
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <p className="font-semibold text-sm">{name}</p>
-                          <p className="font-bold text-sm text-danger">
-                            {currencySymbol}
-                            {data.total.toLocaleString("en-IN", {
-                              minimumFractionDigits: 0,
-                              maximumFractionDigits: 0,
-                            })}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 bg-bg-secondary rounded-full h-1.5 overflow-hidden">
-                            <div
-                              className="h-full rounded-full transition-all duration-500"
-                              style={{
-                                width: `${percentage}%`,
-                                backgroundColor: data.color,
-                              }}
-                            />
-                          </div>
-                          <span className="text-xs text-tertiary font-medium">
-                            {percentage}%
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-          </div>
-        )}
-
-      <div
-        className="grid grid-cols-2 gap-3 animate-slide-up"
-        style={{ animationDelay: "0.6s" }}
-      >
-        <button
-          onClick={() => navigate("/expenses")}
-          className="card p-4 flex items-center justify-between hover:shadow-lg transition"
-        >
-          <div className="flex items-center gap-3">
-            <div
-              className="p-2 rounded-lg"
-              style={{ background: "var(--gradient-primary)" }}
-            >
-              <Receipt size={20} className="text-white" />
-            </div>
-            <div className="text-left">
-              <p className="font-semibold text-sm">View All</p>
-              <p className="text-xs text-tertiary">
-                {expenses.length} expenses
-              </p>
-            </div>
-          </div>
-          <ArrowRight size={18} className="text-tertiary" />
-        </button>
-
-        <button
-          onClick={() => navigate("/add")}
-          className="card p-4 flex items-center justify-between hover:shadow-lg transition"
-        >
-          <div className="flex items-center gap-3">
-            <div
-              className="p-2 rounded-lg"
-              style={{ background: "var(--gradient-secondary)" }}
-            >
-              <TrendingUp size={20} className="text-white" />
-            </div>
-            <div className="text-left">
-              <p className="font-semibold text-sm">Add New</p>
-              <p className="text-xs text-tertiary">Track expense</p>
-            </div>
-          </div>
-          <ArrowRight size={18} className="text-tertiary" />
-        </button>
-      </div>
-
-      {expenses.length === 0 && (
-        <div
-          className="card p-8 text-center animate-slide-up"
-          style={{ animationDelay: "0.3s" }}
-        >
-          <Receipt size={48} className="mx-auto text-tertiary mb-3" />
-          <p className="text-tertiary mb-4">
-            No expenses yet. Add your first expense to get started!
-          </p>
-          <button
-            onClick={() => navigate("/add")}
-            className="btn btn-primary"
-            style={{ background: "var(--gradient-primary)" }}
-          >
-            Add Your First Expense
-          </button>
-        </div>
-      )}
-
-      <div style={{ height: "20px" }} />
     </div>
   );
 };

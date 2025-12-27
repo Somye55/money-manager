@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useData } from "../context/DataContext";
 import { supabase } from "../lib/supabase";
-import { Button, Card, Typography } from "../design-system";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 const DebugSupabase = () => {
   const { user: authUser } = useAuth();
@@ -144,76 +145,74 @@ const DebugSupabase = () => {
   };
 
   return (
-    <Card padding="lg" className="mb-4">
-      <Typography variant="h3" className="mb-4">
-        🔍 Supabase Debug
-      </Typography>
+    <Card className="mb-4">
+      <CardContent className="p-6">
+        <h3 className="text-lg font-semibold mb-4">🔍 Supabase Debug</h3>
 
-      <div className="space-y-3 mb-4">
-        <Button onClick={runDiagnostics} loading={loading} variant="primary">
-          Run Full Diagnostics
-        </Button>
+        <div className="space-y-3 mb-4">
+          <Button onClick={runDiagnostics} disabled={loading} variant="default">
+            {loading ? "Running..." : "Run Full Diagnostics"}
+          </Button>
 
-        <Button onClick={testCategoryCreation} variant="secondary">
-          Test Category Creation
-        </Button>
-      </div>
+          <Button onClick={testCategoryCreation} variant="secondary">
+            Test Category Creation
+          </Button>
+        </div>
 
-      {debugInfo && (
-        <div className="space-y-4">
-          <div>
-            <Typography variant="h4">Auth User</Typography>
-            <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto">
-              {JSON.stringify(debugInfo.authUser, null, 2)}
-            </pre>
-          </div>
-
-          <div>
-            <Typography variant="h4">Database User</Typography>
-            <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto">
-              {JSON.stringify(debugInfo.dbUser, null, 2)}
-            </pre>
-          </div>
-
-          <div>
-            <Typography variant="h4">
-              Categories ({debugInfo.categories.length})
-            </Typography>
-            <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto max-h-32">
-              {JSON.stringify(debugInfo.categories, null, 2)}
-            </pre>
-          </div>
-
-          <div>
-            <Typography variant="h4">Tests</Typography>
-            <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto">
-              {JSON.stringify(debugInfo.tests, null, 2)}
-            </pre>
-          </div>
-
-          {debugInfo.errors.length > 0 && (
+        {debugInfo && (
+          <div className="space-y-4">
             <div>
-              <Typography variant="h4" color="error">
-                Errors
-              </Typography>
-              <div className="text-xs text-red-600 space-y-1">
-                {debugInfo.errors.map((error, idx) => (
-                  <div key={idx}>{error}</div>
-                ))}
+              <h4 className="font-semibold">Auth User</h4>
+              <pre className="text-xs bg-muted p-2 rounded overflow-auto">
+                {JSON.stringify(debugInfo.authUser, null, 2)}
+              </pre>
+            </div>
+
+            <div>
+              <h4 className="font-semibold">Database User</h4>
+              <pre className="text-xs bg-muted p-2 rounded overflow-auto">
+                {JSON.stringify(debugInfo.dbUser, null, 2)}
+              </pre>
+            </div>
+
+            <div>
+              <h4 className="font-semibold">
+                Categories ({debugInfo.categories.length})
+              </h4>
+              <pre className="text-xs bg-muted p-2 rounded overflow-auto max-h-32">
+                {JSON.stringify(debugInfo.categories, null, 2)}
+              </pre>
+            </div>
+
+            <div>
+              <h4 className="font-semibold">Tests</h4>
+              <pre className="text-xs bg-muted p-2 rounded overflow-auto">
+                {JSON.stringify(debugInfo.tests, null, 2)}
+              </pre>
+            </div>
+
+            {debugInfo.errors.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-red-600">Errors</h4>
+                <div className="text-xs text-red-600 space-y-1">
+                  {debugInfo.errors.map((error, idx) => (
+                    <div key={idx}>{error}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div>
+              <h4 className="font-semibold">Context Data</h4>
+              <div className="text-xs space-y-1">
+                <div>Auth User: {authUser?.email || "None"}</div>
+                <div>DB User: {dbUser?.email || "None"}</div>
+                <div>Categories: {categories?.length || 0}</div>
               </div>
             </div>
-          )}
-
-          <div>
-            <Typography variant="h4">Context Data</Typography>
-            <div className="text-xs space-y-1">
-              <div>Auth User: {authUser?.email || "None"}</div>
-              <div>DB User: {dbUser?.email || "None"}</div>
-              <div>Categories: {categories?.length || 0}</div>
-            </div>
           </div>
-        </div>
-      )}
+        )}
+      </CardContent>
     </Card>
   );
 };
