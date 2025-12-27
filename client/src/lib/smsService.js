@@ -108,8 +108,17 @@ class SMSService {
    */
   async checkNotificationPermission() {
     if (!this.isSupported) return false;
-    // Cannot check programmatically - user must enable manually
-    return false;
+
+    try {
+      const NotificationListenerPlugin = (await import("./notificationPlugin"))
+        .default;
+
+      const result = await NotificationListenerPlugin.checkPermission();
+      return result.granted || false;
+    } catch (error) {
+      console.error("Error checking notification permission:", error);
+      return false;
+    }
   }
 
   /**
@@ -117,8 +126,17 @@ class SMSService {
    */
   async checkOverlayPermission() {
     if (!this.isSupported) return false;
-    // Cannot check programmatically - user must enable manually
-    return false;
+
+    try {
+      const NotificationListenerPlugin = (await import("./notificationPlugin"))
+        .default;
+
+      const result = await NotificationListenerPlugin.checkOverlayPermission();
+      return result.granted || false;
+    } catch (error) {
+      console.error("Error checking overlay permission:", error);
+      return false;
+    }
   }
 
   /**
@@ -160,16 +178,51 @@ class SMSService {
   /**
    * Start listening for real-time notifications
    */
-  async startNotificationListener(callback) {
+  async startNotificationListener(callback, expenseCallback) {
     if (!this.isSupported) return;
-    // The NotificationListener service runs automatically in the background
-    console.log("Notification listener service is running in the background");
+
+    try {
+      const NotificationListenerPlugin = (await import("./notificationPlugin"))
+        .default;
+
+      // Register event listener for notifications
+      await NotificationListenerPlugin.addListener(
+        "notificationReceived",
+        (data) => {
+          console.log("Notification event received:", data);
+          if (callback) {
+            callback(data);
+          }
+        }
+      );
+
+      // Register event listener for expense saved from overlay
+      if (expenseCallback) {
+        await NotificationListenerPlugin.addListener("expenseSaved", (data) => {
+          console.log("Expense saved event received:", data);
+          expenseCallback(data);
+        });
+      }
+
+      // Start listening
+      const result = await NotificationListenerPlugin.startListening();
+      console.log("Started notification listener:", result);
+
+      this.listenerHandle = NotificationListenerPlugin;
+    } catch (error) {
+      console.error("Error starting notification listener:", error);
+    }
   }
 
   async stopNotificationListener() {
     if (this.listenerHandle) {
-      await this.listenerHandle.remove();
-      this.listenerHandle = null;
+      try {
+        await this.listenerHandle.stopListening();
+        await this.listenerHandle.removeAllListeners();
+        this.listenerHandle = null;
+      } catch (error) {
+        console.error("Error stopping notification listener:", error);
+      }
     }
   }
 }

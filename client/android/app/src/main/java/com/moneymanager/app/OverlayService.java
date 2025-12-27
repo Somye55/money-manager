@@ -18,15 +18,22 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 public class OverlayService extends Service {
     private static final String TAG = "OverlayService";
     private static final String CHANNEL_ID = "overlay_service_channel";
     private static final int FOREGROUND_ID = 1002;
-    
+
+    private static boolean isOverlayShowing = false;
+
     private WindowManager windowManager;
     private View overlayView;
     private Handler mainHandler;
@@ -100,7 +107,13 @@ public class OverlayService extends Service {
 
     private void showOverlay(String title, String text, String packageName) {
         Log.d(TAG, "=== showOverlay called ===");
-        
+
+        // Prevent multiple overlays
+        if (isOverlayShowing) {
+            Log.d(TAG, "Overlay already showing, skipping");
+            return;
+        }
+
         // Double check overlay permission
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (!Settings.canDrawOverlays(this)) {
@@ -158,11 +171,34 @@ public class OverlayService extends Service {
                 TextView textView = overlayView.findViewById(R.id.overlay_text);
                 TextView appView = overlayView.findViewById(R.id.overlay_app);
                 View closeButton = overlayView.findViewById(R.id.overlay_close);
+                Spinner categorySpinner = overlayView.findViewById(R.id.category_spinner);
+                Button dismissButton = overlayView.findViewById(R.id.btn_dismiss);
+                Button saveButton = overlayView.findViewById(R.id.btn_save);
 
                 if (titleView != null) titleView.setText(title != null ? title : "Notification");
                 if (textView != null) textView.setText(text != null ? text : "");
                 if (appView != null) appView.setText(getAppName(packageName));
+
+                // Setup category spinner
+                if (categorySpinner != null) {
+                    String[] categories = {"Food & Dining", "Transportation", "Shopping", "Entertainment", "Bills & Utilities", "Healthcare", "Other"};
+                    ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, categories);
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    categorySpinner.setAdapter(adapter);
+                }
+
+                // Setup buttons
                 if (closeButton != null) closeButton.setOnClickListener(v -> removeOverlay());
+                if (dismissButton != null) dismissButton.setOnClickListener(v -> removeOverlay());
+                if (saveButton != null) {
+                    saveButton.setOnClickListener(v -> {
+                        if (categorySpinner != null) {
+                            String selectedCategory = (String) categorySpinner.getSelectedItem();
+                            saveExpense(title, text, packageName, selectedCategory);
+                        }
+                        removeOverlay();
+                    });
+                }
                 
                 Log.d(TAG, "Using layout file for overlay");
             } catch (Exception e) {
@@ -172,9 +208,9 @@ public class OverlayService extends Service {
 
             windowManager.addView(overlayView, params);
             Log.d(TAG, ">>> OVERLAY VIEW ADDED SUCCESSFULLY <<<");
+            isOverlayShowing = true;
 
-            // Auto-dismiss after 10 seconds
-            mainHandler.postDelayed(this::removeOverlay, 10000);
+            // No auto-dismiss, user controls
             
         } catch (Exception e) {
             Log.e(TAG, "!!! ERROR showing overlay: " + e.getMessage(), e);
@@ -232,7 +268,27 @@ public class OverlayService extends Service {
         } catch (Exception e) {
             Log.e(TAG, "Error removing overlay: " + e.getMessage());
         }
+        isOverlayShowing = false;
         stopSelf();
+    }
+
+    private void saveExpense(String title, String text, String packageName, String category) {
+        Log.d(TAG, "saveExpense called - Category: " + category);
+        try {
+            Intent intent = new Intent("com.moneymanager.app.EXPENSE_SAVED");
+            intent.putExtra("title", title);
+            intent.putExtra("text", text);
+            intent.putExtra("package", packageName);
+            intent.putExtra("category", category);
+            intent.putExtra("timestamp", System.currentTimeMillis());
+
+            LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+            Log.d(TAG, "Expense save broadcast sent");
+
+            Toast.makeText(this, "Expense saved in " + category, Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Log.e(TAG, "Error broadcasting expense save: " + e.getMessage(), e);
+        }
     }
 
     private String getAppName(String packageName) {
@@ -262,5 +318,6 @@ public class OverlayService extends Service {
                 // Ignore
             }
         }
+        isOverlayShowing = false;
     }
 }

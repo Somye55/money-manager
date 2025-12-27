@@ -1,11 +1,15 @@
 package com.moneymanager.app;
 
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
 import android.text.TextUtils;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -15,12 +19,109 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 
 @CapacitorPlugin(name = "NotificationListenerPlugin")
 public class NotificationListenerPlugin extends Plugin {
+    private BroadcastReceiver notificationReceiver;
+    private BroadcastReceiver expenseSavedReceiver;
+    private boolean isListening = false;
 
     @PluginMethod
     public void checkPermission(PluginCall call) {
         boolean hasPermission = isNotificationServiceEnabled();
         JSObject ret = new JSObject();
         ret.put("granted", hasPermission);
+        call.resolve(ret);
+    }
+    
+    @PluginMethod
+    public void startListening(PluginCall call) {
+        if (isListening) {
+            JSObject ret = new JSObject();
+            ret.put("success", true);
+            ret.put("message", "Already listening");
+            call.resolve(ret);
+            return;
+        }
+        
+        try {
+            notificationReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    String packageName = intent.getStringExtra("package");
+                    String title = intent.getStringExtra("title");
+                    String text = intent.getStringExtra("text");
+                    long timestamp = intent.getLongExtra("timestamp", System.currentTimeMillis());
+
+                    JSObject notification = new JSObject();
+                    notification.put("package", packageName);
+                    notification.put("title", title);
+                    notification.put("text", text);
+                    notification.put("timestamp", timestamp);
+
+                    notifyListeners("notificationReceived", notification);
+                }
+            };
+
+            expenseSavedReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    String packageName = intent.getStringExtra("package");
+                    String title = intent.getStringExtra("title");
+                    String text = intent.getStringExtra("text");
+                    String category = intent.getStringExtra("category");
+                    long timestamp = intent.getLongExtra("timestamp", System.currentTimeMillis());
+
+                    JSObject expenseData = new JSObject();
+                    expenseData.put("package", packageName);
+                    expenseData.put("title", title);
+                    expenseData.put("text", text);
+                    expenseData.put("category", category);
+                    expenseData.put("timestamp", timestamp);
+
+                    notifyListeners("expenseSaved", expenseData);
+                }
+            };
+
+            IntentFilter filter = new IntentFilter(NotificationListener.NOTIFICATION_BROADCAST);
+            LocalBroadcastManager.getInstance(getContext()).registerReceiver(notificationReceiver, filter);
+
+            IntentFilter expenseFilter = new IntentFilter("com.moneymanager.app.EXPENSE_SAVED");
+            LocalBroadcastManager.getInstance(getContext()).registerReceiver(expenseSavedReceiver, expenseFilter);
+
+            isListening = true;
+            
+            JSObject ret = new JSObject();
+            ret.put("success", true);
+            ret.put("message", "Started listening for notifications");
+            call.resolve(ret);
+        } catch (Exception e) {
+            JSObject ret = new JSObject();
+            ret.put("success", false);
+            ret.put("error", e.getMessage());
+            call.resolve(ret);
+        }
+    }
+    
+    @PluginMethod
+    public void stopListening(PluginCall call) {
+        if (notificationReceiver != null) {
+            try {
+                LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(notificationReceiver);
+                notificationReceiver = null;
+            } catch (Exception e) {
+                // Ignore
+            }
+        }
+        if (expenseSavedReceiver != null) {
+            try {
+                LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(expenseSavedReceiver);
+                expenseSavedReceiver = null;
+            } catch (Exception e) {
+                // Ignore
+            }
+        }
+        isListening = false;
+        
+        JSObject ret = new JSObject();
+        ret.put("success", true);
         call.resolve(ret);
     }
 
@@ -126,5 +227,24 @@ public class NotificationListenerPlugin extends Plugin {
             }
         }
         return false;
+    }
+    
+    @Override
+    protected void handleOnDestroy() {
+        if (notificationReceiver != null) {
+            try {
+                LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(notificationReceiver);
+            } catch (Exception e) {
+                // Ignore
+            }
+        }
+        if (expenseSavedReceiver != null) {
+            try {
+                LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(expenseSavedReceiver);
+            } catch (Exception e) {
+                // Ignore
+            }
+        }
+        super.handleOnDestroy();
     }
 }

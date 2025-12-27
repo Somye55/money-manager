@@ -33,7 +33,6 @@ import {
   ThemeSettings,
   ThemeToggle,
 } from "../design-system";
-import DebugSupabase from "../components/DebugSupabase";
 
 const Settings = () => {
   const { user: authUser, signOut } = useAuth();
@@ -387,22 +386,23 @@ const Settings = () => {
   const IconComponent = LucideIcons[categoryForm.icon] || Tag;
 
   return (
-    <div className="p-4 space-y-6 animate-fade-in max-w-2xl mx-auto">
-      {/* Debug Component - Remove this after fixing the issue */}
-      <DebugSupabase />
-
+    <div className="p-4 pb-24 space-y-4 animate-fade-in max-w-2xl mx-auto">
       {/* Header with Save Status */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3">
           <div
             className="p-3 rounded-xl"
-            style={{ background: "var(--gradient-primary)" }}
+            style={{
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            }}
           >
             <SettingsIcon className="text-white" size={24} />
           </div>
           <div>
-            <Typography variant="h1">Settings</Typography>
-            <Typography variant="body2" color="tertiary">
+            <Typography variant="h1" className="text-2xl font-bold">
+              Settings
+            </Typography>
+            <Typography variant="body2" color="tertiary" className="text-xs">
               Manage your preferences
             </Typography>
           </div>
@@ -441,23 +441,31 @@ const Settings = () => {
       </div>
 
       {/* Profile Section */}
-      <Card padding="lg" className="animate-slide-up">
+      <Card
+        padding="lg"
+        className="animate-slide-up"
+        style={{ borderRadius: "1.25rem" }}
+      >
         <div className="flex items-center gap-2 mb-4">
-          <User size={20} className="text-primary" />
-          <Typography variant="h3">Profile</Typography>
+          <User size={18} className="text-primary" />
+          <Typography variant="h3" className="text-base font-bold">
+            Profile
+          </Typography>
         </div>
         <div className="flex items-center gap-4">
           <div
-            className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white"
-            style={{ background: "var(--gradient-primary)" }}
+            className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-white"
+            style={{
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            }}
           >
-            {authUser?.user_metadata?.name?.charAt(0)?.toUpperCase() || "U"}
+            {authUser?.user_metadata?.name?.charAt(0)?.toUpperCase() || "T"}
           </div>
           <div>
-            <Typography variant="h4">
-              {authUser?.user_metadata?.name || "User"}
+            <Typography variant="h4" className="text-base font-bold">
+              {authUser?.user_metadata?.name || "Thamuz"}
             </Typography>
-            <Typography variant="body2" color="tertiary">
+            <Typography variant="body2" color="tertiary" className="text-xs">
               {authUser?.email}
             </Typography>
           </div>
@@ -468,43 +476,52 @@ const Settings = () => {
       <Card
         padding="lg"
         className="animate-slide-up"
-        style={{ animationDelay: "0.05s" }}
+        style={{ animationDelay: "0.05s", borderRadius: "1.25rem" }}
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Tag size={20} className="text-primary" />
-            <Typography variant="h3">Categories</Typography>
+            <Tag size={18} className="text-primary" />
+            <Typography variant="h3" className="text-base font-bold">
+              Categories
+            </Typography>
           </div>
           <Button
             variant="primary"
             size="sm"
             onClick={() => openCategoryModal()}
+            style={{
+              background: "linear-gradient(135deg, #0ea5e9 0%, #10b981 100%)",
+              border: "none",
+              padding: "0.5rem 1rem",
+              borderRadius: "0.75rem",
+              fontSize: "0.875rem",
+            }}
           >
-            <Plus size={18} />
+            <Plus size={16} />
             Add Category
           </Button>
         </div>
 
         {/* Success Message */}
         {categorySuccessMessage && (
-          <div className="mb-4 p-3 rounded-lg bg-success/10 text-success text-sm font-medium animate-slide-up">
+          <div className="mb-4 p-3 rounded-xl bg-success/10 text-success text-sm font-medium animate-slide-up">
             {categorySuccessMessage}
           </div>
         )}
-        <div className="flex items-center justify-between mb-4">
-          <Typography variant="body2" color="tertiary">
+        <div className="flex items-center justify-between mb-3">
+          <Typography variant="body2" color="tertiary" className="text-xs">
             Drag to reorder categories
           </Typography>
-          <Typography variant="caption" color="tertiary">
+          <Typography variant="caption" color="tertiary" className="text-xs">
             {categories.length} categories
           </Typography>
         </div>
         <div className="space-y-2">
           {categories.length === 0 && !dataLoading ? (
-            <div className="text-center py-8">
-              <div className="p-4 rounded-lg bg-bg-secondary border-2 border-dashed border-border">
-                <Tag size={32} className="mx-auto mb-2 text-tertiary" />
-                <p className="text-tertiary mb-2">No categories yet</p>
+            <div className="text-center py-6">
+              <div className="p-4 rounded-xl bg-bg-secondary border-2 border-dashed border-border">
+                <Tag size={28} className="mx-auto mb-2 text-tertiary" />
+                <p className="text-tertiary text-sm mb-1">No categories yet</p>
                 <p className="text-xs text-tertiary">
                   Create your first category to get started
                 </p>
@@ -520,23 +537,23 @@ const Settings = () => {
                   onDragStart={() => handleDragStart(index)}
                   onDragOver={(e) => handleDragOver(e, index)}
                   onDragEnd={handleDragEnd}
-                  className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all cursor-move ${
+                  className={`flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all cursor-move ${
                     draggedIndex === index
                       ? "border-primary bg-primary/10 opacity-50 scale-105"
                       : "border-border hover:border-primary/50 bg-bg-secondary hover:shadow-md"
                   }`}
                 >
                   <GripVertical
-                    size={20}
+                    size={18}
                     className="text-tertiary flex-shrink-0"
                   />
                   <div
-                    className="p-2.5 rounded-lg flex-shrink-0"
+                    className="p-2 rounded-lg flex-shrink-0"
                     style={{ backgroundColor: category.color + "20" }}
                   >
-                    <Icon size={22} style={{ color: category.color }} />
+                    <Icon size={20} style={{ color: category.color }} />
                   </div>
-                  <span className="flex-1 font-semibold text-base">
+                  <span className="flex-1 font-semibold text-sm">
                     {category.name}
                   </span>
                   <button
@@ -544,14 +561,14 @@ const Settings = () => {
                     className="p-2 hover:bg-primary/10 rounded-lg transition flex-shrink-0"
                     title="Edit category"
                   >
-                    <Edit2 size={18} className="text-primary" />
+                    <Edit2 size={16} className="text-primary" />
                   </button>
                   <button
                     onClick={() => handleDeleteCategory(category.id)}
                     className="p-2 hover:bg-danger/10 rounded-lg transition flex-shrink-0"
                     title="Delete category"
                   >
-                    <Trash2 size={18} className="text-danger" />
+                    <Trash2 size={16} className="text-danger" />
                   </button>
                 </div>
               );
@@ -784,16 +801,19 @@ const Settings = () => {
       <Card
         padding="lg"
         className="animate-slide-up"
-        style={{ animationDelay: "0.15s" }}
+        style={{ animationDelay: "0.15s", borderRadius: "1.25rem" }}
       >
-        <div className="flex items-center gap-2 mb-4">
-          <DollarSign size={20} className="text-primary" />
-          <Typography variant="h3">Currency</Typography>
+        <div className="flex items-center gap-2 mb-3">
+          <DollarSign size={18} className="text-primary" />
+          <Typography variant="h3" className="text-base font-bold">
+            Currency
+          </Typography>
         </div>
         <select
           value={formData.currency}
           onChange={(e) => handleChange("currency", e.target.value)}
-          className="w-full p-3 rounded-lg border-2 border-border bg-bg-secondary outline-none focus:border-primary transition"
+          className="w-full p-3 rounded-xl border-0 bg-bg-secondary outline-none focus:ring-2 focus:ring-primary/20 transition text-sm"
+          style={{ color: "var(--text-primary)" }}
         >
           {currencies.map((curr) => (
             <option key={curr.code} value={curr.code}>
@@ -807,18 +827,21 @@ const Settings = () => {
       <Card
         padding="lg"
         className="animate-slide-up"
-        style={{ animationDelay: "0.2s" }}
+        style={{ animationDelay: "0.2s", borderRadius: "1.25rem" }}
       >
-        <div className="flex items-center gap-2 mb-4">
-          <DollarSign size={20} className="text-primary" />
-          <Typography variant="h3">Monthly Budget</Typography>
+        <div className="flex items-center gap-2 mb-3">
+          <DollarSign size={18} className="text-primary" />
+          <Typography variant="h3" className="text-base font-bold">
+            Monthly Budget
+          </Typography>
         </div>
-        <Input
+        <input
           type="number"
           value={formData.monthlyBudget}
           onChange={(e) => handleChange("monthlyBudget", e.target.value)}
           placeholder="Enter monthly budget"
-          fullWidth
+          className="w-full p-3 rounded-xl border-0 bg-bg-secondary outline-none focus:ring-2 focus:ring-primary/20 transition text-sm"
+          style={{ color: "var(--text-primary)" }}
         />
       </Card>
 
@@ -872,9 +895,12 @@ const Settings = () => {
         className="animate-slide-up"
         style={{
           animationDelay: "0.3s",
-          background: "var(--gradient-danger)",
+          background: "linear-gradient(135deg, #f43f5e 0%, #ec4899 100%)",
           border: "none",
           color: "white",
+          borderRadius: "0.75rem",
+          padding: "0.875rem",
+          fontSize: "0.9375rem",
         }}
       >
         <LogOut size={18} /> Sign Out

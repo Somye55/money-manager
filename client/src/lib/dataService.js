@@ -284,11 +284,6 @@ export const createCategory = async (category) => {
       throw new Error("User not authenticated");
     }
 
-    console.log("🔄 Current Supabase user:", {
-      id: currentUser.id,
-      email: currentUser.email,
-    });
-
     // Verify the user exists in our database
     const { data: dbUser, error: dbUserError } = await supabase
       .from("User")

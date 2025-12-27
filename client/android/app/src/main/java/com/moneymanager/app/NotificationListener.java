@@ -9,9 +9,11 @@ import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.util.Log;
 import android.widget.Toast;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 public class NotificationListener extends NotificationListenerService {
     private static final String TAG = "NotificationListener";
+    public static final String NOTIFICATION_BROADCAST = "com.moneymanager.app.NOTIFICATION_RECEIVED";
     private static boolean isConnected = false;
 
     @Override
@@ -50,21 +52,30 @@ public class NotificationListener extends NotificationListenerService {
 
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
+        Log.d(TAG, ">>> onNotificationPosted() called <<<");
+        
         if (sbn == null) {
             Log.d(TAG, "Received null notification");
             return;
         }
 
         String packageName = sbn.getPackageName();
+        Log.d(TAG, "Package name: " + packageName);
         
         // Skip our own notifications
         if (packageName.equals(getPackageName())) {
+            Log.d(TAG, "Skipping our own notification");
             return;
         }
 
         Notification notification = sbn.getNotification();
-        if (notification == null || notification.extras == null) {
-            Log.d(TAG, "Notification or extras is null from: " + packageName);
+        if (notification == null) {
+            Log.d(TAG, "Notification is null from: " + packageName);
+            return;
+        }
+        
+        if (notification.extras == null) {
+            Log.d(TAG, "Notification extras is null from: " + packageName);
             return;
         }
 
@@ -82,8 +93,10 @@ public class NotificationListener extends NotificationListenerService {
             title = titleCs != null ? titleCs.toString() : "";
             text = textCs != null ? textCs.toString() : "";
             bigText = bigTextCs != null ? bigTextCs.toString() : "";
+            
+            Log.d(TAG, "Extracted - Title: '" + title + "', Text: '" + text + "', BigText: '" + bigText + "'");
         } catch (Exception e) {
-            Log.e(TAG, "Error extracting notification text: " + e.getMessage());
+            Log.e(TAG, "Error extracting notification text: " + e.getMessage(), e);
         }
         
         String fullText = bigText.isEmpty() ? text : bigText;
@@ -95,15 +108,31 @@ public class NotificationListener extends NotificationListenerService {
         Log.d(TAG, "Title: " + title);
         Log.d(TAG, "Text: " + text);
         Log.d(TAG, "BigText: " + bigText);
-        Log.d(TAG, "Is Financial App: " + isFinancialApp(packageName));
-        Log.d(TAG, "Is Financial Content: " + isFinancialNotification(title, fullText));
+        Log.d(TAG, "FullText: " + fullText);
+        
+        boolean isFinApp = isFinancialApp(packageName);
+        boolean isFinContent = isFinancialNotification(title, fullText);
+        
+        Log.d(TAG, "Is Financial App: " + isFinApp);
+        Log.d(TAG, "Is Financial Content: " + isFinContent);
         Log.d(TAG, "========================================");
 
-        // For testing: Show popup for ALL notifications from financial apps
-        // Remove the financial content check temporarily to debug
-        if (isFinancialApp(packageName)) {
-            Log.d(TAG, ">>> FINANCIAL APP DETECTED - Attempting to show overlay...");
+        // Show popup for ALL notifications
+        Log.d(TAG, ">>> NOTIFICATION DETECTED - Attempting to show overlay...");
+
+        try {
             showOverlayPopup(title, fullText, packageName);
+            Log.d(TAG, "showOverlayPopup() completed");
+        } catch (Exception e) {
+            Log.e(TAG, "Exception in showOverlayPopup: " + e.getMessage(), e);
+        }
+
+        // Broadcast notification to the app
+        try {
+            broadcastNotification(packageName, title, fullText);
+            Log.d(TAG, "broadcastNotification() completed");
+        } catch (Exception e) {
+            Log.e(TAG, "Exception in broadcastNotification: " + e.getMessage(), e);
         }
     }
 
@@ -188,5 +217,20 @@ public class NotificationListener extends NotificationListenerService {
                combined.contains("₹") ||
                combined.contains("rupee") ||
                combined.matches(".*\\d+\\.\\d{2}.*");
+    }
+    
+    private void broadcastNotification(String packageName, String title, String text) {
+        try {
+            Intent intent = new Intent(NOTIFICATION_BROADCAST);
+            intent.putExtra("package", packageName);
+            intent.putExtra("title", title);
+            intent.putExtra("text", text);
+            intent.putExtra("timestamp", System.currentTimeMillis());
+            
+            LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+            Log.d(TAG, "Broadcast sent successfully");
+        } catch (Exception e) {
+            Log.e(TAG, "Error broadcasting notification: " + e.getMessage(), e);
+        }
     }
 }

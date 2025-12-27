@@ -325,6 +325,10 @@ input::placeholder {
   padding-bottom: 5rem;
 }
 
+.pb-24 {
+  padding-bottom: 6rem;
+}
+
 .m-0 {
   margin: 0;
 }
@@ -824,11 +828,12 @@ button:active:not(:disabled),
   }
 
   .card {
-    padding: 1.25rem;
+    padding: 1rem;
+    border-radius: 1.25rem;
   }
 
   .p-4 {
-    padding: 0.75rem;
+    padding: 1rem;
   }
 
   .p-6 {
@@ -864,6 +869,17 @@ button:active:not(:disabled),
 
   .space-y-3 > * + * {
     margin-top: 0.5rem;
+  }
+
+  /* Improved button sizing for mobile */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Better card spacing */
+  .card + .card {
+    margin-top: 0.75rem;
   }
 }
 
@@ -903,4 +919,21 @@ button:active:not(:disabled),
 .modal-backdrop {
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+}
+
+/* Bottom Navigation Active Indicator */
+.nav-item-active {
+  position: relative;
+}
+
+.nav-item-active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3rem;
+  height: 0.25rem;
+  border-radius: 0.25rem 0.25rem 0 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }

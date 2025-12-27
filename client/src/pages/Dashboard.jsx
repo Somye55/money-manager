@@ -320,105 +320,111 @@ const Dashboard = () => {
   });
 
   return (
-    <div className="p-4 space-y-6 animate-fade-in">
-      <div className="grid grid-cols-2 gap-4">
+    <div className="p-4 pb-24 space-y-4 animate-fade-in">
+      {/* Balance and Expenses Cards */}
+      <div className="grid grid-cols-2 gap-3">
         <div
           className="card p-4 animate-slide-up"
           style={{
-            background: "var(--gradient-success)",
+            background: "linear-gradient(135deg, #0ea5e9 0%, #10b981 100%)",
             border: "none",
-            boxShadow: "0 10px 30px rgba(16, 185, 129, 0.3)",
+            boxShadow: "0 8px 24px rgba(16, 185, 129, 0.25)",
+            borderRadius: "1.25rem",
+            minHeight: "120px",
           }}
         >
-          <div className="flex flex-col h-full">
-            <div className="flex items-center gap-2 mb-2">
-              <div
-                style={{
-                  background: "rgba(255, 255, 255, 0.2)",
-                  padding: "0.5rem",
-                  borderRadius: "0.75rem",
-                }}
-              >
-                <Wallet size={20} className="text-white" />
-              </div>
+          <div className="flex flex-col h-full justify-between">
+            <div
+              style={{
+                background: "rgba(255, 255, 255, 0.25)",
+                padding: "0.5rem",
+                borderRadius: "0.75rem",
+                width: "fit-content",
+              }}
+            >
+              <Wallet size={18} className="text-white" />
             </div>
-            <p className="text-sm text-white opacity-90 font-medium">Balance</p>
-            <h2 className="text-2xl font-extrabold text-white mt-auto">
-              {currencySymbol}{" "}
-              {balance.toLocaleString("en-IN", {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0,
-              })}
-            </h2>
+            <div>
+              <p className="text-sm text-white opacity-90 font-medium mb-1">
+                Balance
+              </p>
+              <h2 className="text-2xl font-extrabold text-white">
+                {currencySymbol}{" "}
+                {balance.toLocaleString("en-IN", {
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                })}
+              </h2>
+            </div>
           </div>
         </div>
 
         <div
           className="card p-4 animate-slide-up"
           style={{
-            background: "var(--gradient-danger)",
+            background: "linear-gradient(135deg, #f43f5e 0%, #ec4899 100%)",
             border: "none",
-            boxShadow: "0 10px 30px rgba(239, 68, 68, 0.3)",
-            animationDelay: "0.1s",
+            boxShadow: "0 8px 24px rgba(239, 68, 68, 0.25)",
+            borderRadius: "1.25rem",
+            minHeight: "120px",
+            animationDelay: "0.05s",
           }}
         >
-          <div className="flex flex-col h-full">
-            <div className="flex items-center gap-2 mb-2">
-              <div
-                style={{
-                  background: "rgba(255, 255, 255, 0.2)",
-                  padding: "0.5rem",
-                  borderRadius: "0.75rem",
-                }}
-              >
-                <TrendingDown size={20} className="text-white" />
-              </div>
+          <div className="flex flex-col h-full justify-between">
+            <div
+              style={{
+                background: "rgba(255, 255, 255, 0.25)",
+                padding: "0.5rem",
+                borderRadius: "0.75rem",
+                width: "fit-content",
+              }}
+            >
+              <TrendingDown size={18} className="text-white" />
             </div>
-            <p className="text-sm text-white opacity-90 font-medium">
-              Expenses
-            </p>
-            <h2 className="text-2xl font-extrabold text-white mt-auto">
-              {currencySymbol}{" "}
-              {totalExpense.toLocaleString("en-IN", {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0,
-              })}
-            </h2>
+            <div>
+              <p className="text-sm text-white opacity-90 font-medium mb-1">
+                Expenses
+              </p>
+              <h2 className="text-2xl font-extrabold text-white">
+                {currencySymbol}{" "}
+                {totalExpense.toLocaleString("en-IN", {
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                })}
+              </h2>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Monthly Overview */}
       <div
         className="card p-4 animate-slide-up"
-        style={{ animationDelay: "0.2s" }}
+        style={{ animationDelay: "0.1s", borderRadius: "1.25rem" }}
       >
-        <div className="flex items-center justify-between mb-1">
-          <h3 className="text-lg font-bold">Monthly Overview</h3>
-          <TrendingUp size={20} className="text-primary" />
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-base font-bold">Monthly Overview</h3>
+          <TrendingUp size={18} className="text-primary" />
         </div>
-        <p className="text-sm text-tertiary mb-4">{currentMonth}</p>
+        <p className="text-xs text-tertiary mb-4">{currentMonth}</p>
 
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 flex-1">
-              <div className="w-full bg-bg-secondary rounded-full h-2 overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{
-                    width: `${Math.min(
-                      (totalExpense / monthlyBudget) * 100,
-                      100
-                    )}%`,
-                    background:
-                      totalExpense > monthlyBudget
-                        ? "var(--gradient-danger)"
-                        : "var(--gradient-primary)",
-                  }}
-                />
-              </div>
-            </div>
+        <div className="space-y-2">
+          <div className="w-full bg-bg-secondary rounded-full h-2 overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${Math.min(
+                  (totalExpense / monthlyBudget) * 100,
+                  100
+                )}%`,
+                background:
+                  totalExpense > monthlyBudget
+                    ? "linear-gradient(90deg, #f43f5e 0%, #ec4899 100%)"
+                    : "linear-gradient(90deg, #667eea 0%, #764ba2 100%)",
+              }}
+            />
           </div>
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center justify-between text-xs">
             <span className="text-tertiary font-medium">
               {((totalExpense / monthlyBudget) * 100).toFixed(1)}% of budget
               spent
@@ -545,64 +551,75 @@ const Dashboard = () => {
           </div>
         )}
 
+      {/* Quick Actions */}
       <div
         className="grid grid-cols-2 gap-3 animate-slide-up"
-        style={{ animationDelay: "0.6s" }}
+        style={{ animationDelay: "0.15s" }}
       >
         <button
           onClick={() => navigate("/expenses")}
-          className="card p-4 flex items-center justify-between hover:shadow-lg transition"
+          className="card p-4 flex flex-col items-start hover:shadow-lg transition"
+          style={{ borderRadius: "1.25rem" }}
         >
-          <div className="flex items-center gap-3">
-            <div
-              className="p-2 rounded-lg"
-              style={{ background: "var(--gradient-primary)" }}
-            >
-              <Receipt size={20} className="text-white" />
-            </div>
-            <div className="text-left">
-              <p className="font-semibold text-sm">View All</p>
-              <p className="text-xs text-tertiary">
-                {expenses.length} expenses
-              </p>
-            </div>
+          <div
+            className="p-2.5 rounded-xl mb-3"
+            style={{
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            }}
+          >
+            <Receipt size={20} className="text-white" />
           </div>
-          <ArrowRight size={18} className="text-tertiary" />
+          <div className="text-left">
+            <p className="font-bold text-base mb-0.5">View All</p>
+            <p className="text-xs text-tertiary">{expenses.length} expenses</p>
+          </div>
+          <ArrowRight size={16} className="text-tertiary mt-auto self-end" />
         </button>
 
         <button
           onClick={() => navigate("/add")}
-          className="card p-4 flex items-center justify-between hover:shadow-lg transition"
+          className="card p-4 flex flex-col items-start hover:shadow-lg transition"
+          style={{ borderRadius: "1.25rem" }}
         >
-          <div className="flex items-center gap-3">
-            <div
-              className="p-2 rounded-lg"
-              style={{ background: "var(--gradient-secondary)" }}
-            >
-              <TrendingUp size={20} className="text-white" />
-            </div>
-            <div className="text-left">
-              <p className="font-semibold text-sm">Add New</p>
-              <p className="text-xs text-tertiary">Track expense</p>
-            </div>
+          <div
+            className="p-2.5 rounded-xl mb-3"
+            style={{
+              background: "linear-gradient(135deg, #f59e0b 0%, #f97316 100%)",
+            }}
+          >
+            <TrendingUp size={20} className="text-white" />
           </div>
-          <ArrowRight size={18} className="text-tertiary" />
+          <div className="text-left">
+            <p className="font-bold text-base mb-0.5">Add New</p>
+            <p className="text-xs text-tertiary">Track expense</p>
+          </div>
+          <ArrowRight size={16} className="text-tertiary mt-auto self-end" />
         </button>
       </div>
 
       {expenses.length === 0 && (
         <div
           className="card p-8 text-center animate-slide-up"
-          style={{ animationDelay: "0.3s" }}
+          style={{ animationDelay: "0.2s", borderRadius: "1.25rem" }}
         >
-          <Receipt size={48} className="mx-auto text-tertiary mb-3" />
-          <p className="text-tertiary mb-4">
+          <div
+            className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center"
+            style={{ background: "var(--bg-secondary)" }}
+          >
+            <Receipt size={32} className="text-tertiary" />
+          </div>
+          <p className="text-tertiary mb-4 text-sm">
             No expenses yet. Add your first expense to get started!
           </p>
           <button
             onClick={() => navigate("/add")}
             className="btn btn-primary"
-            style={{ background: "var(--gradient-primary)" }}
+            style={{
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              border: "none",
+              padding: "0.875rem 1.75rem",
+              borderRadius: "0.75rem",
+            }}
           >
             Add Your First Expense
           </button>
