@@ -29,10 +29,22 @@ CREATE TABLE IF NOT EXISTS "UserSettings" (
     "monthlyBudget" DECIMAL(10,2),
     "enableNotifications" BOOLEAN NOT NULL DEFAULT true,
     theme TEXT NOT NULL DEFAULT 'system',
+    "selectedApps" JSONB DEFAULT '["com.whatsapp", "com.google.android.apps.messaging"]',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "UserSettings_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+-- Add selectedApps column to UserSettings if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'UserSettings' AND column_name = 'selectedApps' AND table_schema = 'public') THEN
+        ALTER TABLE "UserSettings" ADD COLUMN "selectedApps" JSONB DEFAULT '["com.whatsapp", "com.google.android.apps.messaging"]';
+        RAISE NOTICE 'Added selectedApps column to UserSettings table';
+    ELSE
+        RAISE NOTICE 'selectedApps column already exists in UserSettings table';
+    END IF;
+END $$;
 
 -- Create Category table if it doesn't exist
 CREATE TABLE IF NOT EXISTS "Category" (
@@ -60,7 +72,14 @@ END $$;
 
 -- Create Source enum type if it doesn't exist
 DO $$ BEGIN
-    CREATE TYPE "Source" AS ENUM ('MANUAL', 'SMS');
+    CREATE TYPE "Source" AS ENUM ('MANUAL', 'SMS', 'NOTIFICATION');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+-- Create TransactionType enum type if it doesn't exist
+DO $$ BEGIN
+    CREATE TYPE "TransactionType" AS ENUM ('debit', 'credit');
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
@@ -74,12 +93,32 @@ CREATE TABLE IF NOT EXISTS "Expense" (
     "categoryId" INTEGER,
     "userId" INTEGER NOT NULL,
     source "Source" NOT NULL DEFAULT 'MANUAL',
+    type "TransactionType" NOT NULL DEFAULT 'debit',
     "rawSmsBody" TEXT,
+    notes TEXT,
+    "smsTimestamp" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "Expense_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"(id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT "Expense_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+-- Add new columns to Expense table if they don't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Expense' AND column_name = 'type' AND table_schema = 'public') THEN
+        ALTER TABLE "Expense" ADD COLUMN type "TransactionType" NOT NULL DEFAULT 'debit';
+        RAISE NOTICE 'Added type column to Expense table';
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Expense' AND column_name = 'notes' AND table_schema = 'public') THEN
+        ALTER TABLE "Expense" ADD COLUMN notes TEXT;
+        RAISE NOTICE 'Added notes column to Expense table';
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Expense' AND column_name = 'smsTimestamp' AND table_schema = 'public') THEN
+        ALTER TABLE "Expense" ADD COLUMN "smsTimestamp" TIMESTAMP(3);
+        RAISE NOTICE 'Added smsTimestamp column to Expense table';
+    END IF;
+END $$;
 
 -- Create indexes for better query performance (only if columns exist)
 CREATE INDEX IF NOT EXISTS "User_email_idx" ON "User"(email);

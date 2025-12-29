@@ -11,6 +11,7 @@ import android.provider.Settings;
 import android.text.TextUtils;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -67,14 +68,20 @@ public class NotificationListenerPlugin extends Plugin {
                     String title = intent.getStringExtra("title");
                     String text = intent.getStringExtra("text");
                     String category = intent.getStringExtra("category");
-                    long timestamp = intent.getLongExtra("timestamp", System.currentTimeMillis());
+                    double amount = intent.getDoubleExtra("amount", 0.0);
+                    String type = intent.getStringExtra("type");
+                    long transactionTimestamp = intent.getLongExtra("transactionTimestamp", System.currentTimeMillis());
+                    long notificationTimestamp = intent.getLongExtra("notificationTimestamp", System.currentTimeMillis());
 
                     JSObject expenseData = new JSObject();
                     expenseData.put("package", packageName);
                     expenseData.put("title", title);
                     expenseData.put("text", text);
                     expenseData.put("category", category);
-                    expenseData.put("timestamp", timestamp);
+                    expenseData.put("amount", amount);
+                    expenseData.put("type", type);
+                    expenseData.put("transactionTimestamp", transactionTimestamp);
+                    expenseData.put("notificationTimestamp", notificationTimestamp);
 
                     notifyListeners("expenseSaved", expenseData);
                 }
@@ -197,13 +204,48 @@ public class NotificationListenerPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void setSelectedApps(PluginCall call) {
+        JSArray appsArray = call.getArray("apps");
+        if (appsArray != null) {
+            try {
+                String appsJson = appsArray.toString();
+                getContext().getSharedPreferences("MoneyManager", Context.MODE_PRIVATE)
+                    .edit()
+                    .putString("selectedApps", appsJson)
+                    .apply();
+                JSObject ret = new JSObject();
+                ret.put("success", true);
+                call.resolve(ret);
+            } catch (Exception e) {
+                JSObject ret = new JSObject();
+                ret.put("success", false);
+                ret.put("error", e.getMessage());
+                call.resolve(ret);
+            }
+        } else {
+            JSObject ret = new JSObject();
+            ret.put("success", false);
+            ret.put("error", "No apps array provided");
+            call.resolve(ret);
+        }
+    }
+
+    @PluginMethod
+    public void isServiceConnected(PluginCall call) {
+        boolean connected = NotificationListener.isServiceConnected();
+        JSObject ret = new JSObject();
+        ret.put("connected", connected);
+        call.resolve(ret);
+    }
+
+    @PluginMethod
     public void getPermissionStatus(PluginCall call) {
         boolean notificationAccess = isNotificationServiceEnabled();
         boolean overlayPermission = true;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             overlayPermission = Settings.canDrawOverlays(getContext());
         }
-        
+
         JSObject ret = new JSObject();
         ret.put("notificationAccess", notificationAccess);
         ret.put("overlayPermission", overlayPermission);

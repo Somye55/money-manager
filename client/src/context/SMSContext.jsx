@@ -2,13 +2,14 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import smsService from "../lib/smsService";
 import { parseSMSList, parseNotification } from "../lib/smsParser";
 import { useData } from "./DataContext";
+import { getUserSettings } from "../lib/dataService";
 
 const SMSContext = createContext();
 
 export const useSMS = () => useContext(SMSContext);
 
 export const SMSProvider = ({ children }) => {
-  const { addExpense, categories } = useData();
+  const { addExpense, categories, user, settings } = useData();
   const [isSupported, setIsSupported] = useState(false);
 
   // Permissions state
@@ -55,6 +56,11 @@ export const SMSProvider = ({ children }) => {
   // Real-time listener
   const startLiveListener = async () => {
     try {
+      // Set selected apps from user settings
+      if (settings?.selectedApps) {
+        await smsService.setSelectedApps(settings.selectedApps);
+      }
+
       await smsService.startNotificationListener(
         (data) => {
           console.log("Notification received in SMSContext:", data);
@@ -63,11 +69,7 @@ export const SMSProvider = ({ children }) => {
           const parsed = parseNotification(data);
           console.log("Parsed notification:", parsed);
 
-          if (
-            parsed &&
-            parsed.confidence > 40 &&
-            parsed.transactionType === "expense"
-          ) {
+          if (parsed && parsed.confidence > 40) {
             // Check for duplicates
             setExtractedExpenses((prev) => {
               const exists = prev.some(
@@ -205,12 +207,23 @@ export const SMSProvider = ({ children }) => {
   // Handle category selection from popup
   const handleCategoryConfirm = async (expense, categoryId) => {
     try {
-      const { confidence, rawSMS, suggestedCategory, ...cleanData } = expense;
+      const {
+        confidence,
+        rawSMS,
+        suggestedCategory,
+        transactionType,
+        merchant,
+        smsDate,
+        ...cleanData
+      } = expense;
 
       const finalData = {
         ...cleanData,
         categoryId,
         source: expense.source || "NOTIFICATION",
+        type: transactionType === "income" ? "credit" : "debit",
+        notes: rawSMS,
+        smsTimestamp: smsDate,
       };
 
       await addExpense(finalData);
@@ -236,20 +249,11 @@ export const SMSProvider = ({ children }) => {
     try {
       console.log("Handling expense saved from overlay:", data);
 
-      // Parse the notification
-      const notificationData = {
-        package: data.package,
-        title: data.title,
-        text: data.text,
-        timestamp: data.timestamp,
-      };
-      const parsed = parseNotification(notificationData);
-      console.log("Parsed from overlay:", parsed);
-
-      if (!parsed || parsed.transactionType !== "expense") {
-        console.warn("Parsed data is not an expense");
-        return;
-      }
+      // Use the parsed data from Android
+      const amount = data.amount || 0;
+      const type = data.type || "debit";
+      const transactionTimestamp =
+        data.transactionTimestamp || data.notificationTimestamp || Date.now();
 
       // Map overlay category to database category
       const overlayCategory = data.category;
@@ -272,9 +276,13 @@ export const SMSProvider = ({ children }) => {
       }
 
       const finalData = {
-        ...parsed,
+        amount,
         categoryId,
         source: "NOTIFICATION_OVERLAY",
+        type,
+        notes: data.text,
+        smsTimestamp: transactionTimestamp,
+        description: data.title || "Transaction",
       };
 
       await addExpense(finalData);

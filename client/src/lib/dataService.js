@@ -142,6 +142,7 @@ const initializeDefaultSettings = async (userId) => {
     monthlyBudget: null,
     enableNotifications: true,
     theme: "system",
+    selectedApps: ["com.whatsapp", "com.google.android.apps.messaging"],
   };
 
   const { error } = await supabase

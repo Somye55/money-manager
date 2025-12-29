@@ -57,12 +57,14 @@ const Settings = () => {
     scanSMS,
     scanning,
   } = useSMS();
+  const [serviceConnected, setServiceConnected] = useState(false);
 
   const [formData, setFormData] = useState({
     currency: "INR",
     monthlyBudget: "",
     theme: "system",
   });
+  const [selectedApps, setSelectedApps] = useState([]);
 
   const [saveStatus, setSaveStatus] = useState("");
   const [scanMessage, setScanMessage] = useState("");
@@ -89,8 +91,30 @@ const Settings = () => {
           : "",
         theme: settings.theme || "system",
       });
+      setSelectedApps(
+        settings.selectedApps || [
+          "com.whatsapp",
+          "com.google.android.apps.messaging",
+        ]
+      );
     }
   }, [settings]);
+
+  // Check notification service connection
+  useEffect(() => {
+    const checkConnection = async () => {
+      if (isSupported && notifPermissionGranted) {
+        try {
+          const smsService = (await import("../lib/smsService")).default;
+          const connected = await smsService.isNotificationServiceConnected();
+          setServiceConnected(connected);
+        } catch (error) {
+          console.error("Error checking service connection:", error);
+        }
+      }
+    };
+    checkConnection();
+  }, [isSupported, notifPermissionGranted]);
 
   // Auto-save function with debounce
   const autoSave = async (updates) => {
@@ -305,6 +329,18 @@ const Settings = () => {
     setTimeout(() => setScanMessage(""), 3000);
   };
 
+  const handleAppSelectionChange = async (apps) => {
+    setSelectedApps(apps);
+    try {
+      await modifySettings({ selectedApps: apps });
+      // Also update the Android side
+      const smsService = (await import("../lib/smsService")).default;
+      await smsService.setSelectedApps(apps);
+    } catch (error) {
+      console.error("Error updating selected apps:", error);
+    }
+  };
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -373,6 +409,32 @@ const Settings = () => {
     "#f43f5e",
     "#06b6d4",
     "#a855f7",
+  ];
+
+  const availableApps = [
+    { package: "com.whatsapp", name: "WhatsApp", icon: "MessageCircle" },
+    {
+      package: "com.google.android.apps.messaging",
+      name: "Messages",
+      icon: "MessageSquare",
+    },
+    { package: "org.telegram.messenger", name: "Telegram", icon: "Send" },
+    {
+      package: "com.google.android.apps.nbu.paisa.user",
+      name: "Google Pay",
+      icon: "CreditCard",
+    },
+    { package: "com.phonepe.app", name: "PhonePe", icon: "Smartphone" },
+    { package: "net.one97.paytm", name: "Paytm", icon: "Wallet" },
+    { package: "com.freecharge.android", name: "Freecharge", icon: "Zap" },
+    {
+      package: "com.amazon.mShop.android.shopping",
+      name: "Amazon",
+      icon: "ShoppingBag",
+    },
+    { package: "com.sbi.lotus", name: "SBI YONO", icon: "Banknote" },
+    { package: "com.axis.mobile", name: "Axis Mobile", icon: "Banknote" },
+    { package: "com.hdfcbank.mobileapp", name: "HDFC Bank", icon: "Banknote" },
   ];
 
   if (dataLoading) {
@@ -667,9 +729,15 @@ const Settings = () => {
                   <div className="flex items-center gap-2 mb-1">
                     <p className="font-semibold">Read Notifications</p>
                     {notifPermissionGranted ? (
-                      <span className="text-xs bg-success/20 text-success px-2 py-1 rounded-full font-bold">
-                        ✓ Enabled
-                      </span>
+                      serviceConnected ? (
+                        <span className="text-xs bg-success/20 text-success px-2 py-1 rounded-full font-bold">
+                          ✓ Connected
+                        </span>
+                      ) : (
+                        <span className="text-xs bg-warning/20 text-warning px-2 py-1 rounded-full font-bold">
+                          ⚠ Enabled but not connected
+                        </span>
+                      )
                     ) : (
                       <span className="text-xs bg-danger/20 text-danger px-2 py-1 rounded-full font-bold">
                         ✗ Disabled
@@ -749,6 +817,59 @@ const Settings = () => {
                   Enable Notification Access
                 </button>
               )}
+            </div>
+
+            {/* App Selection */}
+            <div className="border-2 border-border rounded-lg p-4">
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="font-semibold">Select Apps to Monitor</p>
+                  </div>
+                  <p className="text-xs text-tertiary mb-2">
+                    Choose which apps to listen for SMS notifications from
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {availableApps.map((app) => {
+                  const Icon = LucideIcons[app.icon] || Smartphone;
+                  const isSelected = selectedApps.includes(app.package);
+                  return (
+                    <button
+                      key={app.package}
+                      onClick={() => {
+                        const newSelected = isSelected
+                          ? selectedApps.filter((p) => p !== app.package)
+                          : [...selectedApps, app.package];
+                        handleAppSelectionChange(newSelected);
+                      }}
+                      className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${
+                        isSelected
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-primary/50 bg-bg-secondary"
+                      }`}
+                    >
+                      <Icon
+                        size={20}
+                        className={
+                          isSelected ? "text-primary" : "text-tertiary"
+                        }
+                      />
+                      <span
+                        className={`text-sm font-medium ${
+                          isSelected ? "text-primary" : "text-tertiary"
+                        }`}
+                      >
+                        {app.name}
+                      </span>
+                      {isSelected && (
+                        <Check size={16} className="text-primary ml-auto" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Display Over Other Apps Permission */}

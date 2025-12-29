@@ -26,6 +26,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class OverlayService extends Service {
     private static final String TAG = "OverlayService";
@@ -37,6 +39,9 @@ public class OverlayService extends Service {
     private WindowManager windowManager;
     private View overlayView;
     private Handler mainHandler;
+    private double parsedAmount = 0.0;
+    private long parsedTimestamp = 0;
+    private String parsedType = "debit";
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -73,6 +78,54 @@ public class OverlayService extends Service {
                 .setSmallIcon(android.R.drawable.ic_dialog_info)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .build();
+    }
+
+    private double parseAmount(String text) {
+        if (text == null) return 0.0;
+        Pattern pattern = Pattern.compile("Rs\\.(\\d+\\.\\d{2})");
+        Matcher matcher = pattern.matcher(text);
+        if (matcher.find()) {
+            try {
+                return Double.parseDouble(matcher.group(1));
+            } catch (NumberFormatException e) {
+                Log.e(TAG, "Error parsing amount: " + e.getMessage());
+            }
+        }
+        return 0.0;
+    }
+
+    private long parseTimestamp(String text) {
+        if (text == null) return 0;
+        Pattern pattern = Pattern.compile("\\((\\d{4}):(\\d{2}):(\\d{2}) (\\d{2}):(\\d{2}):(\\d{2})\\)");
+        Matcher matcher = pattern.matcher(text);
+        if (matcher.find()) {
+            try {
+                int year = Integer.parseInt(matcher.group(1));
+                int month = Integer.parseInt(matcher.group(2)) - 1; // Calendar month is 0-based
+                int day = Integer.parseInt(matcher.group(3));
+                int hour = Integer.parseInt(matcher.group(4));
+                int minute = Integer.parseInt(matcher.group(5));
+                int second = Integer.parseInt(matcher.group(6));
+
+                java.util.Calendar cal = java.util.Calendar.getInstance();
+                cal.set(year, month, day, hour, minute, second);
+                return cal.getTimeInMillis();
+            } catch (NumberFormatException e) {
+                Log.e(TAG, "Error parsing timestamp: " + e.getMessage());
+            }
+        }
+        return 0;
+    }
+
+    private String parseType(String text) {
+        if (text == null) return "debit";
+        String lowerText = text.toLowerCase();
+        if (lowerText.contains("credited") || lowerText.contains("cr.")) {
+            return "credit";
+        } else if (lowerText.contains("debited") || lowerText.contains("dr.")) {
+            return "debit";
+        }
+        return "debit"; // default
     }
 
     @Override
@@ -176,8 +229,18 @@ public class OverlayService extends Service {
                 Button saveButton = overlayView.findViewById(R.id.btn_save);
 
                 if (titleView != null) titleView.setText(title != null ? title : "Notification");
-                if (textView != null) textView.setText(text != null ? text : "");
-                if (appView != null) appView.setText(getAppName(packageName));
+                 if (textView != null) textView.setText(text != null ? text : "");
+                 if (appView != null) appView.setText(getAppName(packageName));
+
+                 // Parse amount, timestamp, and type
+                 parsedAmount = parseAmount(text);
+                 parsedTimestamp = parseTimestamp(text);
+                 parsedType = parseType(text);
+
+                 TextView amountView = overlayView.findViewById(R.id.overlay_amount);
+                 if (amountView != null) {
+                     amountView.setText("Amount: Rs. " + String.format("%.2f", parsedAmount));
+                 }
 
                 // Setup category spinner
                 if (categorySpinner != null) {
@@ -273,14 +336,17 @@ public class OverlayService extends Service {
     }
 
     private void saveExpense(String title, String text, String packageName, String category) {
-        Log.d(TAG, "saveExpense called - Category: " + category);
+        Log.d(TAG, "saveExpense called - Category: " + category + ", Amount: " + parsedAmount);
         try {
             Intent intent = new Intent("com.moneymanager.app.EXPENSE_SAVED");
             intent.putExtra("title", title);
             intent.putExtra("text", text);
             intent.putExtra("package", packageName);
             intent.putExtra("category", category);
-            intent.putExtra("timestamp", System.currentTimeMillis());
+            intent.putExtra("amount", parsedAmount);
+            intent.putExtra("type", parsedType);
+            intent.putExtra("transactionTimestamp", parsedTimestamp > 0 ? parsedTimestamp : System.currentTimeMillis());
+            intent.putExtra("notificationTimestamp", System.currentTimeMillis());
 
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
             Log.d(TAG, "Expense save broadcast sent");
