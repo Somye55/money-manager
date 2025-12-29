@@ -176,6 +176,42 @@ class SMSService {
   }
 
   /**
+   * Set selected apps for notification listening
+   */
+  async setSelectedApps(apps) {
+    if (!this.isSupported) return;
+
+    try {
+      const NotificationListenerPlugin = (await import("./notificationPlugin"))
+        .default;
+
+      const result = await NotificationListenerPlugin.setSelectedApps({ apps });
+      console.log("Set selected apps:", result);
+      return result;
+    } catch (error) {
+      console.error("Error setting selected apps:", error);
+    }
+  }
+
+  /**
+   * Check if notification listener service is connected
+   */
+  async isNotificationServiceConnected() {
+    if (!this.isSupported) return false;
+
+    try {
+      const NotificationListenerPlugin = (await import("./notificationPlugin"))
+        .default;
+
+      const result = await NotificationListenerPlugin.isServiceConnected();
+      return result.connected || false;
+    } catch (error) {
+      console.error("Error checking service connection:", error);
+      return false;
+    }
+  }
+
+  /**
    * Start listening for real-time notifications
    */
   async startNotificationListener(callback, expenseCallback) {

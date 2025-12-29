@@ -58,6 +58,16 @@
         android:maxLines="3"
         android:ellipsize="end" />
 
+    <TextView
+        android:id="@+id/overlay_amount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Amount: Rs. 0.00"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#FF5722"
+        android:layout_marginTop="8dp" />
+
     <!-- Category Selection -->
     <TextView
         android:layout_width="match_parent"
