@@ -18,6 +18,7 @@ import {
   FileText,
   Tag as TagIcon,
   Smartphone,
+  Plus,
 } from "lucide-react";
 import * as Icons from "lucide-react";
 import SMSExpenseCard from "../components/SMSExpenseCard";
@@ -30,6 +31,7 @@ const Expenses = () => {
     removeExpense,
     modifyExpense,
     loading,
+    addExpense,
   } = useData();
   const {
     extractedExpenses,
@@ -63,6 +65,14 @@ const Expenses = () => {
   });
   const [deleting, setDeleting] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addForm, setAddForm] = useState({
+    amount: "",
+    description: "",
+    categoryId: "",
+    date: new Date().toISOString().split("T")[0],
+  });
+  const [addingSaving, setAddingSaving] = useState(false);
 
   // Get currency symbol
   const currencySymbol =
@@ -193,6 +203,36 @@ const Expenses = () => {
     }
   };
 
+  const handleAddExpense = async () => {
+    if (!addForm.amount || !addForm.description) return;
+
+    setAddingSaving(true);
+    try {
+      const expenseData = {
+        amount: parseFloat(addForm.amount),
+        description: addForm.description.trim(),
+        categoryId: addForm.categoryId ? parseInt(addForm.categoryId) : null,
+        date: new Date(addForm.date).toISOString(),
+        source: "MANUAL",
+      };
+
+      await addExpense(expenseData);
+
+      // Reset form and close modal
+      setAddForm({
+        amount: "",
+        description: "",
+        categoryId: "",
+        date: new Date().toISOString().split("T")[0],
+      });
+      setShowAddModal(false);
+    } catch (error) {
+      console.error("Error adding expense:", error);
+    } finally {
+      setAddingSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -204,21 +244,36 @@ const Expenses = () => {
   return (
     <div className="p-4 pb-24 space-y-4 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-2">
-        <div
-          className="p-3 rounded-xl"
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-3">
+          <div
+            className="p-3 rounded-xl"
+            style={{
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            }}
+          >
+            <Receipt className="text-white" size={24} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">Expenses</h1>
+            <p className="text-xs text-tertiary">
+              {filteredExpenses.length} transactions
+            </p>
+          </div>
+        </div>
+
+        {/* Add Expense Button */}
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition text-sm font-medium text-white"
           style={{
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+            boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
           }}
         >
-          <Receipt className="text-white" size={24} />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold">Expenses</h1>
-          <p className="text-xs text-tertiary">
-            {filteredExpenses.length} transactions
-          </p>
-        </div>
+          <Plus size={18} />
+          Add
+        </button>
       </div>
 
       {/* New Expenses Found Section */}
@@ -371,7 +426,7 @@ const Expenses = () => {
           </div>
           <p className="text-tertiary text-sm mb-4">No expenses found</p>
           <button
-            onClick={() => navigate("/add")}
+            onClick={() => setShowAddModal(true)}
             className="btn btn-primary"
             style={{
               background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
@@ -602,7 +657,146 @@ const Expenses = () => {
         </div>
       )}
 
+      {/* Add Expense Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-2xl p-6 max-w-md w-full animate-slide-up shadow-xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold">Add Expense</h2>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="p-2 hover:bg-bg-secondary rounded-lg transition"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
+                  <DollarSign size={16} className="text-primary" />
+                  Amount
+                </label>
+                <div className="relative flex items-center">
+                  <span className="absolute left-3 font-bold text-tertiary pointer-events-none">
+                    {currencySymbol}
+                  </span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={addForm.amount}
+                    onChange={(e) =>
+                      setAddForm({ ...addForm, amount: e.target.value })
+                    }
+                    placeholder="0.00"
+                    className="w-full pl-8 pr-4 py-3 rounded-lg border-2 border-border bg-bg-secondary outline-none focus:border-primary transition"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
+                  <FileText size={16} className="text-primary" />
+                  Description
+                </label>
+                <input
+                  type="text"
+                  value={addForm.description}
+                  onChange={(e) =>
+                    setAddForm({ ...addForm, description: e.target.value })
+                  }
+                  placeholder="What did you spend on?"
+                  className="w-full p-3 rounded-lg border-2 border-border bg-bg-secondary outline-none focus:border-primary transition"
+                />
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
+                  <TagIcon size={16} className="text-primary" />
+                  Category
+                </label>
+                <select
+                  value={addForm.categoryId}
+                  onChange={(e) =>
+                    setAddForm({ ...addForm, categoryId: e.target.value })
+                  }
+                  className="w-full p-3 rounded-lg border-2 border-border bg-bg-secondary outline-none focus:border-primary transition"
+                >
+                  <option value="">No Category</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
+                  <Calendar size={16} className="text-primary" />
+                  Date
+                </label>
+                <input
+                  type="date"
+                  value={addForm.date}
+                  onChange={(e) =>
+                    setAddForm({ ...addForm, date: e.target.value })
+                  }
+                  max={new Date().toISOString().split("T")[0]}
+                  className="w-full p-3 rounded-lg border-2 border-border bg-bg-secondary outline-none focus:border-primary transition"
+                />
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="flex-1 btn btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddExpense}
+                  disabled={
+                    addingSaving || !addForm.amount || !addForm.description
+                  }
+                  className="flex-1 btn btn-primary flex items-center justify-center gap-2"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                  }}
+                >
+                  {addingSaving ? (
+                    <>
+                      <Loader size={18} className="animate-spin" />
+                      Adding...
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={18} />
+                      Add Expense
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={{ height: "20px" }} />
+
+      {/* Floating Action Button */}
+      <button
+        onClick={() => setShowAddModal(true)}
+        className="fixed bottom-20 right-4 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 z-40"
+        style={{
+          background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+          boxShadow: "0 8px 24px rgba(16, 185, 129, 0.4)",
+        }}
+      >
+        <Plus size={24} className="text-white" />
+      </button>
     </div>
   );
 };
