@@ -545,9 +545,19 @@ export const createExpense = async (expense) => {
   try {
     console.log("🔄 Creating expense:", expense);
 
+    // Ensure timestamps are set
+    const now = new Date().toISOString();
+    const expenseWithTimestamps = {
+      ...expense,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    console.log("🔄 Expense with timestamps:", expenseWithTimestamps);
+
     const { data, error } = await supabase
       .from("Expense")
-      .insert([expense])
+      .insert([expenseWithTimestamps])
       .select(
         `
         *,

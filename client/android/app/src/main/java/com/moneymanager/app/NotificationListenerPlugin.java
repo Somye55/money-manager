@@ -64,6 +64,8 @@ public class NotificationListenerPlugin extends Plugin {
             expenseSavedReceiver = new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
+                    android.util.Log.d("NotificationListenerPlugin", "=== EXPENSE_SAVED broadcast received ===");
+                    
                     String packageName = intent.getStringExtra("package");
                     String title = intent.getStringExtra("title");
                     String text = intent.getStringExtra("text");
@@ -72,6 +74,8 @@ public class NotificationListenerPlugin extends Plugin {
                     String type = intent.getStringExtra("type");
                     long transactionTimestamp = intent.getLongExtra("transactionTimestamp", System.currentTimeMillis());
                     long notificationTimestamp = intent.getLongExtra("notificationTimestamp", System.currentTimeMillis());
+
+                    android.util.Log.d("NotificationListenerPlugin", "Expense data: amount=" + amount + ", category=" + category + ", type=" + type);
 
                     JSObject expenseData = new JSObject();
                     expenseData.put("package", packageName);
@@ -83,6 +87,7 @@ public class NotificationListenerPlugin extends Plugin {
                     expenseData.put("transactionTimestamp", transactionTimestamp);
                     expenseData.put("notificationTimestamp", notificationTimestamp);
 
+                    android.util.Log.d("NotificationListenerPlugin", "Notifying listeners with expenseSaved event");
                     notifyListeners("expenseSaved", expenseData);
                 }
             };

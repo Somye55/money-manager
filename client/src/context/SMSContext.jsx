@@ -249,20 +249,78 @@ export const SMSProvider = ({ children }) => {
     try {
       console.log("Handling expense saved from overlay:", data);
 
+      // Validate required data
+      if (!data.amount || data.amount <= 0) {
+        console.error("Invalid amount in overlay data:", data.amount);
+        return;
+      }
+
+      if (!data.category) {
+        console.error("No category in overlay data");
+        return;
+      }
+
       // Use the parsed data from Android
-      const amount = data.amount || 0;
+      const amount = data.amount;
       const type = data.type || "debit";
       const transactionTimestamp =
         data.transactionTimestamp || data.notificationTimestamp || Date.now();
 
-      // Map overlay category to database category
+      // Enhanced category mapping
       const overlayCategory = data.category;
       let categoryId = null;
+
       if (categories && categories.length > 0) {
-        // Try to find exact match
+        console.log(
+          "Available categories:",
+          categories.map((c) => c.name)
+        );
+        console.log("Overlay category:", overlayCategory);
+
+        // Create mapping for common overlay categories to database categories
+        const categoryMappings = {
+          "Food & Dining": ["Food", "Food & Dining", "Dining", "Restaurant"],
+          Transportation: [
+            "Transport",
+            "Transportation",
+            "Travel",
+            "Uber",
+            "Taxi",
+          ],
+          Shopping: ["Shopping", "Shop", "Purchase", "Buy"],
+          Entertainment: ["Entertainment", "Fun", "Movies", "Games"],
+          "Bills & Utilities": [
+            "Bills",
+            "Utilities",
+            "Bill",
+            "Utility",
+            "Electric",
+            "Water",
+            "Gas",
+          ],
+          Healthcare: ["Health", "Healthcare", "Medical", "Doctor", "Medicine"],
+          Other: ["Other", "Miscellaneous", "Misc"],
+        };
+
+        // Try exact match first
         let match = categories.find(
           (c) => c.name.toLowerCase() === overlayCategory.toLowerCase()
         );
+
+        if (!match) {
+          // Try mapping-based match
+          const possibleNames = categoryMappings[overlayCategory] || [];
+          for (const possibleName of possibleNames) {
+            match = categories.find(
+              (c) => c.name.toLowerCase() === possibleName.toLowerCase()
+            );
+            if (match) {
+              console.log(`Mapped "${overlayCategory}" to "${match.name}"`);
+              break;
+            }
+          }
+        }
+
         if (!match) {
           // Try partial matches
           match = categories.find(
@@ -271,8 +329,24 @@ export const SMSProvider = ({ children }) => {
               c.name.toLowerCase().includes(overlayCategory.toLowerCase())
           );
         }
-        if (!match) match = categories.find((c) => c.name === "Other");
-        if (match) categoryId = match.id;
+
+        // Fallback to "Other" category
+        if (!match) {
+          match = categories.find((c) => c.name.toLowerCase() === "other");
+        }
+
+        if (match) {
+          categoryId = match.id;
+          console.log(
+            `Final category mapping: "${overlayCategory}" -> "${match.name}" (ID: ${categoryId})`
+          );
+        } else {
+          console.warn(
+            "No category match found, expense will be saved without category"
+          );
+        }
+      } else {
+        console.warn("No categories available for mapping");
       }
 
       const finalData = {
@@ -285,10 +359,12 @@ export const SMSProvider = ({ children }) => {
         description: data.title || "Transaction",
       };
 
+      console.log("Final expense data:", finalData);
       await addExpense(finalData);
-      console.log("Expense saved from overlay successfully");
+      console.log("✅ Expense saved from overlay successfully");
     } catch (error) {
-      console.error("Error saving expense from overlay:", error);
+      console.error("❌ Error saving expense from overlay:", error);
+      // You might want to show a user notification here
     }
   };
 

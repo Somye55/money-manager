@@ -82,15 +82,35 @@ public class OverlayService extends Service {
 
     private double parseAmount(String text) {
         if (text == null) return 0.0;
-        Pattern pattern = Pattern.compile("Rs\\.(\\d+\\.\\d{2})");
-        Matcher matcher = pattern.matcher(text);
-        if (matcher.find()) {
-            try {
-                return Double.parseDouble(matcher.group(1));
-            } catch (NumberFormatException e) {
-                Log.e(TAG, "Error parsing amount: " + e.getMessage());
+        
+        // Try multiple patterns for amount parsing
+        String[] patterns = {
+            "Rs\\.(\\d+\\.\\d{2})",           // Rs.100.00
+            "Rs\\s+(\\d+\\.\\d{2})",         // Rs 100.00
+            "Rs\\.(\\d+)",                   // Rs.100
+            "Rs\\s+(\\d+)",                  // Rs 100
+            "₹\\s*(\\d+\\.\\d{2})",          // ₹100.00 or ₹ 100.00
+            "₹\\s*(\\d+)",                   // ₹100 or ₹ 100
+            "INR\\s+(\\d+\\.\\d{2})",        // INR 100.00
+            "INR\\s+(\\d+)"                  // INR 100
+        };
+        
+        for (String patternStr : patterns) {
+            Pattern pattern = Pattern.compile(patternStr);
+            Matcher matcher = pattern.matcher(text);
+            if (matcher.find()) {
+                try {
+                    String amountStr = matcher.group(1);
+                    double amount = Double.parseDouble(amountStr);
+                    Log.d(TAG, "Amount parsed successfully: " + amount + " using pattern: " + patternStr);
+                    return amount;
+                } catch (NumberFormatException e) {
+                    Log.w(TAG, "Error parsing amount with pattern " + patternStr + ": " + e.getMessage());
+                }
             }
         }
+        
+        Log.w(TAG, "Could not parse amount from text: " + text);
         return 0.0;
     }
 
@@ -337,6 +357,20 @@ public class OverlayService extends Service {
 
     private void saveExpense(String title, String text, String packageName, String category) {
         Log.d(TAG, "saveExpense called - Category: " + category + ", Amount: " + parsedAmount);
+        
+        // Validate data before saving
+        if (parsedAmount <= 0) {
+            Log.e(TAG, "Invalid amount: " + parsedAmount);
+            Toast.makeText(this, "Error: Invalid amount", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        if (category == null || category.trim().isEmpty()) {
+            Log.e(TAG, "No category selected");
+            Toast.makeText(this, "Error: Please select a category", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
         try {
             Intent intent = new Intent("com.moneymanager.app.EXPENSE_SAVED");
             intent.putExtra("title", title);
@@ -349,11 +383,13 @@ public class OverlayService extends Service {
             intent.putExtra("notificationTimestamp", System.currentTimeMillis());
 
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-            Log.d(TAG, "Expense save broadcast sent");
+            Log.d(TAG, "Expense save broadcast sent successfully");
+            Log.d(TAG, "Broadcast data: amount=" + parsedAmount + ", category=" + category + ", type=" + parsedType);
 
-            Toast.makeText(this, "Expense saved in " + category, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Expense saved: Rs." + String.format("%.2f", parsedAmount) + " in " + category, Toast.LENGTH_LONG).show();
         } catch (Exception e) {
             Log.e(TAG, "Error broadcasting expense save: " + e.getMessage(), e);
+            Toast.makeText(this, "Error saving expense: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
