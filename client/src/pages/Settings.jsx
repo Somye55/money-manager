@@ -75,6 +75,7 @@ const Settings = () => {
     name: "",
     icon: "Tag",
     color: "#6366f1",
+    budget: "",
   });
   const [categoryFormErrors, setCategoryFormErrors] = useState({});
   const [savingCategory, setSavingCategory] = useState(false);
@@ -183,6 +184,7 @@ const Settings = () => {
         name: category.name,
         icon: category.icon || "Tag",
         color: category.color || "#6366f1",
+        budget: category.budget ? category.budget.toString() : "",
       });
     } else {
       setEditingCategory(null);
@@ -190,6 +192,7 @@ const Settings = () => {
         name: "",
         icon: "Tag",
         color: "#6366f1",
+        budget: "",
       });
     }
     setCategoryFormErrors({});
@@ -213,6 +216,16 @@ const Settings = () => {
       errors.name = "Category name must be at least 2 characters";
     } else if (categoryForm.name.trim().length > 30) {
       errors.name = "Category name must be less than 30 characters";
+    }
+
+    // Validate budget if provided
+    if (categoryForm.budget && categoryForm.budget.trim()) {
+      const budgetValue = parseFloat(categoryForm.budget);
+      if (isNaN(budgetValue) || budgetValue < 0) {
+        errors.budget = "Budget must be a valid positive number";
+      } else if (budgetValue > 999999.99) {
+        errors.budget = "Budget cannot exceed 999,999.99";
+      }
     }
 
     // Check for duplicate names (excluding current category if editing)
@@ -1130,6 +1143,46 @@ const Settings = () => {
                   Press Ctrl+Enter to save
                 </Typography>
               </div>
+            </div>
+
+            {/* Budget Input */}
+            <div>
+              <Input
+                label={
+                  <div className="flex items-center gap-2">
+                    <DollarSign size={16} className="text-primary" />
+                    Monthly Budget (Optional)
+                  </div>
+                }
+                type="number"
+                step="0.01"
+                min="0"
+                max="999999.99"
+                value={categoryForm.budget}
+                onChange={(e) => {
+                  setCategoryForm({
+                    ...categoryForm,
+                    budget: e.target.value,
+                  });
+                  // Clear errors on change
+                  if (categoryFormErrors.budget) {
+                    setCategoryFormErrors({
+                      ...categoryFormErrors,
+                      budget: null,
+                    });
+                  }
+                }}
+                placeholder="0.00"
+                error={categoryFormErrors.budget}
+                fullWidth
+              />
+              <Typography
+                variant="caption"
+                color="tertiary"
+                className="mt-1 block"
+              >
+                Set a monthly spending limit for this category
+              </Typography>
             </div>
 
             {/* Icon Selection */}

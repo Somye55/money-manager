@@ -315,6 +315,10 @@ export const createCategory = async (category) => {
       icon: category.icon || "Tag",
       color: category.color || "#6366f1",
       order: category.order || 0,
+      budget:
+        category.budget && category.budget > 0
+          ? parseFloat(category.budget)
+          : null,
     };
 
     console.log("🔄 Sanitized category data:", sanitizedCategory);
@@ -388,6 +392,12 @@ export const updateCategory = async (id, updates) => {
     const sanitizedUpdates = { ...updates };
     if (sanitizedUpdates.name) {
       sanitizedUpdates.name = sanitizedUpdates.name.trim();
+    }
+    if (sanitizedUpdates.budget !== undefined) {
+      sanitizedUpdates.budget =
+        sanitizedUpdates.budget && sanitizedUpdates.budget > 0
+          ? parseFloat(sanitizedUpdates.budget)
+          : null;
     }
 
     // If updating name, check for duplicates
@@ -642,6 +652,58 @@ export const getSpendingByCategory = async (userId) => {
   });
 
   return categoryTotals;
+};
+
+/**
+ * Get category spending with budget comparison
+ */
+export const getCategoryBudgetAnalysis = async (userId) => {
+  const [categories, expenses] = await Promise.all([
+    getCategories(userId),
+    getCurrentMonthExpenses(userId),
+  ]);
+
+  const categoryAnalysis = {};
+
+  // Initialize with all categories
+  categories.forEach((category) => {
+    categoryAnalysis[category.id] = {
+      id: category.id,
+      name: category.name,
+      color: category.color,
+      icon: category.icon,
+      budget: category.budget,
+      spent: 0,
+      count: 0,
+      remaining: category.budget || 0,
+      percentUsed: 0,
+      isOverBudget: false,
+    };
+  });
+
+  // Add spending data
+  expenses.forEach((expense) => {
+    const categoryId = expense.categoryId;
+    if (categoryAnalysis[categoryId]) {
+      const amount = parseFloat(expense.amount);
+      categoryAnalysis[categoryId].spent += amount;
+      categoryAnalysis[categoryId].count += 1;
+    }
+  });
+
+  // Calculate budget metrics
+  Object.values(categoryAnalysis).forEach((category) => {
+    if (category.budget && category.budget > 0) {
+      category.remaining = Math.max(0, category.budget - category.spent);
+      category.percentUsed = Math.min(
+        100,
+        (category.spent / category.budget) * 100
+      );
+      category.isOverBudget = category.spent > category.budget;
+    }
+  });
+
+  return categoryAnalysis;
 };
 
 /**

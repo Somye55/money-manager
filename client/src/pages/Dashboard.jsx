@@ -29,6 +29,7 @@ import { useSMS } from "../context/SMSContext";
 import { useNavigate } from "react-router-dom";
 import * as Icons from "lucide-react";
 import SMSExpenseCard from "../components/SMSExpenseCard";
+import BudgetOverview from "../components/BudgetOverview";
 
 ChartJS.register(
   CategoryScale,
@@ -443,6 +444,11 @@ const Dashboard = () => {
             </span>
           </div>
         </div>
+      </div>
+
+      {/* Budget Overview */}
+      <div className="animate-slide-up" style={{ animationDelay: "0.15s" }}>
+        <BudgetOverview />
       </div>
 
       {dailySpending.length > 0 && dailySpending.some((d) => d.total > 0) && (
