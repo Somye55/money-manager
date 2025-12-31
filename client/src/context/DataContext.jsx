@@ -142,20 +142,32 @@ export const DataProvider = ({ children }) => {
   // Expense operations
   const addExpense = async (expenseData) => {
     if (!user) {
+      console.error("❌ User not authenticated when trying to add expense");
       throw new Error("User not authenticated");
     }
 
     try {
+      console.log("🔄 Adding expense with data:", expenseData);
+      console.log("🔄 User ID:", user.id);
+
+      // Validate required fields
+      if (!expenseData.amount || expenseData.amount <= 0) {
+        throw new Error("Invalid amount: " + expenseData.amount);
+      }
+
       const newExpense = await createExpense({
         ...expenseData,
         userId: user.id,
         source: expenseData.source || "MANUAL",
       });
+
       setExpenses([newExpense, ...expenses]);
-      console.log("✅ Expense added successfully to context");
+      console.log("✅ Expense added successfully to context:", newExpense);
       return newExpense;
     } catch (error) {
       console.error("❌ Failed to add expense:", error);
+      console.error("❌ Expense data was:", expenseData);
+      console.error("❌ User was:", user);
       throw error;
     }
   };
