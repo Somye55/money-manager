@@ -15,6 +15,7 @@ import {
   deleteExpense,
   getCurrentMonthExpenses,
   getSpendingByCategory,
+  getCategoryBudgetAnalysis,
   getTotalSpending,
 } from "../lib/dataService";
 
@@ -216,6 +217,11 @@ export const DataProvider = ({ children }) => {
     };
   };
 
+  const getBudgetAnalysis = async () => {
+    if (!user) return null;
+    return await getCategoryBudgetAnalysis(user.id);
+  };
+
   const value = {
     user,
     categories,
@@ -241,6 +247,7 @@ export const DataProvider = ({ children }) => {
 
     // Analytics
     getAnalytics,
+    getBudgetAnalysis,
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
