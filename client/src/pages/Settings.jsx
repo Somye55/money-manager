@@ -1195,7 +1195,7 @@ const Settings = () => {
                 Choose Icon
               </label>
               <div
-                className="grid grid-cols-6 sm:grid-cols-8 gap-2 p-2 max-h-48 overflow-y-auto rounded-lg border"
+                className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 p-2 max-h-48 overflow-y-auto rounded-lg border"
                 style={{
                   backgroundColor: "var(--bg-secondary)",
                   borderColor: "var(--border)",
@@ -1213,6 +1213,7 @@ const Settings = () => {
                       }
                       style={{
                         width: "100%",
+                        aspectRatio: "1",
                         minHeight: "3rem",
                         padding: "0.5rem",
                         borderRadius: "0.5rem",
@@ -1247,7 +1248,7 @@ const Settings = () => {
                 <Palette size={16} style={{ color: "var(--primary)" }} />
                 Choose Color
               </label>
-              <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
                 {colorOptions.map((color) => {
                   const isSelected = categoryForm.color === color;
                   return (
@@ -1259,7 +1260,8 @@ const Settings = () => {
                       }
                       style={{
                         width: "100%",
-                        height: "3.5rem",
+                        aspectRatio: "2.5/1",
+                        minHeight: "3.5rem",
                         borderRadius: "0.75rem",
                         backgroundColor: color,
                         border: isSelected
