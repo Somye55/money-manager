@@ -408,6 +408,70 @@ input::placeholder {
 .grid-cols-3 {
   grid-template-columns: repeat(3, 1fr);
 }
+.grid-cols-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+.grid-cols-5 {
+  grid-template-columns: repeat(5, 1fr);
+}
+.grid-cols-6 {
+  grid-template-columns: repeat(6, 1fr);
+}
+.grid-cols-7 {
+  grid-template-columns: repeat(7, 1fr);
+}
+.grid-cols-8 {
+  grid-template-columns: repeat(8, 1fr);
+}
+
+/* Responsive grid classes */
+@media (min-width: 640px) {
+  .sm\:grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .sm\:grid-cols-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .sm\:grid-cols-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .sm\:grid-cols-5 {
+    grid-template-columns: repeat(5, 1fr);
+  }
+  .sm\:grid-cols-6 {
+    grid-template-columns: repeat(6, 1fr);
+  }
+  .sm\:grid-cols-7 {
+    grid-template-columns: repeat(7, 1fr);
+  }
+  .sm\:grid-cols-8 {
+    grid-template-columns: repeat(8, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .md\:grid-cols-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .md\:grid-cols-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .md\:grid-cols-5 {
+    grid-template-columns: repeat(5, 1fr);
+  }
+  .md\:grid-cols-6 {
+    grid-template-columns: repeat(6, 1fr);
+  }
+  .md\:grid-cols-7 {
+    grid-template-columns: repeat(7, 1fr);
+  }
+  .md\:grid-cols-8 {
+    grid-template-columns: repeat(8, 1fr);
+  }
+}
 
 .block {
   display: block;
@@ -849,6 +913,15 @@ button:active:not(:disabled),
     min-height: 50px;
   }
 
+  .grid-cols-4 > * {
+    min-height: 48px;
+  }
+
+  /* Ensure grid display is not overridden */
+  .grid {
+    display: grid !important;
+  }
+
   /* Improved text sizes for mobile */
   .text-xs {
     font-size: 0.8125rem;
@@ -891,6 +964,11 @@ button:active:not(:disabled),
     .card {
       padding: 1rem;
     }
+
+    /* Smaller grid for very small screens */
+    .grid-cols-4 {
+      grid-template-columns: repeat(3, 1fr);
+    }
   }
 }
 
@@ -920,6 +998,18 @@ button:active:not(:disabled),
 
 .overflow-auto {
   overflow: auto;
+}
+
+.overflow-y-auto {
+  overflow-y: auto;
+}
+
+.max-h-48 {
+  max-height: 12rem;
+}
+
+.max-h-64 {
+  max-height: 16rem;
 }
 
 .select-none {
