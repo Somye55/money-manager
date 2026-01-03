@@ -28,8 +28,12 @@ export const initializeDeepLinks = () => {
             data.session.user?.email
           );
 
-          // Trigger auth state change
+          // Trigger auth state change - this will cause Login component to navigate
           window.dispatchEvent(new CustomEvent("supabase-auth-success"));
+
+          // Also navigate directly as a backup
+          console.log("🔄 Navigating to dashboard...");
+          window.location.href = "/";
         } else {
           console.log("⚠️ No session data in callback");
           await handleManualTokenParsing(event.url);
@@ -77,6 +81,10 @@ const handleManualTokenParsing = async (urlString) => {
       } else {
         console.log("✅ Manual session set successfully:", data.user?.email);
         window.dispatchEvent(new CustomEvent("supabase-auth-success"));
+
+        // Navigate to dashboard
+        console.log("🔄 Navigating to dashboard...");
+        window.location.href = "/";
       }
     } else {
       console.log("⚠️ No tokens found in URL");

@@ -145,13 +145,18 @@ const initializeDefaultSettings = async (userId) => {
     selectedApps: ["com.whatsapp", "com.google.android.apps.messaging"],
   };
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("UserSettings")
-    .insert([defaultSettings]);
+    .insert([defaultSettings])
+    .select()
+    .single();
 
   if (error) {
     console.error("Error creating default settings:", error);
+    throw error; // Throw error to prevent infinite recursion
   }
+
+  return data;
 };
 
 /**
@@ -172,8 +177,22 @@ export const getUserSettings = async (userId) => {
 
   // If no settings exist, create default
   if (!data) {
-    await initializeDefaultSettings(userId);
-    return getUserSettings(userId);
+    console.log("No settings found, creating defaults for user:", userId);
+    try {
+      const newSettings = await initializeDefaultSettings(userId);
+      return newSettings;
+    } catch (err) {
+      console.error("Failed to create default settings:", err);
+      // Return default settings object without saving to prevent infinite loop
+      return {
+        userId,
+        currency: "INR",
+        monthlyBudget: null,
+        enableNotifications: true,
+        theme: "system",
+        selectedApps: ["com.whatsapp", "com.google.android.apps.messaging"],
+      };
+    }
   }
 
   return data;
