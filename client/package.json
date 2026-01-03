@@ -8,7 +8,8 @@
     "dev:mobile": "vite --host 0.0.0.0",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "sync:android": "npx cap sync android && cd android && gradlew.bat assembleDebug && gradlew.bat installDebug"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.4",

@@ -6,6 +6,7 @@ import {
   Link,
   useLocation,
   Navigate,
+  useNavigate,
 } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -20,6 +21,7 @@ import {
   Settings as SettingsIcon,
   Wallet,
   Receipt,
+  ArrowLeft,
 } from "lucide-react";
 import { Card, CardContent } from "./components/ui/card";
 import Dashboard from "./pages/Dashboard";
@@ -65,7 +67,7 @@ const Navigation = () => {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-t border-border safe-area-bottom z-50"
+      className="fixed bottom-0 left-0 right-0 bg-card dark:bg-card border-t border-border safe-area-bottom z-50"
       style={{
         boxShadow: "0 -4px 12px rgba(0, 0, 0, 0.05)",
       }}
@@ -79,8 +81,8 @@ const Navigation = () => {
             to={item.path}
             className={`flex flex-col items-center p-3 rounded-xl transition-all duration-200 min-w-0 flex-1 min-h-[44px] ${
               location.pathname === item.path
-                ? "text-indigo-600"
-                : "text-gray-500"
+                ? "text-indigo-600 dark:text-indigo-400"
+                : "text-gray-500 dark:text-gray-400"
             }`}
             style={{
               textDecoration: "none",
@@ -97,9 +99,6 @@ const Navigation = () => {
               strokeWidth={location.pathname === item.path ? 2.5 : 2}
               aria-hidden="true"
             />
-            <span className="mt-1 truncate text-xs font-medium">
-              {item.label}
-            </span>
             {location.pathname === item.path && (
               <div
                 className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 rounded-t-full"
@@ -119,15 +118,43 @@ const Navigation = () => {
 
 const Header = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   if (location.pathname === "/login") return null;
 
+  // Determine page title based on route
+  const getPageTitle = () => {
+    if (location.pathname === "/") return "Money Manager";
+    if (location.pathname === "/expenses") return "Expenses";
+    if (location.pathname === "/add") return "Add Expense";
+    if (location.pathname === "/settings") return "Settings";
+    if (location.pathname.startsWith("/settings/")) {
+      const group = location.pathname.split("/")[2];
+      const groupName = group.charAt(0).toUpperCase() + group.slice(1);
+      return `Settings → ${groupName}`;
+    }
+    return "Money Manager";
+  };
+
+  // Show back button for all pages except dashboard
+  const showBackButton = location.pathname !== "/";
+
   return (
-    <Card className="flex items-center justify-between sticky top-0 z-10 backdrop-blur-lg bg-opacity-90 rounded-none border-b p-4">
+    <Card className="flex items-center justify-between top-0 z-10 backdrop-blur-lg bg-opacity-90 rounded-none border-b p-4">
       <div className="flex items-center gap-3">
-        <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600">
-          <Wallet className="text-white" size={24} />
-        </div>
+        {showBackButton ? (
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 transition-all"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="text-white" size={24} />
+          </button>
+        ) : (
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600">
+            <Wallet className="text-white" size={24} />
+          </div>
+        )}
         <h3
           className="text-xl font-bold"
           style={{
@@ -137,7 +164,7 @@ const Header = () => {
             backgroundClip: "text",
           }}
         >
-          Money Manager
+          {getPageTitle()}
         </h3>
       </div>
     </Card>

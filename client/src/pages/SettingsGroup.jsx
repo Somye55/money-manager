@@ -37,15 +37,6 @@ const SettingsGroup = () => {
 
   return (
     <div className="p-4 pb-24 space-y-4 animate-fade-in max-w-2xl mx-auto">
-      <Button
-        variant="ghost"
-        onClick={() => navigate("/settings")}
-        className="mb-2"
-        aria-label="Back to settings"
-      >
-        <ArrowLeft size={20} />
-        Back
-      </Button>
       {renderGroupContent()}
     </div>
   );

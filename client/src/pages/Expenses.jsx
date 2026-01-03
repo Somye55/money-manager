@@ -265,36 +265,6 @@ const Expenses = () => {
 
   return (
     <div className="p-4 pb-24 space-y-4 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-3">
-          <div
-            className="p-3 rounded-xl"
-            style={{
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            }}
-          >
-            <Receipt className="text-white" size={24} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">Expenses</h1>
-            <p className="text-xs text-muted-foreground">
-              {filteredExpenses.length} transactions
-            </p>
-          </div>
-        </div>
-
-        {/* Add Expense Button */}
-        <Button
-          onClick={() => setShowAddModal(true)}
-          className="bg-gradient-to-br from-green-500 to-green-600 shadow-lg"
-          aria-label="Add new expense"
-        >
-          <Plus size={18} aria-hidden="true" />
-          Add
-        </Button>
-      </div>
-
       {/* New Expenses Found Section */}
       {extractedExpenses.length > 0 && (
         <div className="animate-slide-up">
