@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useState, useRef } from "react";
 import {
   BarChart,
   Bar,
@@ -11,7 +11,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { TrendingUp, Loader, ArrowRight } from "lucide-react";
+import { TrendingUp, Loader, ArrowRight, RefreshCw } from "lucide-react";
 import { useData } from "../context/DataContext";
 import { useSMS } from "../context/SMSContext";
 import { useNavigate } from "react-router-dom";
@@ -19,18 +19,81 @@ import * as Icons from "lucide-react";
 import { Progress } from "../components/ui/progress";
 
 const Dashboard = () => {
-  const { expenses, categories, settings, loading } = useData();
+  const { expenses, categories, settings, loading, refreshAllData } = useData();
   const { scanSMS, isSupported, permissionGranted } = useSMS();
   const navigate = useNavigate();
   const [analytics, setAnalytics] = useState(null);
   const [dailySpending, setDailySpending] = useState([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isPulling, setIsPulling] = useState(false);
+  const startY = useRef(0);
+  const containerRef = useRef(null);
 
   // Auto-scan on load if permitted
   useEffect(() => {
     if (isSupported && permissionGranted) {
       scanSMS(10);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSupported, permissionGranted]);
+
+  // Handle manual refresh
+  const handleRefresh = async () => {
+    if (isRefreshing) return;
+
+    setIsRefreshing(true);
+    try {
+      await refreshAllData();
+      // Also scan SMS if permitted
+      if (isSupported && permissionGranted) {
+        await scanSMS(10);
+      }
+    } catch (error) {
+      console.error("❌ Error refreshing data:", error);
+    } finally {
+      // Reset pull distance and refreshing state after a short delay
+      setTimeout(() => {
+        setIsRefreshing(false);
+        setPullDistance(0);
+      }, 500);
+    }
+  };
+
+  // Pull-to-refresh handlers
+  const handleTouchStart = (e) => {
+    if (containerRef.current && containerRef.current.scrollTop === 0) {
+      startY.current = e.touches[0].clientY;
+      setIsPulling(true);
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isPulling || isRefreshing) return;
+
+    const currentY = e.touches[0].clientY;
+    const distance = currentY - startY.current;
+
+    if (distance > 0 && containerRef.current.scrollTop === 0) {
+      setPullDistance(distance); // Remove the limit
+      if (distance > 80) {
+        e.preventDefault();
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!isPulling) return;
+
+    if (pullDistance > 80) {
+      handleRefresh();
+    } else {
+      // If not enough pull, reset immediately
+      setPullDistance(0);
+    }
+
+    setIsPulling(false);
+  };
 
   // Calculate analytics from expenses
   useEffect(() => {
@@ -180,7 +243,41 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="bg-page-gradient min-h-full">
+    <div
+      ref={containerRef}
+      className="bg-page-gradient min-h-full relative"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Pull-to-refresh indicator */}
+      <div
+        className="fixed top-[72px] left-0 right-0 flex justify-center z-40 pointer-events-none"
+        style={{
+          transform: `translateY(${
+            isPulling || isRefreshing ? pullDistance * 0.2 : -60
+          }px)`,
+          opacity:
+            isPulling || isRefreshing ? Math.min(pullDistance / 80, 1) : 0,
+          transition: isPulling
+            ? "none"
+            : "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
+      >
+        <div className="bg-card rounded-full p-3 shadow-xl border-2 border-primary/30 backdrop-blur-sm">
+          <RefreshCw
+            className="text-primary"
+            size={24}
+            style={{
+              transform: isRefreshing ? "rotate(360deg)" : "rotate(0deg)",
+              transition: isRefreshing
+                ? "transform 0.8s linear infinite"
+                : "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            }}
+          />
+        </div>
+      </div>
+
       <div className="w-full px-3 py-6 space-y-6">
         {/* Balance and Expenses Cards with Premium Gradient */}
         <div className="grid grid-cols-2 gap-4 animate-fadeIn">

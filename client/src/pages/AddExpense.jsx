@@ -250,29 +250,29 @@ const AddExpense = () => {
 
           {/* Action Buttons */}
           <div
-            className="flex gap-3 pt-2 animate-fadeIn"
+            className="flex flex-nowrap gap-3 pt-2 animate-fadeIn"
             style={{ animationDelay: "0.2s" }}
           >
             <button
               onClick={handleCancel}
               disabled={saving}
               type="button"
-              className="flex-1 py-4 px-6 rounded-2xl bg-secondary text-secondary-foreground font-semibold transition-smooth hover:bg-secondary/80 flex items-center justify-center gap-2 border-2 border-border"
+              className="py-4 px-3 rounded-2xl bg-secondary text-secondary-foreground font-semibold transition-smooth hover:bg-secondary/80 flex items-center justify-center gap-2 border border-border"
               aria-label="Cancel adding expense"
             >
-              <X size={18} aria-hidden="true" />
-              Cancel
+              <X size={18} aria-hidden="true" className="flex-shrink-0" />
+              <span>Cancel</span>
             </button>
 
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 py-4 px-6 rounded-2xl btn-gradient-primary text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
+              className="flex-1 min-w-0 py-4 px-6 rounded-2xl btn-gradient-primary text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
               aria-label={saving ? "Saving expense" : "Add expense"}
             >
               {!saving && <div className="absolute inset-0 shimmer"></div>}
-              <Save size={18} aria-hidden="true" />
-              {saving ? "Saving..." : "Add Expense"}
+              <Save size={18} aria-hidden="true" className="flex-shrink-0" />
+              <span>{saving ? "Saving..." : "Add Expense"}</span>
             </button>
           </div>
         </form>
