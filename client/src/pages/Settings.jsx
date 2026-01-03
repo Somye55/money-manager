@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import {
-  Settings as SettingsIcon,
   User,
   Palette,
   DollarSign,
@@ -9,7 +8,6 @@ import {
   Database,
   ChevronRight,
 } from "lucide-react";
-import { Card, CardContent } from "../components/ui/card";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -60,28 +58,30 @@ const Settings = () => {
   ];
 
   return (
-    <div className="p-4 pb-24 space-y-4 animate-fade-in max-w-2xl mx-auto">
+    <div className="pb-24 space-y-4 animate-fade-in max-w-2xl mx-auto bg-page-gradient min-h-screen px-4 py-6">
       {/* Settings Groups */}
       <div className="space-y-3">
         {settingsGroups.map((group, index) => {
           const Icon = group.icon;
           return (
-            <Card
+            <div
               key={group.id}
-              className="animate-slide-up cursor-pointer hover:shadow-lg transition-all border-2 hover:border-indigo-500/50"
+              className="animate-slide-up cursor-pointer card-elevated rounded-2xl overflow-hidden bg-white dark:bg-card transition-smooth hover:scale-[1.01]"
               style={{ animationDelay: `${index * 0.05}s` }}
               onClick={() => navigate(`/settings/${group.id}`)}
             >
-              <CardContent className="p-4">
+              <div className="p-5">
                 <div className="flex items-center gap-4">
                   <div
-                    className={`p-3 rounded-xl bg-gradient-to-r ${group.color}`}
+                    className={`p-3.5 rounded-xl bg-gradient-to-r ${group.color} shadow-lg`}
                   >
-                    <Icon className="text-white" size={24} />
+                    <Icon className="text-white" size={24} strokeWidth={2.5} />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-base">{group.title}</h3>
-                    <p className="text-xs text-muted-foreground">
+                    <h3 className="font-semibold text-base text-foreground">
+                      {group.title}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       {group.description}
                     </p>
                   </div>
@@ -90,8 +90,8 @@ const Settings = () => {
                     className="text-muted-foreground flex-shrink-0"
                   />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           );
         })}
       </div>

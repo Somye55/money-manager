@@ -264,16 +264,20 @@ const Expenses = () => {
   }
 
   return (
-    <div className="p-4 pb-24 space-y-4 animate-fade-in">
+    <div className="pb-24 space-y-4 animate-fade-in bg-page-gradient min-h-screen px-4 py-6">
       {/* New Expenses Found Section */}
       {extractedExpenses.length > 0 && (
-        <div className="animate-slide-up">
+        <div className="animate-slide-up card-elevated rounded-2xl overflow-hidden bg-white dark:bg-card p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Smartphone className="text-primary" size={20} />
-              <h3 className="text-lg font-bold">New Expenses Found</h3>
+              <div className="p-2 rounded-xl bg-primary/10">
+                <Smartphone className="text-primary" size={20} />
+              </div>
+              <h3 className="text-lg font-bold text-foreground">
+                New Expenses Found
+              </h3>
             </div>
-            <span className="bg-primary text-white text-xs px-2 py-1 rounded-full font-bold">
+            <span className="bg-gradient-primary text-white text-xs px-3 py-1.5 rounded-full font-bold shadow-lg">
               {extractedExpenses.length}
             </span>
           </div>
@@ -300,33 +304,26 @@ const Expenses = () => {
       )}
 
       {/* Summary Card */}
-      <div
-        className="card p-4"
-        style={{
-          background: "linear-gradient(135deg, #f43f5e 0%, #ec4899 100%)",
-          border: "none",
-          boxShadow: "0 8px 24px rgba(239, 68, 68, 0.25)",
-          borderRadius: "1.25rem",
-        }}
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs text-white opacity-90 font-medium mb-1">
-              Total Expenses
-            </p>
-            <h2 className="text-3xl font-extrabold text-white">
-              {currencySymbol}{" "}
-              {totalAmount.toLocaleString("en-IN", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </h2>
-          </div>
-          <div
-            className="p-3 rounded-xl"
-            style={{ background: "rgba(255, 255, 255, 0.25)" }}
-          >
-            <TrendingDown size={28} className="text-white" />
+      <div className="relative overflow-hidden rounded-2xl shadow-xl transition-smooth hover:shadow-2xl">
+        <div className="absolute inset-0 bg-gradient-danger"></div>
+        <div className="absolute inset-0 shimmer"></div>
+        <div className="relative p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-white/80 font-medium mb-1">
+                Total Expenses
+              </p>
+              <h2 className="text-3xl font-extrabold text-white">
+                {currencySymbol}{" "}
+                {totalAmount.toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </h2>
+            </div>
+            <div className="p-3 rounded-xl bg-white/25">
+              <TrendingDown size={28} className="text-white" />
+            </div>
           </div>
         </div>
       </div>
@@ -439,42 +436,45 @@ const Expenses = () => {
                 const categoryColor = category?.color || "#6366f1";
 
                 return (
-                  <Card
+                  <div
                     key={expense.id}
-                    className="p-3.5 transition hover:shadow-lg"
+                    className="p-4 rounded-2xl bg-white dark:bg-card border-2 border-border transition-smooth hover:shadow-lg hover:border-primary/30"
                   >
                     <div className="flex items-center gap-3">
                       <div
-                        className="rounded-xl flex items-center justify-center flex-shrink-0"
+                        className="rounded-2xl flex items-center justify-center flex-shrink-0"
                         style={{
-                          width: "44px",
-                          height: "44px",
+                          width: "56px",
+                          height: "56px",
                           background: `${categoryColor}20`,
                         }}
                       >
                         <IconComponent
-                          size={20}
+                          size={28}
                           style={{ color: categoryColor }}
+                          strokeWidth={2}
                         />
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm truncate">
+                        <p className="font-bold text-base truncate text-foreground mb-0.5">
                           {expense.description}
                         </p>
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          {category && <span>{category.name}</span>}
+                          {category && (
+                            <span className="font-medium">{category.name}</span>
+                          )}
                           {category && <span>•</span>}
-                          <span className="capitalize">
+                          <span className="capitalize font-medium">
                             {expense.source.toLowerCase()}
                           </span>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-2">
                         <div className="text-right">
-                          <p className="font-bold text-sm text-destructive whitespace-nowrap">
-                            - {currencySymbol}
+                          <p className="font-bold text-base text-destructive whitespace-nowrap">
+                            {currencySymbol}
                             {parseFloat(expense.amount).toLocaleString(
                               "en-IN",
                               { minimumFractionDigits: 2 }
@@ -482,46 +482,42 @@ const Expenses = () => {
                           </p>
                         </div>
 
-                        <div className="flex gap-0.5">
-                          <Button
+                        <div className="flex gap-1">
+                          <button
                             onClick={() => handleEdit(expense)}
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 min-h-[44px] min-w-[44px]"
+                            className="h-10 w-10 min-h-[44px] min-w-[44px] rounded-xl hover:bg-primary/10 transition-smooth flex items-center justify-center"
                             aria-label={`Edit ${expense.description}`}
                           >
                             <Edit2
-                              size={14}
+                              size={18}
                               className="text-primary"
                               aria-hidden="true"
                             />
-                          </Button>
-                          <Button
+                          </button>
+                          <button
                             onClick={() => handleDelete(expense.id)}
                             disabled={deleting === expense.id}
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 min-h-[44px] min-w-[44px]"
+                            className="h-10 w-10 min-h-[44px] min-w-[44px] rounded-xl hover:bg-destructive/10 transition-smooth flex items-center justify-center"
                             aria-label={`Delete ${expense.description}`}
                           >
                             {deleting === expense.id ? (
                               <Loader
-                                size={14}
+                                size={18}
                                 className="animate-spin text-destructive"
                                 aria-hidden="true"
                               />
                             ) : (
                               <Trash2
-                                size={14}
+                                size={18}
                                 className="text-destructive"
                                 aria-hidden="true"
                               />
                             )}
-                          </Button>
+                          </button>
                         </div>
                       </div>
                     </div>
-                  </Card>
+                  </div>
                 );
               })}
             </div>

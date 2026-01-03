@@ -1,7 +1,5 @@
 import { User, LogOut } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import { Card, CardHeader, CardContent, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
 
 const ProfileSettings = () => {
   const { user: authUser, signOut } = useAuth();
@@ -16,14 +14,16 @@ const ProfileSettings = () => {
 
   return (
     <div className="space-y-4">
-      <Card className="animate-slide-up">
-        <CardHeader>
-          <CardTitle className="text-base">Account Details</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="animate-slide-up card-elevated rounded-2xl overflow-hidden bg-white dark:bg-card">
+        <div className="p-6 border-b border-border">
+          <h3 className="text-lg font-semibold text-foreground">
+            Account Details
+          </h3>
+        </div>
+        <div className="p-6">
           <div className="flex items-center gap-4 mb-6">
             <div
-              className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white"
+              className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold text-white shadow-lg"
               style={{
                 background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
               }}
@@ -31,7 +31,7 @@ const ProfileSettings = () => {
               {authUser?.user_metadata?.name?.charAt(0)?.toUpperCase() || "U"}
             </div>
             <div>
-              <h4 className="text-lg font-bold">
+              <h4 className="text-lg font-bold text-foreground">
                 {authUser?.user_metadata?.name || "User"}
               </h4>
               <p className="text-sm text-muted-foreground">{authUser?.email}</p>
@@ -39,32 +39,41 @@ const ProfileSettings = () => {
           </div>
 
           <div className="space-y-3 mb-6">
-            <div className="p-3 rounded-lg bg-secondary">
-              <p className="text-xs text-muted-foreground mb-1">Email</p>
-              <p className="text-sm font-medium">{authUser?.email}</p>
+            <div className="p-4 rounded-xl bg-secondary/50 border border-border">
+              <p className="text-xs text-muted-foreground mb-1 font-medium">
+                Email
+              </p>
+              <p className="text-sm font-semibold text-foreground">
+                {authUser?.email}
+              </p>
             </div>
-            <div className="p-3 rounded-lg bg-secondary">
-              <p className="text-xs text-muted-foreground mb-1">Name</p>
-              <p className="text-sm font-medium">
+            <div className="p-4 rounded-xl bg-secondary/50 border border-border">
+              <p className="text-xs text-muted-foreground mb-1 font-medium">
+                Name
+              </p>
+              <p className="text-sm font-semibold text-foreground">
                 {authUser?.user_metadata?.name || "Not set"}
               </p>
             </div>
-            <div className="p-3 rounded-lg bg-secondary">
-              <p className="text-xs text-muted-foreground mb-1">User ID</p>
-              <p className="text-sm font-mono text-xs">{authUser?.id}</p>
+            <div className="p-4 rounded-xl bg-secondary/50 border border-border">
+              <p className="text-xs text-muted-foreground mb-1 font-medium">
+                User ID
+              </p>
+              <p className="text-sm font-mono text-xs text-foreground">
+                {authUser?.id}
+              </p>
             </div>
           </div>
 
-          <Button
-            variant="destructive"
-            className="w-full bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700"
+          <button
+            className="w-full py-4 px-6 rounded-xl btn-gradient-danger font-semibold flex items-center justify-center gap-2"
             onClick={handleSignOut}
             aria-label="Sign out of your account"
           >
             <LogOut size={18} aria-hidden="true" /> Sign Out
-          </Button>
-        </CardContent>
-      </Card>
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

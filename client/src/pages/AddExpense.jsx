@@ -1,22 +1,10 @@
 import React, { useState } from "react";
 import { useData } from "../context/DataContext";
 import { useNavigate } from "react-router-dom";
-import {
-  PlusCircle,
-  Save,
-  X,
-  Calendar,
-  Tag,
-  FileText,
-  DollarSign,
-  Loader,
-} from "lucide-react";
+import { Save, X, Calendar, Tag, FileText, DollarSign } from "lucide-react";
 import * as Icons from "lucide-react";
-import { Button } from "../components/ui/button";
-import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
-import { Alert, AlertDescription } from "../components/ui/alert";
-import { ThemeToggle } from "../components/ui/theme-toggle";
+import { AlertDescription } from "../components/ui/alert";
 
 const AddExpense = () => {
   const { categories, addExpense, settings } = useData();
@@ -92,21 +80,23 @@ const AddExpense = () => {
       : "₹"; // Default to INR
 
   return (
-    <div className="min-h-screen pb-24">
+    <div className="min-h-screen pb-24 bg-page-gradient">
       <div className="max-w-screen-lg mx-auto px-4 py-6 space-y-6">
         {/* Error Message */}
         {error && (
-          <Alert variant="destructive" className="animate-fadeIn">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
+          <div className="animate-fadeIn card-elevated rounded-2xl p-4 bg-gradient-danger text-white">
+            <AlertDescription className="text-white font-medium">
+              {error}
+            </AlertDescription>
+          </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Amount Input */}
-          <Card className="animate-fadeIn">
-            <CardContent className="p-6">
-              <label className="flex items-center gap-2 mb-3 font-semibold text-sm">
-                <DollarSign size={16} />
+          <div className="animate-fadeIn card-elevated rounded-2xl overflow-hidden bg-white dark:bg-card">
+            <div className="p-6">
+              <label className="flex items-center gap-2 mb-3 font-semibold text-sm text-foreground">
+                <DollarSign size={16} className="text-primary" />
                 Amount
               </label>
               <div className="relative flex items-center">
@@ -119,19 +109,22 @@ const AddExpense = () => {
                   value={formData.amount}
                   onChange={(e) => handleChange("amount", e.target.value)}
                   placeholder="0.00"
-                  className="w-full pl-10 pr-4 py-3 text-3xl font-bold rounded-xl border border-input bg-input-background focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] transition-colors"
+                  className="w-full pl-10 pr-4 py-3 text-3xl font-bold rounded-xl border-2 border-border bg-input-background focus-visible:outline-none focus-visible:border-primary focus-visible:ring-primary/20 focus-visible:ring-4 transition-all"
                   autoFocus
                   aria-invalid={!!error && !formData.amount}
                 />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Description Input */}
-          <Card className="animate-fadeIn" style={{ animationDelay: "0.05s" }}>
-            <CardContent className="p-6">
-              <label className="flex items-center gap-2 mb-3 font-semibold text-sm">
-                <FileText size={16} />
+          <div
+            className="animate-fadeIn card-elevated rounded-2xl overflow-hidden bg-white dark:bg-card"
+            style={{ animationDelay: "0.05s" }}
+          >
+            <div className="p-6">
+              <label className="flex items-center gap-2 mb-3 font-semibold text-sm text-foreground">
+                <FileText size={16} className="text-primary" />
                 Description
               </label>
               <Input
@@ -139,17 +132,20 @@ const AddExpense = () => {
                 value={formData.description}
                 onChange={(e) => handleChange("description", e.target.value)}
                 placeholder="e.g., Grocery shopping"
-                className="text-base"
+                className="text-base border-2 h-12"
                 aria-invalid={!!error && !formData.description.trim()}
               />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Category Selection */}
-          <Card className="animate-fadeIn" style={{ animationDelay: "0.1s" }}>
-            <CardContent className="p-6">
-              <label className="flex items-center gap-2 mb-3 font-semibold text-sm">
-                <Tag size={16} />
+          <div
+            className="animate-fadeIn card-elevated rounded-2xl overflow-hidden bg-white dark:bg-card"
+            style={{ animationDelay: "0.1s" }}
+          >
+            <div className="p-6">
+              <label className="flex items-center gap-2 mb-4 font-semibold text-sm text-foreground">
+                <Tag size={16} className="text-primary" />
                 Category
               </label>
 
@@ -169,27 +165,25 @@ const AddExpense = () => {
                         key={category.id}
                         type="button"
                         onClick={() => {
-                          // Toggle category selection - click again to deselect
                           if (isSelected) {
                             handleChange("categoryId", "");
                           } else {
                             handleChange("categoryId", category.id.toString());
                           }
                         }}
-                        className="p-4 flex flex-col items-center gap-2 rounded-xl transition-all min-h-[44px] border-2"
+                        className={`category-btn ${
+                          isSelected ? "category-btn-selected" : ""
+                        }`}
                         style={{
                           background: isSelected
-                            ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+                            ? undefined
                             : `${category.color}15`,
-                          borderColor: isSelected
-                            ? "transparent"
-                            : "transparent",
                         }}
                         aria-label={`Select ${category.name} category`}
                         aria-pressed={isSelected}
                       >
                         <div
-                          className="rounded-xl p-2"
+                          className="rounded-xl p-2 transition-smooth"
                           style={{
                             background: isSelected
                               ? "rgba(255, 255, 255, 0.25)"
@@ -201,11 +195,12 @@ const AddExpense = () => {
                             style={{
                               color: isSelected ? "white" : category.color,
                             }}
+                            strokeWidth={2.5}
                           />
                         </div>
                         <span
                           className={`text-xs font-semibold ${
-                            isSelected ? "text-white" : ""
+                            isSelected ? "text-white" : "text-foreground"
                           }`}
                         >
                           {category.name}
@@ -215,14 +210,17 @@ const AddExpense = () => {
                   })}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Date Input */}
-          <Card className="animate-fadeIn" style={{ animationDelay: "0.15s" }}>
-            <CardContent className="p-6">
-              <label className="flex items-center gap-2 mb-3 font-semibold text-sm">
-                <Calendar size={16} />
+          <div
+            className="animate-fadeIn card-elevated rounded-2xl overflow-hidden bg-white dark:bg-card"
+            style={{ animationDelay: "0.15s" }}
+          >
+            <div className="p-6">
+              <label className="flex items-center gap-2 mb-3 font-semibold text-sm text-foreground">
+                <Calendar size={16} className="text-primary" />
                 Date
               </label>
               <Input
@@ -230,41 +228,37 @@ const AddExpense = () => {
                 value={formData.date}
                 onChange={(e) => handleChange("date", e.target.value)}
                 max={new Date().toISOString().split("T")[0]}
-                className="text-base"
+                className="text-base border-2 h-12"
               />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Action Buttons */}
           <div
             className="flex gap-3 pt-2 animate-fadeIn"
             style={{ animationDelay: "0.2s" }}
           >
-            <Button
-              variant="secondary"
-              size="lg"
+            <button
               onClick={handleCancel}
               disabled={saving}
-              className="flex-1"
               type="button"
+              className="flex-1 py-4 px-6 rounded-2xl bg-secondary text-secondary-foreground font-semibold transition-smooth hover:bg-secondary/80 flex items-center justify-center gap-2 border-2 border-border"
               aria-label="Cancel adding expense"
             >
               <X size={18} aria-hidden="true" />
               Cancel
-            </Button>
+            </button>
 
-            <Button
-              variant="default"
-              size="lg"
+            <button
               type="submit"
               disabled={saving}
-              loading={saving}
-              className="flex-1 bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
+              className="flex-1 py-4 px-6 rounded-2xl btn-gradient-primary text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
               aria-label={saving ? "Saving expense" : "Add expense"}
             >
+              {!saving && <div className="absolute inset-0 shimmer"></div>}
               <Save size={18} aria-hidden="true" />
               {saving ? "Saving..." : "Add Expense"}
-            </Button>
+            </button>
           </div>
         </form>
       </div>
