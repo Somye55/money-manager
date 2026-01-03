@@ -244,7 +244,7 @@ const Expenses = () => {
       {/* Search Bar */}
       <div className="relative">
         <Search
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
+          className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none z-10"
           size={20}
         />
         <input
@@ -252,7 +252,7 @@ const Expenses = () => {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search expenses..."
-          className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-card border-2 border-border focus:border-primary outline-none transition-smooth text-foreground placeholder:text-muted-foreground"
+          className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-card border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-smooth text-foreground placeholder:text-muted-foreground"
         />
       </div>
 
@@ -263,7 +263,7 @@ const Expenses = () => {
           className={`flex items-center gap-2 px-4 py-3 rounded-2xl font-semibold transition-smooth ${
             showFilters
               ? "bg-primary text-white shadow-lg"
-              : "bg-card border-2 border-border text-foreground hover:border-primary/50"
+              : "bg-card border border-border text-foreground hover:border-primary/50"
           }`}
           aria-label={showFilters ? "Hide filters" : "Show filters"}
         >
@@ -271,33 +271,50 @@ const Expenses = () => {
           Filters
         </button>
 
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-          className="flex-1 px-4 py-3 rounded-2xl bg-card border-2 border-border focus:border-primary outline-none transition-smooth text-foreground font-semibold"
-          aria-label="Sort expenses by"
-        >
-          <option value="date-desc">Newest First</option>
-          <option value="date-asc">Oldest First</option>
-          <option value="amount-desc">Highest Amount</option>
-          <option value="amount-asc">Lowest Amount</option>
-        </select>
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="flex-1 h-auto px-4 py-3 rounded-2xl bg-card border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 text-foreground font-semibold">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="rounded-2xl bg-card border border-border shadow-xl">
+            <SelectItem value="date-desc" className="rounded-xl font-semibold">
+              Newest First
+            </SelectItem>
+            <SelectItem value="date-asc" className="rounded-xl font-semibold">
+              Oldest First
+            </SelectItem>
+            <SelectItem
+              value="amount-desc"
+              className="rounded-xl font-semibold"
+            >
+              Highest Amount
+            </SelectItem>
+            <SelectItem value="amount-asc" className="rounded-xl font-semibold">
+              Lowest Amount
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Filter Panel */}
       {showFilters && (
-        <div className="animate-slide-up bg-card rounded-2xl p-4 border-2 border-border">
+        <div className="animate-slide-up bg-card rounded-2xl p-4 border border-border">
           <label className="block text-sm font-bold mb-2 text-foreground">
             Category
           </label>
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full h-auto px-4 py-3 rounded-2xl bg-card border border-border focus:border-primary focus:ring-2 focus:ring-primary/20">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
+            <SelectContent className="rounded-2xl bg-card border border-border shadow-xl">
+              <SelectItem value="all" className="rounded-xl font-semibold">
+                All Categories
+              </SelectItem>
               {categories.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id.toString()}>
+                <SelectItem
+                  key={cat.id}
+                  value={cat.id.toString()}
+                  className="rounded-xl font-semibold"
+                >
                   <div className="flex items-center gap-2">
                     {cat.icon && Icons[cat.icon] && (
                       <span style={{ color: cat.color }}>

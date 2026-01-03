@@ -51,6 +51,14 @@ export const DataProvider = ({ children }) => {
         return;
       }
 
+      // If we already have user data for this auth user, don't reload
+      if (user && user.email === authUser.email) {
+        console.log(
+          "🔄 DataContext: User data already loaded, skipping reload"
+        );
+        return;
+      }
+
       try {
         console.log(
           "🔄 DataContext: Initializing user data for:",
@@ -98,6 +106,7 @@ export const DataProvider = ({ children }) => {
     };
 
     initializeUserData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authUser]);
 
   // Category operations
@@ -193,6 +202,28 @@ export const DataProvider = ({ children }) => {
     setExpenses(data);
   };
 
+  // Refresh all data
+  const refreshAllData = async () => {
+    if (!user) return;
+
+    try {
+      console.log("🔄 DataContext: Refreshing all data");
+      const [categoriesData, expensesData, settingsData] = await Promise.all([
+        getCategories(user.id),
+        getCurrentMonthExpenses(user.id),
+        getUserSettings(user.id),
+      ]);
+
+      setCategories(categoriesData);
+      setExpenses(expensesData);
+      setSettings(settingsData);
+      console.log("✅ DataContext: All data refreshed");
+    } catch (err) {
+      console.error("❌ DataContext: Error refreshing data:", err);
+      throw err;
+    }
+  };
+
   // Settings operations
   const modifySettings = async (updates) => {
     if (!user) return;
@@ -241,6 +272,7 @@ export const DataProvider = ({ children }) => {
     modifyExpense,
     removeExpense,
     refreshExpenses,
+    refreshAllData,
 
     // Settings methods
     modifySettings,
