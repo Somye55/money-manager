@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
-import ReactDOM from "react-dom";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useData } from "../context/DataContext";
-import { useTheme as useOldTheme } from "../context/ThemeContext";
+import { useTheme } from "next-themes";
 import { useSMS } from "../context/SMSContext";
 import {
   Settings as SettingsIcon,
@@ -24,15 +23,25 @@ import {
   FileText,
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
+import { Button } from "../components/ui/button";
 import {
-  Button,
   Card,
-  Input,
-  Modal,
-  Typography,
-  ThemeSettings,
-  ThemeToggle,
-} from "../design-system";
+  CardHeader,
+  CardContent,
+  CardTitle,
+  CardDescription,
+} from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Switch } from "../components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import { Modal } from "../design-system";
+import { ThemeToggle } from "../components/ui/theme-toggle";
 
 const Settings = () => {
   const { user: authUser, signOut } = useAuth();
@@ -47,7 +56,7 @@ const Settings = () => {
     reorderCategories,
     loading: dataLoading,
   } = useData();
-  const { setSpecificTheme } = useOldTheme();
+  const { theme, setTheme } = useTheme();
   const {
     isSupported,
     permissionGranted: smsGranted,
@@ -98,8 +107,13 @@ const Settings = () => {
           "com.google.android.apps.messaging",
         ]
       );
+
+      // Sync theme with next-themes
+      if (settings.theme && settings.theme !== theme) {
+        setTheme(settings.theme);
+      }
     }
-  }, [settings]);
+  }, [settings, theme, setTheme]);
 
   // Check notification service connection
   useEffect(() => {
@@ -129,7 +143,7 @@ const Settings = () => {
       try {
         await modifySettings(updates);
         if (updates.theme) {
-          setSpecificTheme(updates.theme);
+          setTheme(updates.theme);
         }
         setSaveStatus("saved");
         setTimeout(() => setSaveStatus(""), 2000);
@@ -474,12 +488,10 @@ const Settings = () => {
             <SettingsIcon className="text-white" size={24} />
           </div>
           <div>
-            <Typography variant="h1" className="text-2xl font-bold">
-              Settings
-            </Typography>
-            <Typography variant="body2" color="tertiary" className="text-xs">
+            <h1 className="text-2xl font-bold">Settings</h1>
+            <p className="text-xs text-muted-foreground">
               Manage your preferences
-            </Typography>
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -488,26 +500,20 @@ const Settings = () => {
             <div className="flex items-center gap-2 text-sm">
               {saveStatus === "saving" && (
                 <>
-                  <Loader size={16} className="animate-spin text-primary" />
-                  <Typography variant="caption" color="tertiary">
-                    Saving...
-                  </Typography>
+                  <Loader size={16} className="animate-spin text-indigo-600" />
+                  <span className="text-muted-foreground">Saving...</span>
                 </>
               )}
               {saveStatus === "saved" && (
                 <>
-                  <Check size={16} className="text-success" />
-                  <Typography variant="caption" color="success">
-                    Saved
-                  </Typography>
+                  <Check size={16} className="text-emerald-600" />
+                  <span className="text-emerald-600">Saved</span>
                 </>
               )}
               {saveStatus === "error" && (
                 <>
-                  <X size={16} className="text-danger" />
-                  <Typography variant="caption" color="error">
-                    Error
-                  </Typography>
+                  <X size={16} className="text-destructive" />
+                  <span className="text-destructive">Error</span>
                 </>
               )}
             </div>
@@ -516,140 +522,147 @@ const Settings = () => {
       </div>
 
       {/* Profile Section */}
-      <Card
-        padding="lg"
-        className="animate-slide-up"
-        style={{ borderRadius: "1.25rem" }}
-      >
-        <div className="flex items-center gap-2 mb-4">
-          <User size={18} className="text-primary" />
-          <Typography variant="h3" className="text-base font-bold">
-            Profile
-          </Typography>
-        </div>
-        <div className="flex items-center gap-4">
-          <div
-            className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-white"
-            style={{
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            }}
-          >
-            {authUser?.user_metadata?.name?.charAt(0)?.toUpperCase() || "T"}
+      <Card className="animate-slide-up">
+        <CardHeader>
+          <div className="flex items-center gap-2 mb-4">
+            <User size={18} className="text-indigo-600" />
+            <CardTitle className="text-base">Profile</CardTitle>
           </div>
-          <div>
-            <Typography variant="h4" className="text-base font-bold">
-              {authUser?.user_metadata?.name || "Thamuz"}
-            </Typography>
-            <Typography variant="body2" color="tertiary" className="text-xs">
-              {authUser?.email}
-            </Typography>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4">
+            <div
+              className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-white"
+              style={{
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              }}
+            >
+              {authUser?.user_metadata?.name?.charAt(0)?.toUpperCase() || "T"}
+            </div>
+            <div>
+              <h4 className="text-base font-bold">
+                {authUser?.user_metadata?.name || "Thamuz"}
+              </h4>
+              <p className="text-xs text-muted-foreground">{authUser?.email}</p>
+            </div>
           </div>
-        </div>
+        </CardContent>
       </Card>
 
       {/* Categories Management */}
-      <Card
-        padding="lg"
-        className="animate-slide-up"
-        style={{ animationDelay: "0.05s", borderRadius: "1.25rem" }}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Tag size={18} className="text-primary" />
-            <Typography variant="h3" className="text-base font-bold">
-              Categories
-            </Typography>
-          </div>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => openCategoryModal()}
-            style={{
-              background: "linear-gradient(135deg, #0ea5e9 0%, #10b981 100%)",
-              border: "none",
-              padding: "0.5rem 1rem",
-              borderRadius: "0.75rem",
-              fontSize: "0.875rem",
-            }}
-          >
-            <Plus size={16} />
-            Add Category
-          </Button>
-        </div>
-
-        {/* Success Message */}
-        {categorySuccessMessage && (
-          <div className="mb-4 p-3 rounded-xl bg-success/10 text-success text-sm font-medium animate-slide-up">
-            {categorySuccessMessage}
-          </div>
-        )}
-        <div className="flex items-center justify-between mb-3">
-          <Typography variant="body2" color="tertiary" className="text-xs">
-            Drag to reorder categories
-          </Typography>
-          <Typography variant="caption" color="tertiary" className="text-xs">
-            {categories.length} categories
-          </Typography>
-        </div>
-        <div className="space-y-2">
-          {categories.length === 0 && !dataLoading ? (
-            <div className="text-center py-6">
-              <div className="p-4 rounded-xl bg-bg-secondary border-2 border-dashed border-border">
-                <Tag size={28} className="mx-auto mb-2 text-tertiary" />
-                <p className="text-tertiary text-sm mb-1">No categories yet</p>
-                <p className="text-xs text-tertiary">
-                  Create your first category to get started
-                </p>
-              </div>
+      <Card className="animate-slide-up" style={{ animationDelay: "0.05s" }}>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Tag size={18} className="text-indigo-600" />
+              <CardTitle className="text-base">Categories</CardTitle>
             </div>
-          ) : (
-            categories.map((category, index) => {
-              const Icon = LucideIcons[category.icon] || Tag;
-              return (
-                <div
-                  key={category.id}
-                  draggable
-                  onDragStart={() => handleDragStart(index)}
-                  onDragOver={(e) => handleDragOver(e, index)}
-                  onDragEnd={handleDragEnd}
-                  className={`flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all cursor-move ${
-                    draggedIndex === index
-                      ? "border-primary bg-primary/10 opacity-50 scale-105"
-                      : "border-border hover:border-primary/50 bg-bg-secondary hover:shadow-md"
-                  }`}
-                >
-                  <GripVertical
-                    size={18}
-                    className="text-tertiary flex-shrink-0"
-                  />
-                  <div
-                    className="p-2 rounded-lg flex-shrink-0"
-                    style={{ backgroundColor: category.color + "20" }}
-                  >
-                    <Icon size={20} style={{ color: category.color }} />
-                  </div>
-                  <span className="flex-1 font-semibold text-sm">
-                    {category.name}
-                  </span>
-                  <button
-                    onClick={() => openCategoryModal(category)}
-                    className="p-2 hover:bg-primary/10 rounded-lg transition flex-shrink-0"
-                    title="Edit category"
-                  >
-                    <Edit2 size={16} className="text-primary" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteCategory(category.id)}
-                    className="p-2 hover:bg-danger/10 rounded-lg transition flex-shrink-0"
-                    title="Delete category"
-                  >
-                    <Trash2 size={16} className="text-danger" />
-                  </button>
-                </div>
-              );
-            })
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => openCategoryModal()}
+              className="bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-600 hover:to-emerald-600"
+              aria-label="Add new category"
+            >
+              <Plus size={16} aria-hidden="true" />
+              Add Category
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {/* Success Message */}
+          {categorySuccessMessage && (
+            <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 text-emerald-600 text-sm font-medium animate-slide-up">
+              {categorySuccessMessage}
+            </div>
           )}
-        </div>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs text-muted-foreground">
+              Drag to reorder categories
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {categories.length} categories
+            </p>
+          </div>
+          <div className="space-y-2">
+            {categories.length === 0 && !dataLoading ? (
+              <div className="text-center py-6">
+                <div className="p-4 rounded-xl bg-secondary border-2 border-dashed border-border">
+                  <Tag
+                    size={28}
+                    className="mx-auto mb-2 text-muted-foreground"
+                  />
+                  <p className="text-muted-foreground text-sm mb-1">
+                    No categories yet
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Create your first category to get started
+                  </p>
+                </div>
+              </div>
+            ) : (
+              categories.map((category, index) => {
+                const Icon = LucideIcons[category.icon] || Tag;
+                return (
+                  <div
+                    key={category.id}
+                    draggable
+                    onDragStart={() => handleDragStart(index)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDragEnd={handleDragEnd}
+                    className={`flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all cursor-move ${
+                      draggedIndex === index
+                        ? "border-indigo-600 bg-indigo-50 opacity-50 scale-105"
+                        : "border-border hover:border-indigo-500/50 bg-secondary hover:shadow-md"
+                    }`}
+                  >
+                    <GripVertical
+                      size={18}
+                      className="text-muted-foreground flex-shrink-0"
+                    />
+                    <div
+                      className="p-2 rounded-lg flex-shrink-0"
+                      style={{ backgroundColor: category.color + "20" }}
+                    >
+                      <Icon size={20} style={{ color: category.color }} />
+                    </div>
+                    <span className="flex-1 font-semibold text-sm">
+                      {category.name}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => openCategoryModal(category)}
+                      title="Edit category"
+                      className="h-8 w-8 min-h-[44px] min-w-[44px]"
+                      aria-label={`Edit ${category.name} category`}
+                    >
+                      <Edit2
+                        size={16}
+                        className="text-indigo-600"
+                        aria-hidden="true"
+                      />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteCategory(category.id)}
+                      title="Delete category"
+                      className="h-8 w-8 min-h-[44px] min-w-[44px]"
+                      aria-label={`Delete ${category.name} category`}
+                    >
+                      <Trash2
+                        size={16}
+                        className="text-destructive"
+                        aria-hidden="true"
+                      />
+                    </Button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </CardContent>
       </Card>
 
       {/* Automation Section */}
@@ -932,112 +945,126 @@ const Settings = () => {
       )}
 
       {/* Currency */}
-      <Card
-        padding="lg"
-        className="animate-slide-up"
-        style={{ animationDelay: "0.15s", borderRadius: "1.25rem" }}
-      >
-        <div className="flex items-center gap-2 mb-3">
-          <DollarSign size={18} className="text-primary" />
-          <Typography variant="h3" className="text-base font-bold">
-            Currency
-          </Typography>
-        </div>
-        <select
-          value={formData.currency}
-          onChange={(e) => handleChange("currency", e.target.value)}
-          className="w-full p-3 rounded-xl border-0 bg-bg-secondary outline-none focus:ring-2 focus:ring-primary/20 transition text-sm"
-          style={{ color: "var(--text-primary)" }}
-        >
-          {currencies.map((curr) => (
-            <option key={curr.code} value={curr.code}>
-              {curr.symbol} {curr.name} ({curr.code})
-            </option>
-          ))}
-        </select>
+      <Card className="animate-slide-up" style={{ animationDelay: "0.15s" }}>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <DollarSign size={18} className="text-indigo-600" />
+            <CardTitle className="text-base">Currency</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Select
+            value={formData.currency}
+            onValueChange={(value) => handleChange("currency", value)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select currency" />
+            </SelectTrigger>
+            <SelectContent>
+              {currencies.map((curr) => (
+                <SelectItem key={curr.code} value={curr.code}>
+                  {curr.symbol} {curr.name} ({curr.code})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </CardContent>
       </Card>
 
       {/* Budget */}
-      <Card
-        padding="lg"
-        className="animate-slide-up"
-        style={{ animationDelay: "0.2s", borderRadius: "1.25rem" }}
-      >
-        <div className="flex items-center gap-2 mb-3">
-          <DollarSign size={18} className="text-primary" />
-          <Typography variant="h3" className="text-base font-bold">
-            Monthly Budget
-          </Typography>
-        </div>
-        <input
-          type="number"
-          value={formData.monthlyBudget}
-          onChange={(e) => handleChange("monthlyBudget", e.target.value)}
-          placeholder="Enter monthly budget"
-          className="w-full p-3 rounded-xl border-0 bg-bg-secondary outline-none focus:ring-2 focus:ring-primary/20 transition text-sm"
-          style={{ color: "var(--text-primary)" }}
-        />
+      <Card className="animate-slide-up" style={{ animationDelay: "0.2s" }}>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <DollarSign size={18} className="text-indigo-600" />
+            <CardTitle className="text-base">Monthly Budget</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Input
+            type="number"
+            value={formData.monthlyBudget}
+            onChange={(e) => handleChange("monthlyBudget", e.target.value)}
+            placeholder="Enter monthly budget"
+          />
+        </CardContent>
       </Card>
 
       {/* Theme Settings */}
-      <div className="animate-slide-up" style={{ animationDelay: "0.25s" }}>
-        <ThemeSettings />
-      </div>
+      <Card className="animate-slide-up" style={{ animationDelay: "0.25s" }}>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Palette size={18} className="text-indigo-600" />
+            <CardTitle className="text-base">Theme</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Select
+            value={formData.theme}
+            onValueChange={(value) => handleChange("theme", value)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select theme" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="light">☀️ Light</SelectItem>
+              <SelectItem value="dark">🌙 Dark</SelectItem>
+              <SelectItem value="system">💻 System</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground mt-2">
+            Current:{" "}
+            {theme === "system"
+              ? "System (auto)"
+              : theme === "dark"
+              ? "Dark"
+              : "Light"}
+          </p>
+        </CardContent>
+      </Card>
 
       {/* Database Test */}
-      <Card
-        padding="lg"
-        className="animate-slide-up"
-        style={{ animationDelay: "0.28s" }}
-      >
-        <div className="flex items-center gap-2 mb-4">
-          <div
-            className="p-2 rounded-lg"
-            style={{ background: "var(--gradient-primary)" }}
-          >
-            <Check size={16} className="text-white" />
+      <Card className="animate-slide-up" style={{ animationDelay: "0.28s" }}>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600">
+              <Check size={16} className="text-white" />
+            </div>
+            <CardTitle>Database Status</CardTitle>
           </div>
-          <Typography variant="h3">Database Status</Typography>
-        </div>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 rounded-lg bg-bg-secondary">
-            <Typography variant="body2">Connection</Typography>
-            <span className="text-xs bg-success/20 text-success px-2 py-1 rounded-full font-bold">
-              ✓ Connected
-            </span>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-secondary">
+              <p className="text-sm">Connection</p>
+              <span className="text-xs bg-emerald-500/20 text-emerald-600 px-2 py-1 rounded-full font-bold">
+                ✓ Connected
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-secondary">
+              <p className="text-sm">User Profile</p>
+              <span className="text-xs bg-emerald-500/20 text-emerald-600 px-2 py-1 rounded-full font-bold">
+                ✓ {user ? "Loaded" : "Loading..."}
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-secondary">
+              <p className="text-sm">Categories</p>
+              <span className="text-xs bg-emerald-500/20 text-emerald-600 px-2 py-1 rounded-full font-bold">
+                ✓ {categories.length} loaded
+              </span>
+            </div>
           </div>
-          <div className="flex items-center justify-between p-3 rounded-lg bg-bg-secondary">
-            <Typography variant="body2">User Profile</Typography>
-            <span className="text-xs bg-success/20 text-success px-2 py-1 rounded-full font-bold">
-              ✓ {user ? "Loaded" : "Loading..."}
-            </span>
-          </div>
-          <div className="flex items-center justify-between p-3 rounded-lg bg-bg-secondary">
-            <Typography variant="body2">Categories</Typography>
-            <span className="text-xs bg-success/20 text-success px-2 py-1 rounded-full font-bold">
-              ✓ {categories.length} loaded
-            </span>
-          </div>
-        </div>
+        </CardContent>
       </Card>
 
       {/* Sign Out */}
       <Button
-        variant="primary"
-        fullWidth
+        variant="destructive"
+        className="w-full animate-slide-up bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700"
+        style={{ animationDelay: "0.3s" }}
         onClick={handleSignOut}
-        className="animate-slide-up"
-        style={{
-          animationDelay: "0.3s",
-          background: "linear-gradient(135deg, #f43f5e 0%, #ec4899 100%)",
-          border: "none",
-          color: "white",
-          borderRadius: "0.75rem",
-          padding: "0.875rem",
-          fontSize: "0.9375rem",
-        }}
+        aria-label="Sign out of your account"
       >
-        <LogOut size={18} /> Sign Out
+        <LogOut size={18} aria-hidden="true" /> Sign Out
       </Button>
 
       {/* Category Modal */}
@@ -1051,71 +1078,66 @@ const Settings = () => {
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div
-                className="p-2.5 rounded-xl"
-                style={{ background: "var(--gradient-primary)" }}
-              >
+              <div className="p-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600">
                 <IconComponent size={24} style={{ color: "white" }} />
               </div>
               <div>
-                <Typography variant="h2">
+                <h2 className="text-xl font-semibold">
                   {editingCategory ? "Edit Category" : "Create Category"}
-                </Typography>
-                <Typography variant="body2" color="tertiary" className="mt-1">
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1">
                   {editingCategory
                     ? "Update your category details"
                     : "Add a new category to organize your expenses"}
-                </Typography>
+                </p>
               </div>
             </div>
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               onClick={closeCategoryModal}
-              className="p-2"
+              aria-label="Close modal"
             >
-              <X size={22} />
+              <X size={22} aria-hidden="true" />
             </Button>
           </div>
 
           <div className="space-y-5">
             {/* Preview */}
-            <Card variant="outlined" padding="md">
-              <Typography
-                variant="caption"
-                color="tertiary"
-                className="mb-2 uppercase tracking-wide"
-              >
-                Preview
-              </Typography>
-              <div className="flex items-center gap-3">
-                <div
-                  className="p-3 rounded-xl"
-                  style={{ backgroundColor: categoryForm.color + "20" }}
-                >
-                  <IconComponent
-                    size={32}
-                    style={{ color: categoryForm.color }}
-                  />
+            <Card className="border-2">
+              <CardHeader>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
+                  Preview
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-3">
+                  <div
+                    className="p-3 rounded-xl"
+                    style={{ backgroundColor: categoryForm.color + "20" }}
+                  >
+                    <IconComponent
+                      size={32}
+                      style={{ color: categoryForm.color }}
+                    />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold">
+                      {categoryForm.name || "Category Name"}
+                    </h4>
+                  </div>
                 </div>
-                <div>
-                  <Typography variant="h4">
-                    {categoryForm.name || "Category Name"}
-                  </Typography>
-                </div>
-              </div>
+              </CardContent>
             </Card>
 
             {/* Name Input */}
             <div>
+              <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
+                <FileText size={16} className="text-indigo-600" />
+                Category Name
+                <span className="text-destructive">*</span>
+              </label>
               <Input
-                label={
-                  <div className="flex items-center gap-2">
-                    <FileText size={16} className="text-primary" />
-                    Category Name
-                    <span className="text-danger">*</span>
-                  </div>
-                }
                 value={categoryForm.name}
                 onChange={(e) => {
                   setCategoryForm({
@@ -1132,28 +1154,25 @@ const Settings = () => {
                 }}
                 placeholder="e.g., Groceries, Transport, Entertainment"
                 error={categoryFormErrors.name}
-                fullWidth
                 maxLength={30}
               />
               <div className="flex justify-between items-center mt-1">
-                <Typography variant="caption" color="tertiary">
+                <span className="text-xs text-muted-foreground">
                   {categoryForm.name.length}/30 characters
-                </Typography>
-                <Typography variant="caption" color="tertiary">
+                </span>
+                <span className="text-xs text-muted-foreground">
                   Press Ctrl+Enter to save
-                </Typography>
+                </span>
               </div>
             </div>
 
             {/* Budget Input */}
             <div>
+              <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
+                <DollarSign size={16} className="text-indigo-600" />
+                Monthly Budget (Optional)
+              </label>
               <Input
-                label={
-                  <div className="flex items-center gap-2">
-                    <DollarSign size={16} className="text-primary" />
-                    Monthly Budget (Optional)
-                  </div>
-                }
                 type="number"
                 step="0.01"
                 min="0"
@@ -1174,33 +1193,19 @@ const Settings = () => {
                 }}
                 placeholder="0.00"
                 error={categoryFormErrors.budget}
-                fullWidth
               />
-              <Typography
-                variant="caption"
-                color="tertiary"
-                className="mt-1 block"
-              >
+              <p className="text-xs text-muted-foreground mt-1">
                 Set a monthly spending limit for this category
-              </Typography>
+              </p>
             </div>
 
             {/* Icon Selection */}
             <div>
-              <label
-                className="flex items-center gap-2 mb-3 font-semibold text-sm"
-                style={{ color: "var(--text-primary)" }}
-              >
-                <Tag size={16} style={{ color: "var(--primary)" }} />
+              <label className="flex items-center gap-2 mb-3 font-semibold text-sm">
+                <Tag size={16} className="text-indigo-600" />
                 Choose Icon
               </label>
-              <div
-                className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 p-2 max-h-48 overflow-y-auto rounded-lg border"
-                style={{
-                  backgroundColor: "var(--bg-secondary)",
-                  borderColor: "var(--border)",
-                }}
-              >
+              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 p-2 max-h-48 overflow-y-auto rounded-lg border bg-secondary">
                 {iconOptions.map((iconName) => {
                   const Icon = LucideIcons[iconName] || Tag;
                   const isSelected = categoryForm.icon === iconName;
@@ -1211,28 +1216,14 @@ const Settings = () => {
                       onClick={() =>
                         setCategoryForm({ ...categoryForm, icon: iconName })
                       }
-                      style={{
-                        width: "100%",
-                        aspectRatio: "1",
-                        minHeight: "3rem",
-                        padding: "0.5rem",
-                        borderRadius: "0.5rem",
-                        border: isSelected
-                          ? "2px solid var(--primary)"
-                          : "2px solid transparent",
-                        backgroundColor: isSelected
-                          ? "rgba(99, 102, 241, 0.15)"
-                          : "var(--bg-card)",
-                        color: "var(--text-primary)",
-                        cursor: "pointer",
-                        transition: "all 0.2s ease",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
+                      className={`w-full aspect-square min-h-[3rem] p-2 rounded-lg border-2 transition-all flex items-center justify-center ${
+                        isSelected
+                          ? "border-indigo-600 bg-indigo-50"
+                          : "border-transparent bg-card hover:border-indigo-300"
+                      }`}
                       title={iconName}
                     >
-                      <Icon size={22} style={{ flexShrink: 0 }} />
+                      <Icon size={22} />
                     </button>
                   );
                 })}
@@ -1241,11 +1232,8 @@ const Settings = () => {
 
             {/* Color Selection */}
             <div>
-              <label
-                className="flex items-center gap-2 mb-3 font-semibold text-sm"
-                style={{ color: "var(--text-primary)" }}
-              >
-                <Palette size={16} style={{ color: "var(--primary)" }} />
+              <label className="flex items-center gap-2 mb-3 font-semibold text-sm">
+                <Palette size={16} className="text-indigo-600" />
                 Choose Color
               </label>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
@@ -1259,24 +1247,15 @@ const Settings = () => {
                         setCategoryForm({ ...categoryForm, color })
                       }
                       style={{
-                        width: "100%",
-                        aspectRatio: "2.5/1",
-                        minHeight: "3.5rem",
-                        borderRadius: "0.75rem",
                         backgroundColor: color,
-                        border: isSelected
-                          ? "3px solid var(--primary)"
-                          : "2px solid var(--border)",
-                        cursor: "pointer",
-                        transition: "all 0.2s ease",
                         transform: isSelected ? "scale(1.05)" : "scale(1)",
                         boxShadow: isSelected
                           ? "0 8px 16px rgba(0, 0, 0, 0.2)"
                           : "0 2px 4px rgba(0, 0, 0, 0.1)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
                       }}
+                      className={`w-full aspect-[2.5/1] min-h-[3.5rem] rounded-xl border-2 transition-all flex items-center justify-center ${
+                        isSelected ? "border-indigo-600" : "border-border"
+                      }`}
                       title={color}
                     >
                       {isSelected && (
@@ -1306,31 +1285,37 @@ const Settings = () => {
             <div className="flex gap-3 pt-6">
               <Button
                 variant="secondary"
-                fullWidth
+                className="flex-1"
                 onClick={closeCategoryModal}
                 disabled={savingCategory}
+                aria-label="Cancel category changes"
               >
                 Cancel
               </Button>
               <Button
-                variant="primary"
-                fullWidth
+                variant="default"
+                className="flex-1"
                 onClick={handleSaveCategory}
                 disabled={!categoryForm.name.trim() || savingCategory}
                 loading={savingCategory}
+                aria-label={
+                  savingCategory
+                    ? editingCategory
+                      ? "Updating category"
+                      : "Creating category"
+                    : editingCategory
+                    ? "Update category"
+                    : "Create category"
+                }
               >
-                {savingCategory ? (
-                  editingCategory ? (
-                    "Updating..."
-                  ) : (
-                    "Creating..."
-                  )
-                ) : (
-                  <>
-                    <Save size={20} />
-                    {editingCategory ? "Update" : "Create"}
-                  </>
-                )}
+                {!savingCategory && <Save size={20} aria-hidden="true" />}
+                {savingCategory
+                  ? editingCategory
+                    ? "Updating..."
+                    : "Creating..."
+                  : editingCategory
+                  ? "Update"
+                  : "Create"}
               </Button>
             </div>
           </div>

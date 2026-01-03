@@ -22,6 +22,28 @@ import {
 } from "lucide-react";
 import * as Icons from "lucide-react";
 import SMSExpenseCard from "../components/SMSExpenseCard";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "../components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 
 const Expenses = () => {
   const {
@@ -263,17 +285,14 @@ const Expenses = () => {
         </div>
 
         {/* Add Expense Button */}
-        <button
+        <Button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition text-sm font-medium text-white"
-          style={{
-            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-            boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
-          }}
+          className="bg-gradient-to-br from-green-500 to-green-600 shadow-lg"
+          aria-label="Add new expense"
         >
-          <Plus size={18} />
+          <Plus size={18} aria-hidden="true" />
           Add
-        </button>
+        </Button>
       </div>
 
       {/* New Expenses Found Section */}
@@ -344,39 +363,36 @@ const Expenses = () => {
 
       {/* Search and Filter */}
       <div className="space-y-2.5">
-        <div className="relative flex items-center">
-          <Search
-            className="absolute left-3.5 text-tertiary pointer-events-none"
-            size={18}
-          />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search expenses..."
-            className="w-full pl-11 pr-4 py-3 rounded-xl border-0 bg-bg-secondary outline-none focus:ring-2 focus:ring-primary/20 transition text-sm"
-            style={{ color: "var(--text-primary)" }}
-          />
-        </div>
+        <Input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search expenses..."
+          icon={<Search size={18} />}
+        />
 
         <div className="flex gap-2">
-          <button
+          <Button
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition text-sm font-medium ${
+            variant={showFilters ? "default" : "outline"}
+            className={
               showFilters
                 ? "bg-primary/10 text-primary border-2 border-primary/30"
-                : "bg-bg-secondary text-text-secondary border-2 border-transparent"
-            }`}
+                : ""
+            }
+            aria-label={showFilters ? "Hide filters" : "Show filters"}
+            aria-expanded={showFilters}
           >
-            <Filter size={16} />
+            <Filter size={16} aria-hidden="true" />
             Filters
-          </button>
+          </Button>
 
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="flex-1 px-4 py-2.5 rounded-xl border-0 bg-bg-secondary outline-none focus:ring-2 focus:ring-primary/20 transition text-sm font-medium"
+            className="flex-1 px-4 py-2.5 rounded-xl border-0 bg-input-background outline-none focus:ring-2 focus:ring-primary/20 transition text-sm font-medium"
             style={{ color: "var(--text-primary)" }}
+            aria-label="Sort expenses by"
           >
             <option value="date-desc">Newest First</option>
             <option value="date-asc">Oldest First</option>
@@ -386,58 +402,49 @@ const Expenses = () => {
         </div>
 
         {showFilters && (
-          <div
-            className="card p-4 space-y-3 animate-slide-up"
-            style={{ borderRadius: "1.25rem" }}
-          >
+          <Card className="p-4 space-y-3 animate-slide-up">
             <div>
               <label className="block text-xs font-semibold mb-2 text-primary">
                 Category
               </label>
-              <select
+              <Select
                 value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full p-3 rounded-xl border-0 bg-bg-secondary outline-none focus:ring-2 focus:ring-primary/20 transition text-sm"
-                style={{ color: "var(--text-primary)" }}
+                onValueChange={setSelectedCategory}
               >
-                <option value="all">All Categories</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id.toString()}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          </div>
+          </Card>
         )}
       </div>
 
       {/* Expenses List */}
       {filteredExpenses.length === 0 ? (
-        <div
-          className="card p-8 text-center"
-          style={{ borderRadius: "1.25rem" }}
-        >
-          <div
-            className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center"
-            style={{ background: "var(--bg-secondary)" }}
-          >
-            <Receipt size={32} className="text-tertiary" />
+        <Card className="p-8 text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center bg-secondary">
+            <Receipt size={32} className="text-muted-foreground" />
           </div>
-          <p className="text-tertiary text-sm mb-4">No expenses found</p>
-          <button
+          <p className="text-muted-foreground text-sm mb-4">
+            No expenses found
+          </p>
+          <Button
             onClick={() => setShowAddModal(true)}
-            className="btn btn-primary"
-            style={{
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              border: "none",
-              padding: "0.875rem 1.75rem",
-              borderRadius: "0.75rem",
-            }}
+            className="bg-gradient-to-br from-indigo-500 to-purple-600"
+            aria-label="Add your first expense"
           >
             Add Your First Expense
-          </button>
-        </div>
+          </Button>
+        </Card>
       ) : (
         <div className="space-y-3">
           {Object.entries(groupedExpenses).map(([date, dayExpenses]) => (
@@ -462,10 +469,9 @@ const Expenses = () => {
                 const categoryColor = category?.color || "#6366f1";
 
                 return (
-                  <div
+                  <Card
                     key={expense.id}
-                    className="card p-3.5 transition hover:shadow-lg"
-                    style={{ borderRadius: "1.25rem" }}
+                    className="p-3.5 transition hover:shadow-lg"
                   >
                     <div className="flex items-center gap-3">
                       <div
@@ -486,7 +492,7 @@ const Expenses = () => {
                         <p className="font-semibold text-sm truncate">
                           {expense.description}
                         </p>
-                        <div className="flex items-center gap-1.5 text-xs text-tertiary">
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                           {category && <span>{category.name}</span>}
                           {category && <span>•</span>}
                           <span className="capitalize">
@@ -497,7 +503,7 @@ const Expenses = () => {
 
                       <div className="flex items-center gap-1.5">
                         <div className="text-right">
-                          <p className="font-bold text-sm text-danger whitespace-nowrap">
+                          <p className="font-bold text-sm text-destructive whitespace-nowrap">
                             - {currencySymbol}
                             {parseFloat(expense.amount).toLocaleString(
                               "en-IN",
@@ -507,30 +513,45 @@ const Expenses = () => {
                         </div>
 
                         <div className="flex gap-0.5">
-                          <button
+                          <Button
                             onClick={() => handleEdit(expense)}
-                            className="p-2 hover:bg-primary/10 rounded-lg transition"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 min-h-[44px] min-w-[44px]"
+                            aria-label={`Edit ${expense.description}`}
                           >
-                            <Edit2 size={14} className="text-primary" />
-                          </button>
-                          <button
+                            <Edit2
+                              size={14}
+                              className="text-primary"
+                              aria-hidden="true"
+                            />
+                          </Button>
+                          <Button
                             onClick={() => handleDelete(expense.id)}
                             disabled={deleting === expense.id}
-                            className="p-2 hover:bg-danger/10 rounded-lg transition"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 min-h-[44px] min-w-[44px]"
+                            aria-label={`Delete ${expense.description}`}
                           >
                             {deleting === expense.id ? (
                               <Loader
                                 size={14}
-                                className="animate-spin text-danger"
+                                className="animate-spin text-destructive"
+                                aria-hidden="true"
                               />
                             ) : (
-                              <Trash2 size={14} className="text-danger" />
+                              <Trash2
+                                size={14}
+                                className="text-destructive"
+                                aria-hidden="true"
+                              />
                             )}
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </Card>
                 );
               })}
             </div>
@@ -539,264 +560,234 @@ const Expenses = () => {
       )}
 
       {/* Edit Modal */}
-      {showEditModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-2xl p-6 max-w-md w-full animate-slide-up shadow-xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold">Edit Expense</h2>
-              <button
-                onClick={() => setShowEditModal(false)}
-                className="p-2 hover:bg-bg-secondary rounded-lg transition"
-              >
-                <X size={20} />
-              </button>
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Expense</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
+                <DollarSign size={16} className="text-primary" />
+                Amount
+              </label>
+              <div className="relative flex items-center">
+                <span className="absolute left-3 font-bold text-muted-foreground pointer-events-none">
+                  {currencySymbol}
+                </span>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={editForm.amount}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, amount: e.target.value })
+                  }
+                  className="pl-8"
+                />
+              </div>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
-                  <DollarSign size={16} className="text-primary" />
-                  Amount
-                </label>
-                <div className="relative flex items-center">
-                  <span className="absolute left-3 font-bold text-tertiary pointer-events-none">
-                    {currencySymbol}
-                  </span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={editForm.amount}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, amount: e.target.value })
-                    }
-                    className="w-full pl-8 pr-4 py-3 rounded-lg border-2 border-border bg-bg-secondary outline-none focus:border-primary transition"
-                  />
-                </div>
-              </div>
+            <div>
+              <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
+                <FileText size={16} className="text-primary" />
+                Description
+              </label>
+              <Input
+                type="text"
+                value={editForm.description}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, description: e.target.value })
+                }
+              />
+            </div>
 
-              <div>
-                <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
-                  <FileText size={16} className="text-primary" />
-                  Description
-                </label>
-                <input
-                  type="text"
-                  value={editForm.description}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, description: e.target.value })
-                  }
-                  className="w-full p-3 rounded-lg border-2 border-border bg-bg-secondary outline-none focus:border-primary transition"
-                />
-              </div>
-
-              <div>
-                <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
-                  <TagIcon size={16} className="text-primary" />
-                  Category
-                </label>
-                <select
-                  value={editForm.categoryId}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, categoryId: e.target.value })
-                  }
-                  className="w-full p-3 rounded-lg border-2 border-border bg-bg-secondary outline-none focus:border-primary transition"
-                >
-                  <option value="">No Category</option>
+            <div>
+              <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
+                <TagIcon size={16} className="text-primary" />
+                Category
+              </label>
+              <Select
+                value={editForm.categoryId}
+                onValueChange={(value) =>
+                  setEditForm({ ...editForm, categoryId: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="No Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No Category</SelectItem>
                   {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
+                    <SelectItem key={cat.id} value={cat.id.toString()}>
                       {cat.name}
-                    </option>
+                    </SelectItem>
                   ))}
-                </select>
-              </div>
+                </SelectContent>
+              </Select>
+            </div>
 
-              <div>
-                <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
-                  <Calendar size={16} className="text-primary" />
-                  Date
-                </label>
-                <input
-                  type="date"
-                  value={editForm.date}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, date: e.target.value })
-                  }
-                  max={new Date().toISOString().split("T")[0]}
-                  className="w-full p-3 rounded-lg border-2 border-border bg-bg-secondary outline-none focus:border-primary transition"
-                />
-              </div>
-
-              <div className="pt-4 flex gap-3">
-                <button
-                  onClick={() => setShowEditModal(false)}
-                  className="flex-1 btn btn-secondary"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveEdit}
-                  disabled={saving || !editForm.amount || !editForm.description}
-                  className="flex-1 btn btn-primary flex items-center justify-center gap-2"
-                  style={{ background: "var(--gradient-primary)" }}
-                >
-                  {saving ? (
-                    <>
-                      <Loader size={18} className="animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save size={18} />
-                      Save
-                    </>
-                  )}
-                </button>
-              </div>
+            <div>
+              <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
+                <Calendar size={16} className="text-primary" />
+                Date
+              </label>
+              <Input
+                type="date"
+                value={editForm.date}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, date: e.target.value })
+                }
+                max={new Date().toISOString().split("T")[0]}
+              />
             </div>
           </div>
-        </div>
-      )}
+
+          <DialogFooter className="gap-3 sm:gap-2">
+            <Button
+              onClick={() => setShowEditModal(false)}
+              variant="secondary"
+              className="flex-1 sm:flex-none"
+              aria-label="Cancel editing"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveEdit}
+              disabled={saving || !editForm.amount || !editForm.description}
+              loading={saving}
+              className="flex-1 sm:flex-none bg-gradient-to-br from-indigo-500 to-purple-600"
+              aria-label={saving ? "Saving changes" : "Save changes"}
+            >
+              <Save size={18} aria-hidden="true" />
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Add Expense Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-2xl p-6 max-w-md w-full animate-slide-up shadow-xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold">Add Expense</h2>
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="p-2 hover:bg-bg-secondary rounded-lg transition"
-              >
-                <X size={20} />
-              </button>
+      <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add Expense</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
+                <DollarSign size={16} className="text-primary" />
+                Amount
+              </label>
+              <div className="relative flex items-center">
+                <span className="absolute left-3 font-bold text-muted-foreground pointer-events-none">
+                  {currencySymbol}
+                </span>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={addForm.amount}
+                  onChange={(e) =>
+                    setAddForm({ ...addForm, amount: e.target.value })
+                  }
+                  placeholder="0.00"
+                  className="pl-8"
+                  autoFocus
+                />
+              </div>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
-                  <DollarSign size={16} className="text-primary" />
-                  Amount
-                </label>
-                <div className="relative flex items-center">
-                  <span className="absolute left-3 font-bold text-tertiary pointer-events-none">
-                    {currencySymbol}
-                  </span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={addForm.amount}
-                    onChange={(e) =>
-                      setAddForm({ ...addForm, amount: e.target.value })
-                    }
-                    placeholder="0.00"
-                    className="w-full pl-8 pr-4 py-3 rounded-lg border-2 border-border bg-bg-secondary outline-none focus:border-primary transition"
-                    autoFocus
-                  />
-                </div>
-              </div>
+            <div>
+              <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
+                <FileText size={16} className="text-primary" />
+                Description
+              </label>
+              <Input
+                type="text"
+                value={addForm.description}
+                onChange={(e) =>
+                  setAddForm({ ...addForm, description: e.target.value })
+                }
+                placeholder="What did you spend on?"
+              />
+            </div>
 
-              <div>
-                <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
-                  <FileText size={16} className="text-primary" />
-                  Description
-                </label>
-                <input
-                  type="text"
-                  value={addForm.description}
-                  onChange={(e) =>
-                    setAddForm({ ...addForm, description: e.target.value })
-                  }
-                  placeholder="What did you spend on?"
-                  className="w-full p-3 rounded-lg border-2 border-border bg-bg-secondary outline-none focus:border-primary transition"
-                />
-              </div>
-
-              <div>
-                <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
-                  <TagIcon size={16} className="text-primary" />
-                  Category
-                </label>
-                <select
-                  value={addForm.categoryId}
-                  onChange={(e) =>
-                    setAddForm({ ...addForm, categoryId: e.target.value })
-                  }
-                  className="w-full p-3 rounded-lg border-2 border-border bg-bg-secondary outline-none focus:border-primary transition"
-                >
-                  <option value="">No Category</option>
+            <div>
+              <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
+                <TagIcon size={16} className="text-primary" />
+                Category
+              </label>
+              <Select
+                value={addForm.categoryId}
+                onValueChange={(value) =>
+                  setAddForm({ ...addForm, categoryId: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="No Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No Category</SelectItem>
                   {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
+                    <SelectItem key={cat.id} value={cat.id.toString()}>
                       {cat.name}
-                    </option>
+                    </SelectItem>
                   ))}
-                </select>
-              </div>
+                </SelectContent>
+              </Select>
+            </div>
 
-              <div>
-                <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
-                  <Calendar size={16} className="text-primary" />
-                  Date
-                </label>
-                <input
-                  type="date"
-                  value={addForm.date}
-                  onChange={(e) =>
-                    setAddForm({ ...addForm, date: e.target.value })
-                  }
-                  max={new Date().toISOString().split("T")[0]}
-                  className="w-full p-3 rounded-lg border-2 border-border bg-bg-secondary outline-none focus:border-primary transition"
-                />
-              </div>
-
-              <div className="pt-4 flex gap-3">
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  className="flex-1 btn btn-secondary"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAddExpense}
-                  disabled={
-                    addingSaving || !addForm.amount || !addForm.description
-                  }
-                  className="flex-1 btn btn-primary flex items-center justify-center gap-2"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                  }}
-                >
-                  {addingSaving ? (
-                    <>
-                      <Loader size={18} className="animate-spin" />
-                      Adding...
-                    </>
-                  ) : (
-                    <>
-                      <Plus size={18} />
-                      Add Expense
-                    </>
-                  )}
-                </button>
-              </div>
+            <div>
+              <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
+                <Calendar size={16} className="text-primary" />
+                Date
+              </label>
+              <Input
+                type="date"
+                value={addForm.date}
+                onChange={(e) =>
+                  setAddForm({ ...addForm, date: e.target.value })
+                }
+                max={new Date().toISOString().split("T")[0]}
+              />
             </div>
           </div>
-        </div>
-      )}
+
+          <DialogFooter className="gap-3 sm:gap-2">
+            <Button
+              onClick={() => setShowAddModal(false)}
+              variant="secondary"
+              className="flex-1 sm:flex-none"
+              aria-label="Cancel adding expense"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddExpense}
+              disabled={addingSaving || !addForm.amount || !addForm.description}
+              loading={addingSaving}
+              className="flex-1 sm:flex-none bg-gradient-to-br from-green-500 to-green-600"
+              aria-label={addingSaving ? "Adding expense" : "Add expense"}
+            >
+              <Plus size={18} aria-hidden="true" />
+              Add Expense
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div style={{ height: "20px" }} />
 
       {/* Floating Action Button */}
-      <button
+      <Button
         onClick={() => setShowAddModal(true)}
-        className="fixed bottom-20 right-4 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 z-40"
-        style={{
-          background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-          boxShadow: "0 8px 24px rgba(16, 185, 129, 0.4)",
-        }}
+        size="icon"
+        className="fixed bottom-20 right-4 w-14 h-14 min-w-[56px] min-h-[56px] rounded-full shadow-lg transition-all duration-200 hover:scale-110 z-40 bg-gradient-to-br from-green-500 to-green-600"
+        aria-label="Add new expense"
       >
-        <Plus size={24} className="text-white" />
-      </button>
+        <Plus size={24} className="text-white" aria-hidden="true" />
+        <span className="sr-only">Add new expense</span>
+      </Button>
     </div>
   );
 };

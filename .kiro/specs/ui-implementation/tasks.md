@@ -183,7 +183,7 @@ This implementation plan focuses on migrating from the current custom design sys
   - Create `client/src/components/ui/progress.tsx` with gradient styling
   - _Requirements: 4.5, 14.1, 14.5_
 
-- [ ] 14. Migrate Dashboard page to use new components
+- [x] 14. Migrate Dashboard page to use new components
 
   - Replace custom design system components with new components/ui components
   - Ensure glassmorphism effect on header (backdrop-blur-xl)
@@ -192,7 +192,7 @@ This implementation plan focuses on migrating from the current custom design sys
   - Ensure page structure: min-h-screen pb-24
   - _Requirements: 8.1, 8.2, 8.3, 11.1, 11.2_
 
-- [ ] 15. Migrate AddExpense page to use new components
+- [x] 15. Migrate AddExpense page to use new components
 
   - Replace custom design system components with new components/ui components
   - Use new Input component with validation
@@ -201,7 +201,7 @@ This implementation plan focuses on migrating from the current custom design sys
   - Ensure proper form validation patterns
   - _Requirements: 5.5, 6.3, 7.1, 16.1, 16.2_
 
-- [ ] 16. Migrate Expenses page to use new components
+- [x] 16. Migrate Expenses page to use new components
 
   - Replace custom design system components with new components/ui components
   - Ensure empty state displays properly
@@ -209,7 +209,7 @@ This implementation plan focuses on migrating from the current custom design sys
   - Apply consistent spacing and layout
   - _Requirements: 7.1, 14.3_
 
-- [ ] 17. Migrate Settings page to use new components
+- [x] 17. Migrate Settings page to use new components
 
   - Replace custom design system components with new components/ui components
   - Use new Switch component for toggles
@@ -217,7 +217,7 @@ This implementation plan focuses on migrating from the current custom design sys
   - Ensure proper form layout
   - _Requirements: 4.1, 4.1_
 
-- [ ] 18. Update Navigation component
+- [x] 18. Update Navigation component
 
   - Verify Navigation uses glassmorphism (backdrop-blur-xl)
   - Ensure active tab uses indigo-600 color
@@ -236,7 +236,7 @@ This implementation plan focuses on migrating from the current custom design sys
   - **Property 24: Touch target size compliance** (navigation)
   - **Validates: Requirements 12.4**
 
-- [ ] 19. Implement Recharts integration
+- [x] 19. Implement Recharts integration
 
   - Replace Chart.js with Recharts v2.15.2
   - Update Dashboard bar chart to use Recharts Bar component
@@ -256,7 +256,7 @@ This implementation plan focuses on migrating from the current custom design sys
   - Test ResponsiveContainer usage
   - _Requirements: 10.1, 10.5_
 
-- [ ] 20. Implement next-themes for dark mode
+- [x] 20. Implement next-themes for dark mode
 
   - Wrap application with next-themes ThemeProvider
   - Implement theme toggle that applies/removes .dark class
@@ -274,7 +274,7 @@ This implementation plan focuses on migrating from the current custom design sys
   - Test system theme detection
   - _Requirements: 19.1, 19.2, 19.4, 19.5_
 
-- [ ] 21. Audit and fix accessibility issues
+- [x] 21. Audit and fix accessibility issues
 
   - Add focus rings to all interactive elements (focus-visible:ring-ring/50)
   - Add ARIA attributes where missing (aria-invalid, aria-label, role)
@@ -300,7 +300,7 @@ This implementation plan focuses on migrating from the current custom design sys
   - Test screen reader text
   - _Requirements: 15.2, 15.4, 15.5_
 
-- [ ] 22. Implement utility functions
+- [x] 22. Implement utility functions
 
   - Verify cn() function in components/ui/utils.ts
   - Verify useMobile hook in components/ui/use-mobile.ts
@@ -318,7 +318,7 @@ This implementation plan focuses on migrating from the current custom design sys
   - Test validation functions
   - _Requirements: 17.1, 17.2, 17.3, 17.4, 17.5_
 
-- [ ] 23. Optimize performance
+- [x] 23. Optimize performance
 
   - Verify animations use transform and opacity (GPU-accelerated)
   - Add loading="lazy" to off-screen images
