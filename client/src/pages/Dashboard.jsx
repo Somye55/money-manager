@@ -1,61 +1,36 @@
-import React, { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useState } from "react";
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  LineElement,
-  PointElement,
-  Title,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
   Tooltip,
   Legend,
-  ArcElement,
-} from "chart.js";
-import { Doughnut, Bar } from "react-chartjs-2";
-import {
-  Wallet,
-  TrendingUp,
-  Loader,
-  Smartphone,
-  RefreshCw,
-  ArrowRight,
-  Receipt,
-  Calendar,
-  TrendingDown,
-  PieChart,
-} from "lucide-react";
+} from "recharts";
+import { Wallet, TrendingUp, Loader, ArrowRight } from "lucide-react";
 import { useData } from "../context/DataContext";
 import { useSMS } from "../context/SMSContext";
 import { useNavigate } from "react-router-dom";
 import * as Icons from "lucide-react";
-import SMSExpenseCard from "../components/SMSExpenseCard";
-import BudgetOverview from "../components/BudgetOverview";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  LineElement,
-  PointElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement
-);
+import { Button } from "../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "../components/ui/card";
+import { Progress } from "../components/ui/progress";
 
 const Dashboard = () => {
   const { expenses, categories, settings, loading } = useData();
-  const {
-    extractedExpenses,
-    scanSMS,
-    importExpense,
-    dismissExpense,
-    isSupported,
-    permissionGranted,
-  } = useSMS();
+  const { scanSMS, importExpense, isSupported, permissionGranted } = useSMS();
   const navigate = useNavigate();
   const [analytics, setAnalytics] = useState(null);
-  const [importingId, setImportingId] = useState(null);
   const [dailySpending, setDailySpending] = useState([]);
 
   // Auto-scan on load if permitted
@@ -125,15 +100,6 @@ const Dashboard = () => {
     setAnalytics({ categoryTotals, totalExpense });
   }, [expenses]);
 
-  const handleImport = async (expense) => {
-    setImportingId(expense.rawSMS);
-    try {
-      await importExpense(expense);
-    } finally {
-      setImportingId(null);
-    }
-  };
-
   const totalExpense = analytics?.totalExpense || 0;
   const monthlyBudget = settings?.monthlyBudget
     ? parseFloat(settings.monthlyBudget)
@@ -151,347 +117,291 @@ const Dashboard = () => {
       ? "¥"
       : "₹";
 
-  const doughnutData = useMemo(() => {
+  const pieChartData = useMemo(() => {
     if (!analytics?.categoryTotals) {
-      return {
-        labels: [],
-        datasets: [
-          {
-            label: "Expenses",
-            data: [],
-            backgroundColor: [],
-            borderColor: [],
-            borderWidth: 3,
-          },
-        ],
-      };
+      return [];
     }
 
-    const labels = Object.keys(analytics.categoryTotals);
-    const data = labels.map((label) => analytics.categoryTotals[label].total);
-    const colors = labels.map((label) => analytics.categoryTotals[label].color);
-
-    return {
-      labels,
-      datasets: [
-        {
-          label: "Expenses",
-          data,
-          backgroundColor: colors.map((color) => `${color}CC`),
-          borderColor: colors,
-          borderWidth: 3,
-        },
-      ],
-    };
+    return Object.entries(analytics.categoryTotals).map(([name, data]) => ({
+      name,
+      value: data.total,
+      color: data.color,
+    }));
   }, [analytics]);
 
-  const doughnutOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: "bottom",
-        labels: {
-          color: "var(--text-secondary)",
-          padding: 15,
-          font: {
-            size: 12,
-            weight: "500",
-          },
-          usePointStyle: true,
-          pointStyle: "circle",
-        },
-      },
-      title: {
-        display: false,
-      },
-      tooltip: {
-        backgroundColor: "rgba(0, 0, 0, 0.8)",
-        padding: 12,
-        titleFont: {
-          size: 14,
-          weight: "600",
-        },
-        bodyFont: {
-          size: 13,
-        },
-        borderColor: "rgba(255, 255, 255, 0.1)",
-        borderWidth: 1,
-        displayColors: true,
-        callbacks: {
-          label: function (context) {
-            const percentage = ((context.parsed / totalExpense) * 100).toFixed(
-              1
-            );
-            return ` ${currencySymbol}${context.parsed.toLocaleString()} (${percentage}%)`;
-          },
-        },
-      },
-    },
-  };
-
-  const barData = useMemo(() => {
-    return {
-      labels: dailySpending.map((d) => d.label),
-      datasets: [
-        {
-          label: "Daily Spending",
-          data: dailySpending.map((d) => d.total),
-          backgroundColor: dailySpending.map((d) =>
-            d.total > 0 ? "rgba(239, 68, 68, 0.8)" : "rgba(156, 163, 175, 0.3)"
-          ),
-          borderColor: dailySpending.map((d) =>
-            d.total > 0 ? "rgba(239, 68, 68, 1)" : "rgba(156, 163, 175, 0.5)"
-          ),
-          borderWidth: 2,
-          borderRadius: 8,
-        },
-      ],
-    };
+  const barChartData = useMemo(() => {
+    return dailySpending.map((d) => ({
+      day: d.label,
+      amount: d.total,
+    }));
   }, [dailySpending]);
 
-  const barOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: false,
-      },
-      tooltip: {
-        backgroundColor: "rgba(0, 0, 0, 0.8)",
-        padding: 12,
-        titleFont: {
-          size: 14,
-          weight: "600",
-        },
-        bodyFont: {
-          size: 13,
-        },
-        borderColor: "rgba(255, 255, 255, 0.1)",
-        borderWidth: 1,
-        callbacks: {
-          label: function (context) {
-            return ` ${currencySymbol}${context.parsed.y.toLocaleString()}`;
-          },
-        },
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        grid: {
-          color: "rgba(156, 163, 175, 0.1)",
-        },
-        ticks: {
-          color: "var(--text-tertiary)",
-          font: {
-            size: 11,
-          },
-          callback: function (value) {
-            return currencySymbol + value.toLocaleString();
-          },
-        },
-      },
-      x: {
-        grid: {
-          display: false,
-        },
-        ticks: {
-          color: "var(--text-tertiary)",
-          font: {
-            size: 11,
-            weight: "500",
-          },
-        },
-      },
-    },
+  // Custom tooltip for bar chart
+  const CustomBarTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-lg">
+          <p className="text-sm font-semibold text-gray-900">
+            {currencySymbol}
+            {payload[0].value.toLocaleString("en-IN", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Custom tooltip for pie chart
+  const CustomPieTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const percentage = ((payload[0].value / totalExpense) * 100).toFixed(1);
+      return (
+        <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-lg">
+          <p className="text-sm font-semibold text-gray-900 mb-1">
+            {payload[0].name}
+          </p>
+          <p className="text-sm text-gray-600">
+            {currencySymbol}
+            {payload[0].value.toLocaleString("en-IN", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}{" "}
+            ({percentage}%)
+          </p>
+        </div>
+      );
+    }
+    return null;
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center min-h-screen">
         <Loader className="animate-spin text-primary" size={32} />
       </div>
     );
   }
 
-  const currentMonth = new Date().toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-  });
-
   return (
     <div className="min-h-screen pb-24">
-      {/* Header */}
-      <header className="glass border-b sticky top-0 z-40">
+      {/* Header with Glassmorphism */}
+      <header className="glass border-b sticky top-0 z-40 backdrop-blur-xl">
         <div className="max-w-screen-lg mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-br from-primary to-secondary p-2 rounded-xl">
-              <Wallet className="w-6 h-6 text-primary-foreground" />
+            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2 rounded-xl">
+              <Wallet className="w-6 h-6 text-white" />
             </div>
-            <h1 className="gradient-text">Money Manager</h1>
+            <h1 className="text-xl font-semibold">Money Manager</h1>
           </div>
         </div>
       </header>
 
       <div className="max-w-screen-lg mx-auto px-4 py-6 space-y-6">
-        {/* Balance and Expenses Cards */}
+        {/* Balance and Expenses Cards with Gradient */}
         <div className="grid grid-cols-2 gap-4 animate-fadeIn">
-          <div className="p-6 bg-gradient-to-br from-primary to-secondary text-primary-foreground border-0 rounded-lg shadow-lg">
-            <div className="text-sm opacity-90 mb-1">Current Balance</div>
-            <div className="text-2xl mb-2">
-              {currencySymbol}
-              {balance.toLocaleString("en-IN", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </div>
-            <div className="text-xs opacity-75">Available to spend</div>
-          </div>
+          <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-0 shadow-lg">
+            <CardContent className="p-6">
+              <div className="text-sm opacity-90 mb-1">Current Balance</div>
+              <div className="text-2xl font-semibold mb-2">
+                {currencySymbol}
+                {balance.toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </div>
+              <div className="text-xs opacity-75">Available to spend</div>
+            </CardContent>
+          </Card>
 
-          <div className="p-6 bg-gradient-to-br from-primary to-secondary text-primary-foreground border-0 rounded-lg shadow-lg">
-            <div className="text-sm opacity-90 mb-1">Total Expenses</div>
-            <div className="text-2xl mb-2">
-              {currencySymbol}
-              {totalExpense.toLocaleString("en-IN", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </div>
-            <div className="text-xs opacity-75">This month</div>
-          </div>
-        </div>
-
-        {/* Monthly Overview */}
-        <div
-          className="card p-6 animate-fadeIn"
-          style={{ animationDelay: "0.1s" }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-foreground">Monthly Budget</h3>
-              <p className="text-sm text-muted-foreground">
+          <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-0 shadow-lg">
+            <CardContent className="p-6">
+              <div className="text-sm opacity-90 mb-1">Total Expenses</div>
+              <div className="text-2xl font-semibold mb-2">
                 {currencySymbol}
                 {totalExpense.toLocaleString("en-IN", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
-                })}{" "}
-                of {currencySymbol}
-                {monthlyBudget.toLocaleString("en-IN", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
                 })}
-              </p>
-            </div>
-            <div
-              className="text-2xl"
-              style={{
-                color:
-                  (totalExpense / monthlyBudget) * 100 > 100
-                    ? "var(--destructive)"
-                    : "var(--success)",
-              }}
-            >
-              {((totalExpense / monthlyBudget) * 100).toFixed(0)}%
-            </div>
-          </div>
-          <div className="w-full h-3 bg-muted rounded-full overflow-hidden">
-            <div
-              className="h-full transition-all duration-500 bg-gradient-to-r from-primary to-secondary"
-              style={{
-                width: `${Math.min(
-                  (totalExpense / monthlyBudget) * 100,
-                  100
-                )}%`,
-                opacity: (totalExpense / monthlyBudget) * 100 > 100 ? 0.7 : 1,
-              }}
-            />
-          </div>
+              </div>
+              <div className="text-xs opacity-75">This month</div>
+            </CardContent>
+          </Card>
         </div>
+
+        {/* Monthly Overview with Progress Component */}
+        <Card className="animate-fadeIn" style={{ animationDelay: "0.1s" }}>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <CardTitle className="text-base mb-1">Monthly Budget</CardTitle>
+                <CardDescription>
+                  {currencySymbol}
+                  {totalExpense.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}{" "}
+                  of {currencySymbol}
+                  {monthlyBudget.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </CardDescription>
+              </div>
+              <div
+                className="text-2xl font-semibold"
+                style={{
+                  color:
+                    (totalExpense / monthlyBudget) * 100 > 100
+                      ? "var(--color-destructive)"
+                      : "#10b981",
+                }}
+              >
+                {((totalExpense / monthlyBudget) * 100).toFixed(0)}%
+              </div>
+            </div>
+            <Progress
+              value={totalExpense}
+              max={monthlyBudget}
+              variant="gradient"
+              className="h-3"
+            />
+          </CardContent>
+        </Card>
 
         {/* 7-Day Spending Chart */}
         {dailySpending.length > 0 && dailySpending.some((d) => d.total > 0) && (
-          <div
-            className="card p-6 animate-fadeIn"
-            style={{ animationDelay: "0.2s" }}
-          >
-            <h3 className="text-foreground mb-4">7-Day Spending</h3>
-            <div style={{ height: "220px" }}>
-              <Bar data={barData} options={barOptions} />
-            </div>
-          </div>
+          <Card className="animate-fadeIn" style={{ animationDelay: "0.2s" }}>
+            <CardHeader>
+              <CardTitle>7-Day Spending</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={barChartData}>
+                  <XAxis
+                    dataKey="day"
+                    tick={{ fill: "var(--text-tertiary)", fontSize: 11 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fill: "var(--text-tertiary)", fontSize: 11 }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={(value) =>
+                      `${currencySymbol}${value.toLocaleString()}`
+                    }
+                  />
+                  <Tooltip content={<CustomBarTooltip />} cursor={false} />
+                  <Bar
+                    dataKey="amount"
+                    fill="rgba(239, 68, 68, 0.8)"
+                    radius={[8, 8, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
         )}
 
         {/* Category Breakdown */}
         {analytics?.categoryTotals &&
           Object.keys(analytics.categoryTotals).length > 0 && (
-            <div
-              className="card p-6 animate-fadeIn"
-              style={{ animationDelay: "0.3s" }}
-            >
-              <h3 className="text-foreground mb-4">Category Breakdown</h3>
-              <div style={{ height: "280px" }}>
-                <Doughnut data={doughnutData} options={doughnutOptions} />
-              </div>
-            </div>
+            <Card className="animate-fadeIn" style={{ animationDelay: "0.3s" }}>
+              <CardHeader>
+                <CardTitle>Category Breakdown</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart>
+                    <Pie
+                      data={pieChartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={90}
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
+                      {pieChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomPieTooltip />} />
+                    <Legend
+                      verticalAlign="bottom"
+                      height={36}
+                      iconType="circle"
+                      formatter={(value) => (
+                        <span className="text-sm text-gray-600">{value}</span>
+                      )}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
           )}
 
         {/* Top Categories */}
         {analytics?.categoryTotals &&
           Object.keys(analytics.categoryTotals).length > 0 && (
-            <div
-              className="card p-6 animate-fadeIn"
-              style={{ animationDelay: "0.4s" }}
-            >
-              <h3 className="text-foreground mb-4">Top Categories</h3>
-              <div className="space-y-4">
-                {Object.entries(analytics.categoryTotals)
-                  .sort((a, b) => b[1].total - a[1].total)
-                  .slice(0, 5)
-                  .map(([name, data], index) => {
-                    const percentage = (
-                      (data.total / totalExpense) *
-                      100
-                    ).toFixed(1);
-                    const category = categories.find((c) => c.name === name);
-                    const IconComponent = category?.icon
-                      ? Icons[category.icon]
-                      : Icons.Circle;
+            <Card className="animate-fadeIn" style={{ animationDelay: "0.4s" }}>
+              <CardHeader>
+                <CardTitle>Top Categories</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {Object.entries(analytics.categoryTotals)
+                    .sort((a, b) => b[1].total - a[1].total)
+                    .slice(0, 5)
+                    .map(([name, data]) => {
+                      const percentage = (
+                        (data.total / totalExpense) *
+                        100
+                      ).toFixed(1);
+                      const category = categories.find((c) => c.name === name);
+                      const IconComponent = category?.icon
+                        ? Icons[category.icon]
+                        : Icons.Circle;
 
-                    return (
-                      <div key={name}>
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-2xl">
-                              <IconComponent
-                                size={24}
-                                style={{ color: data.color }}
-                              />
+                      return (
+                        <div key={name}>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-2xl">
+                                <IconComponent
+                                  size={24}
+                                  style={{ color: data.color }}
+                                />
+                              </span>
+                              <span className="text-foreground">{name}</span>
+                            </div>
+                            <span className="text-foreground font-medium">
+                              {currencySymbol}
+                              {data.total.toLocaleString("en-IN", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })}
                             </span>
-                            <span className="text-foreground">{name}</span>
                           </div>
-                          <span className="text-foreground font-medium">
-                            {currencySymbol}
-                            {data.total.toLocaleString("en-IN", {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })}
-                          </span>
-                        </div>
-                        <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full transition-all duration-500"
+                          <Progress
+                            value={data.total}
+                            max={totalExpense}
+                            variant="default"
+                            className="h-2"
                             style={{
-                              width: `${Math.min(percentage, 100)}%`,
-                              backgroundColor: data.color,
+                              "--tw-gradient-from": data.color,
+                              "--tw-gradient-to": data.color,
                             }}
                           />
                         </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
+                      );
+                    })}
+                </div>
+              </CardContent>
+            </Card>
           )}
 
         {/* Quick Actions */}
@@ -499,60 +409,49 @@ const Dashboard = () => {
           className="grid grid-cols-2 gap-4 animate-fadeIn"
           style={{ animationDelay: "0.5s" }}
         >
-          <button
+          <Button
+            variant="outline"
+            size="lg"
             onClick={() => navigate("/expenses")}
-            className="card p-4 hover:shadow-xl transition flex items-center justify-center"
+            className="h-auto py-4"
+            aria-label="View all expenses"
           >
             <span>View All</span>
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </button>
-          <button
+            <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
+          </Button>
+          <Button
+            size="lg"
             onClick={() => navigate("/add")}
-            className="bg-gradient-to-br from-primary to-secondary text-primary-foreground p-4 rounded-lg shadow-md hover:shadow-lg transition flex items-center justify-center"
+            className="h-auto py-4 bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
+            aria-label="Add new expense"
           >
-            <TrendingUp className="w-4 h-4 mr-2" />
+            <TrendingUp className="w-4 h-4 mr-2" aria-hidden="true" />
             <span>Add New</span>
-          </button>
+          </Button>
         </div>
 
         {/* Empty State */}
         {expenses.length === 0 && (
-          <div
-            className="card p-12 text-center animate-fadeIn"
-            style={{ animationDelay: "0.4s" }}
-          >
-            <TrendingUp className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-foreground mb-2">No Expenses Yet</h3>
-            <p className="text-muted-foreground mb-6">
-              Start tracking your spending by adding your first expense
-            </p>
-            <button
-              onClick={() => navigate("/add")}
-              className="bg-gradient-to-br from-primary to-secondary text-primary-foreground px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition inline-flex items-center"
-            >
-              <TrendingUp className="w-5 h-5 mr-2" />
-              Add Expense
-            </button>
-          </div>
+          <Card className="animate-fadeIn" style={{ animationDelay: "0.4s" }}>
+            <CardContent className="p-12 text-center">
+              <TrendingUp className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+              <CardTitle className="mb-2">No Expenses Yet</CardTitle>
+              <CardDescription className="mb-6">
+                Start tracking your spending by adding your first expense
+              </CardDescription>
+              <Button
+                size="lg"
+                onClick={() => navigate("/add")}
+                className="bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
+                aria-label="Add your first expense"
+              >
+                <TrendingUp className="w-5 h-5 mr-2" aria-hidden="true" />
+                Add Expense
+              </Button>
+            </CardContent>
+          </Card>
         )}
       </div>
-
-      <style>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.6s ease-out forwards;
-          opacity: 0;
-        }
-      `}</style>
     </div>
   );
 };
