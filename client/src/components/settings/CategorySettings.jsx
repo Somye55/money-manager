@@ -15,8 +15,6 @@ import {
   Loader,
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
-import { Button } from "../ui/button";
-import { Card, CardHeader, CardContent, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 
@@ -244,23 +242,23 @@ const CategorySettings = () => {
 
   return (
     <div className="space-y-4">
-      <Card className="animate-slide-up">
-        <CardHeader>
+      <div className="animate-slide-up card-elevated rounded-2xl overflow-hidden bg-white dark:bg-card">
+        <div className="p-6 border-b border-border">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base">Manage Categories</CardTitle>
-            <Button
-              variant="default"
-              size="sm"
+            <h3 className="text-lg font-semibold text-foreground">
+              Manage Categories
+            </h3>
+            <button
               onClick={() => openCategoryModal()}
-              className="bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-600 hover:to-emerald-600"
+              className="px-4 py-2.5 rounded-xl btn-gradient-success font-semibold flex items-center gap-2 text-sm"
               aria-label="Add new category"
             >
               <Plus size={16} aria-hidden="true" />
               Add Category
-            </Button>
+            </button>
           </div>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className="p-6">
           {categorySuccessMessage && (
             <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 text-emerald-600 text-sm font-medium animate-slide-up">
               {categorySuccessMessage}
@@ -311,49 +309,49 @@ const CategorySettings = () => {
                       className="text-muted-foreground flex-shrink-0"
                     />
                     <div
-                      className="p-2 rounded-lg flex-shrink-0"
+                      className="p-2.5 rounded-xl flex-shrink-0"
                       style={{ backgroundColor: category.color + "20" }}
                     >
-                      <Icon size={20} style={{ color: category.color }} />
+                      <Icon
+                        size={22}
+                        style={{ color: category.color }}
+                        strokeWidth={2.5}
+                      />
                     </div>
-                    <span className="flex-1 font-semibold text-sm">
+                    <span className="flex-1 font-bold text-sm text-foreground">
                       {category.name}
                     </span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
+                    <button
                       onClick={() => openCategoryModal(category)}
                       title="Edit category"
-                      className="h-8 w-8 min-h-[44px] min-w-[44px]"
+                      className="h-10 w-10 min-h-[44px] min-w-[44px] rounded-xl hover:bg-primary/10 transition-smooth flex items-center justify-center"
                       aria-label={`Edit ${category.name} category`}
                     >
                       <Edit2
-                        size={16}
-                        className="text-indigo-600"
+                        size={18}
+                        className="text-primary"
                         aria-hidden="true"
                       />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
+                    </button>
+                    <button
                       onClick={() => handleDeleteCategory(category.id)}
                       title="Delete category"
-                      className="h-8 w-8 min-h-[44px] min-w-[44px]"
+                      className="h-10 w-10 min-h-[44px] min-w-[44px] rounded-xl hover:bg-destructive/10 transition-smooth flex items-center justify-center"
                       aria-label={`Delete ${category.name} category`}
                     >
                       <Trash2
-                        size={16}
+                        size={18}
                         className="text-destructive"
                         aria-hidden="true"
                       />
-                    </Button>
+                    </button>
                   </div>
                 );
               })
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Category Modal */}
       <Dialog
@@ -383,13 +381,13 @@ const CategorySettings = () => {
 
           <div className="space-y-5">
             {/* Preview */}
-            <Card className="border-2">
-              <CardHeader>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
+            <div className="border-2 border-border rounded-2xl overflow-hidden bg-white dark:bg-card">
+              <div className="p-4 border-b border-border">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">
                   Preview
                 </p>
-              </CardHeader>
-              <CardContent>
+              </div>
+              <div className="p-6">
                 <div className="flex items-center gap-3">
                   <div
                     className="p-3 rounded-xl"
@@ -401,13 +399,13 @@ const CategorySettings = () => {
                     />
                   </div>
                   <div>
-                    <h4 className="font-semibold">
+                    <h4 className="font-semibold text-foreground">
                       {categoryForm.name || "Category Name"}
                     </h4>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Name Input */}
             <div>
@@ -557,21 +555,18 @@ const CategorySettings = () => {
 
             {/* Action Buttons */}
             <div className="flex gap-3 pt-6">
-              <Button
-                variant="secondary"
-                className="flex-1"
+              <button
+                className="flex-1 py-3 px-6 rounded-xl bg-secondary text-secondary-foreground font-semibold transition-smooth hover:bg-secondary/80"
                 onClick={closeCategoryModal}
                 disabled={savingCategory}
                 aria-label="Cancel category changes"
               >
                 Cancel
-              </Button>
-              <Button
-                variant="default"
-                className="flex-1"
+              </button>
+              <button
+                className="flex-1 py-3 px-6 rounded-xl btn-gradient-primary font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
                 onClick={handleSaveCategory}
                 disabled={!categoryForm.name.trim() || savingCategory}
-                loading={savingCategory}
                 aria-label={
                   savingCategory
                     ? editingCategory
@@ -590,7 +585,7 @@ const CategorySettings = () => {
                   : editingCategory
                   ? "Update"
                   : "Create"}
-              </Button>
+              </button>
             </div>
           </div>
         </DialogContent>

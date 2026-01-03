@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useData } from "../../context/DataContext";
 import { useTheme } from "next-themes";
-import { Palette, Check, Loader, X } from "lucide-react";
-import { Card, CardHeader, CardContent, CardTitle } from "../ui/card";
+import { Check, Loader, X } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -60,35 +59,37 @@ const AppearanceSettings = () => {
   return (
     <div className="space-y-4">
       {saveStatus && (
-        <div className="flex items-center gap-2 text-sm justify-end">
+        <div className="flex items-center gap-2 text-sm justify-end px-2">
           {saveStatus === "saving" && (
             <>
-              <Loader size={16} className="animate-spin text-indigo-600" />
-              <span className="text-muted-foreground">Saving...</span>
+              <Loader size={16} className="animate-spin text-primary" />
+              <span className="text-muted-foreground font-medium">
+                Saving...
+              </span>
             </>
           )}
           {saveStatus === "saved" && (
             <>
               <Check size={16} className="text-emerald-600" />
-              <span className="text-emerald-600">Saved</span>
+              <span className="text-emerald-600 font-medium">Saved</span>
             </>
           )}
           {saveStatus === "error" && (
             <>
               <X size={16} className="text-destructive" />
-              <span className="text-destructive">Error</span>
+              <span className="text-destructive font-medium">Error</span>
             </>
           )}
         </div>
       )}
 
-      <Card className="animate-slide-up">
-        <CardHeader>
-          <CardTitle className="text-base">Theme</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="animate-slide-up card-elevated rounded-2xl overflow-hidden bg-white dark:bg-card">
+        <div className="p-6 border-b border-border">
+          <h3 className="text-lg font-semibold text-foreground">Theme</h3>
+        </div>
+        <div className="p-6">
           <Select value={formData.theme} onValueChange={handleChange}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full border-2">
               <SelectValue placeholder="Select theme" />
             </SelectTrigger>
             <SelectContent>
@@ -105,14 +106,14 @@ const AppearanceSettings = () => {
               ? "Dark"
               : "Light"}
           </p>
-          <div className="mt-4 p-3 rounded-lg bg-secondary">
+          <div className="mt-4 p-4 rounded-xl bg-secondary/50 border border-border">
             <p className="text-xs text-muted-foreground">
               The theme will automatically apply across the entire app. System
               theme follows your device settings.
             </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

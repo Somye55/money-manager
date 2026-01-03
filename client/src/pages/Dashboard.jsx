@@ -11,24 +11,16 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { Wallet, TrendingUp, Loader, ArrowRight } from "lucide-react";
+import { TrendingUp, Loader, ArrowRight } from "lucide-react";
 import { useData } from "../context/DataContext";
 import { useSMS } from "../context/SMSContext";
 import { useNavigate } from "react-router-dom";
 import * as Icons from "lucide-react";
-import { Button } from "../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../components/ui/card";
 import { Progress } from "../components/ui/progress";
 
 const Dashboard = () => {
   const { expenses, categories, settings, loading } = useData();
-  const { scanSMS, importExpense, isSupported, permissionGranted } = useSMS();
+  const { scanSMS, isSupported, permissionGranted } = useSMS();
   const navigate = useNavigate();
   const [analytics, setAnalytics] = useState(null);
   const [dailySpending, setDailySpending] = useState([]);
@@ -141,8 +133,8 @@ const Dashboard = () => {
     if (active && payload && payload.length) {
       const value = payload[0].value;
       return (
-        <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-lg">
-          <p className="text-sm font-semibold text-gray-900">
+        <div className="bg-white dark:bg-card border-2 border-primary/20 rounded-xl p-3 shadow-xl">
+          <p className="text-sm font-bold text-foreground">
             {currencySymbol}
             {value.toLocaleString("en-IN", {
               minimumFractionDigits: 0,
@@ -161,11 +153,11 @@ const Dashboard = () => {
       const value = payload[0].value;
       const percentage = ((value / totalExpense) * 100).toFixed(1);
       return (
-        <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-lg">
-          <p className="text-sm font-semibold text-gray-900 mb-1">
+        <div className="bg-white dark:bg-card border-2 border-primary/20 rounded-xl p-3 shadow-xl">
+          <p className="text-sm font-bold text-foreground mb-1">
             {payload[0].name}
           </p>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             {currencySymbol}
             {value.toLocaleString("en-IN", {
               minimumFractionDigits: 0,
@@ -188,15 +180,24 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen pb-24">
+    <div
+      className="min-h-screen pb-24"
+      style={{
+        background: "linear-gradient(to bottom, #f8f9fc 0%, #e8eaf6 100%)",
+      }}
+    >
       <div className="max-w-screen-lg mx-auto px-4 py-6 space-y-6">
-        {/* Balance and Expenses Cards with Gradient */}
+        {/* Balance and Expenses Cards with Premium Gradient */}
         <div className="grid grid-cols-2 gap-4 animate-fadeIn">
-          <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-0 shadow-lg">
-            <CardContent className="p-6 flex flex-col h-full">
-              <div className="text-sm opacity-90 mb-1">Current Balance</div>
+          <div className="relative overflow-hidden rounded-2xl shadow-xl transition-smooth hover:shadow-2xl hover:scale-[1.02]">
+            <div className="absolute inset-0 bg-gradient-primary opacity-100"></div>
+            <div className="absolute inset-0 shimmer"></div>
+            <div className="relative p-6 flex flex-col h-full">
+              <div className="text-sm text-white/80 mb-1 font-medium">
+                Current Balance
+              </div>
               <div
-                className="font-semibold mb-2"
+                className="font-bold mb-2 text-white"
                 style={{
                   fontSize: (() => {
                     const formatted = `${currencySymbol}${balance.toLocaleString(
@@ -211,7 +212,7 @@ const Dashboard = () => {
                     if (len > 10) return "1rem";
                     if (len > 8) return "1.25rem";
                     if (len > 6) return "1.5rem";
-                    return "1.75rem";
+                    return "1.875rem";
                   })(),
                   lineHeight: "1.2",
                   whiteSpace: "nowrap",
@@ -223,17 +224,21 @@ const Dashboard = () => {
                   maximumFractionDigits: balance % 1 === 0 ? 0 : 2,
                 })}
               </div>
-              <div className="text-xs opacity-75 mt-auto">
+              <div className="text-xs text-white/70 mt-auto">
                 Available to spend
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-0 shadow-lg">
-            <CardContent className="p-6 flex flex-col h-full">
-              <div className="text-sm opacity-90 mb-1">Total Expenses</div>
+          <div className="relative overflow-hidden rounded-2xl shadow-xl transition-smooth hover:shadow-2xl hover:scale-[1.02]">
+            <div className="absolute inset-0 bg-gradient-danger opacity-100"></div>
+            <div className="absolute inset-0 shimmer"></div>
+            <div className="relative p-6 flex flex-col h-full">
+              <div className="text-sm text-white/80 mb-1 font-medium">
+                Total Expenses
+              </div>
               <div
-                className="font-semibold mb-2"
+                className="font-bold mb-2 text-white"
                 style={{
                   fontSize: (() => {
                     const formatted = `${currencySymbol}${totalExpense.toLocaleString(
@@ -248,7 +253,7 @@ const Dashboard = () => {
                     if (len > 10) return "1rem";
                     if (len > 8) return "1.25rem";
                     if (len > 6) return "1.5rem";
-                    return "1.75rem";
+                    return "1.875rem";
                   })(),
                   lineHeight: "1.2",
                   whiteSpace: "nowrap",
@@ -260,18 +265,23 @@ const Dashboard = () => {
                   maximumFractionDigits: totalExpense % 1 === 0 ? 0 : 2,
                 })}
               </div>
-              <div className="text-xs opacity-75 mt-auto">This month</div>
-            </CardContent>
-          </Card>
+              <div className="text-xs text-white/70 mt-auto">This month</div>
+            </div>
+          </div>
         </div>
 
-        {/* Monthly Overview with Progress Component */}
-        <Card className="animate-fadeIn" style={{ animationDelay: "0.1s" }}>
-          <CardContent className="p-6">
+        {/* Monthly Overview with Glass Effect */}
+        <div
+          className="animate-fadeIn card-elevated rounded-2xl overflow-hidden"
+          style={{ animationDelay: "0.1s", background: "white" }}
+        >
+          <div className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <CardTitle className="text-base mb-1">Monthly Budget</CardTitle>
-                <CardDescription>
+                <h3 className="text-lg font-semibold text-foreground mb-1">
+                  Monthly Budget
+                </h3>
+                <p className="text-sm text-muted-foreground">
                   {currencySymbol}
                   {totalExpense.toLocaleString("en-IN", {
                     minimumFractionDigits: 0,
@@ -282,15 +292,18 @@ const Dashboard = () => {
                     minimumFractionDigits: 0,
                     maximumFractionDigits: monthlyBudget % 1 === 0 ? 0 : 2,
                   })}
-                </CardDescription>
+                </p>
               </div>
               <div
-                className="text-2xl font-semibold"
+                className="text-3xl font-bold"
                 style={{
-                  color:
+                  background:
                     (totalExpense / monthlyBudget) * 100 > 100
-                      ? "var(--color-destructive)"
-                      : "#10b981",
+                      ? "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)"
+                      : "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
                 }}
               >
                 {((totalExpense / monthlyBudget) * 100).toFixed(0)}%
@@ -302,16 +315,24 @@ const Dashboard = () => {
               variant="gradient"
               className="h-3"
             />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        {/* 7-Day Spending Chart */}
+        {/* 7-Day Spending Chart with Enhanced Card */}
         {dailySpending.length > 0 && dailySpending.some((d) => d.total > 0) && (
-          <Card className="animate-fadeIn" style={{ animationDelay: "0.2s" }}>
-            <CardHeader>
-              <CardTitle>7-Day Spending</CardTitle>
-            </CardHeader>
-            <CardContent className="px-2 pb-6">
+          <div
+            className="animate-fadeIn card-elevated rounded-2xl overflow-hidden"
+            style={{ animationDelay: "0.2s", background: "white" }}
+          >
+            <div className="p-6 pb-2">
+              <h3 className="text-lg font-semibold text-foreground mb-1">
+                7-Day Spending
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Your spending trend this week
+              </p>
+            </div>
+            <div className="px-2 pb-6">
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart
                   data={barChartData}
@@ -319,12 +340,18 @@ const Dashboard = () => {
                 >
                   <XAxis
                     dataKey="day"
-                    tick={{ fill: "var(--text-tertiary)", fontSize: 11 }}
+                    tick={{
+                      fill: "var(--color-muted-foreground)",
+                      fontSize: 11,
+                    }}
                     axisLine={false}
                     tickLine={false}
                   />
                   <YAxis
-                    tick={{ fill: "var(--text-tertiary)", fontSize: 10 }}
+                    tick={{
+                      fill: "var(--color-muted-foreground)",
+                      fontSize: 10,
+                    }}
                     axisLine={false}
                     tickLine={false}
                     width={45}
@@ -337,13 +364,13 @@ const Dashboard = () => {
                   <Tooltip content={<CustomBarTooltip />} cursor={false} />
                   <Bar
                     dataKey="amount"
-                    fill="rgba(239, 68, 68, 0.8)"
-                    radius={[8, 8, 0, 0]}
+                    fill="url(#barGradient)"
+                    radius={[12, 12, 0, 0]}
                     label={{
                       position: "top",
-                      fill: "var(--text-secondary)",
+                      fill: "var(--color-foreground)",
                       fontSize: 11,
-                      fontWeight: 500,
+                      fontWeight: 600,
                       formatter: (value) =>
                         value > 0
                           ? `${currencySymbol}${value.toLocaleString("en-IN", {
@@ -353,20 +380,44 @@ const Dashboard = () => {
                           : "",
                     }}
                   />
+                  <defs>
+                    <linearGradient
+                      id="barGradient"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop offset="0%" stopColor="#ef4444" stopOpacity={1} />
+                      <stop
+                        offset="100%"
+                        stopColor="#dc2626"
+                        stopOpacity={0.8}
+                      />
+                    </linearGradient>
+                  </defs>
                 </BarChart>
               </ResponsiveContainer>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
-        {/* Category Breakdown */}
+        {/* Category Breakdown with Modern Design */}
         {analytics?.categoryTotals &&
           Object.keys(analytics.categoryTotals).length > 0 && (
-            <Card className="animate-fadeIn" style={{ animationDelay: "0.3s" }}>
-              <CardHeader>
-                <CardTitle>Category Breakdown</CardTitle>
-              </CardHeader>
-              <CardContent className="px-2 pb-6">
+            <div
+              className="animate-fadeIn card-elevated rounded-2xl overflow-hidden"
+              style={{ animationDelay: "0.3s", background: "white" }}
+            >
+              <div className="p-6 pb-2">
+                <h3 className="text-lg font-semibold text-foreground mb-1">
+                  Category Breakdown
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Where your money goes
+                </p>
+              </div>
+              <div className="px-2 pb-6">
                 <ResponsiveContainer width="100%" height={320}>
                   <PieChart
                     margin={{ top: 25, right: 10, bottom: 10, left: 10 }}
@@ -375,9 +426,9 @@ const Dashboard = () => {
                       data={pieChartData}
                       cx="50%"
                       cy="47%"
-                      innerRadius={60}
-                      outerRadius={85}
-                      paddingAngle={0}
+                      innerRadius={65}
+                      outerRadius={90}
+                      paddingAngle={2}
                       dataKey="value"
                       label={({ value, percent }) =>
                         `${(percent * 100).toFixed(0)}%`
@@ -394,24 +445,32 @@ const Dashboard = () => {
                       height={36}
                       iconType="circle"
                       formatter={(value) => (
-                        <span className="text-sm text-gray-600">{value}</span>
+                        <span className="text-sm text-muted-foreground font-medium">
+                          {value}
+                        </span>
                       )}
                     />
                   </PieChart>
                 </ResponsiveContainer>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
 
-        {/* Top Categories */}
+        {/* Top Categories with Enhanced Design */}
         {analytics?.categoryTotals &&
           Object.keys(analytics.categoryTotals).length > 0 && (
-            <Card className="animate-fadeIn" style={{ animationDelay: "0.4s" }}>
-              <CardHeader>
-                <CardTitle>Top Categories</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
+            <div
+              className="animate-fadeIn card-elevated rounded-2xl overflow-hidden"
+              style={{ animationDelay: "0.4s", background: "white" }}
+            >
+              <div className="p-6 pb-4">
+                <h3 className="text-lg font-semibold text-foreground mb-1">
+                  Top Categories
+                </h3>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Your biggest spending areas
+                </p>
+                <div className="space-y-5">
                   {Object.entries(analytics.categoryTotals)
                     .sort((a, b) => b[1].total - a[1].total)
                     .slice(0, 5)
@@ -426,18 +485,29 @@ const Dashboard = () => {
                         : Icons.Circle;
 
                       return (
-                        <div key={name}>
+                        <div
+                          key={name}
+                          className="transition-smooth hover:scale-[1.01]"
+                        >
                           <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-2xl">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className="p-2.5 rounded-xl"
+                                style={{
+                                  background: `${data.color}20`,
+                                }}
+                              >
                                 <IconComponent
-                                  size={24}
+                                  size={20}
                                   style={{ color: data.color }}
+                                  strokeWidth={2.5}
                                 />
+                              </div>
+                              <span className="text-foreground font-medium">
+                                {name}
                               </span>
-                              <span className="text-foreground">{name}</span>
                             </div>
-                            <span className="text-foreground font-medium">
+                            <span className="text-foreground font-semibold">
                               {currencySymbol}
                               {data.total.toLocaleString("en-IN", {
                                 minimumFractionDigits: 0,
@@ -446,70 +516,80 @@ const Dashboard = () => {
                               })}
                             </span>
                           </div>
-                          <Progress
-                            value={data.total}
-                            max={totalExpense}
-                            variant="default"
-                            className="h-2"
-                            style={{
-                              "--tw-gradient-from": data.color,
-                              "--tw-gradient-to": data.color,
-                            }}
-                          />
+                          <div className="relative h-2.5 bg-secondary rounded-full overflow-hidden">
+                            <div
+                              className="absolute inset-y-0 left-0 rounded-full transition-all duration-500"
+                              style={{
+                                width: `${percentage}%`,
+                                background: `linear-gradient(90deg, ${data.color} 0%, ${data.color}dd 100%)`,
+                              }}
+                            />
+                          </div>
                         </div>
                       );
                     })}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
 
-        {/* Quick Actions */}
+        {/* Quick Actions with Modern Buttons */}
         <div
           className="grid grid-cols-2 gap-4 animate-fadeIn"
           style={{ animationDelay: "0.5s" }}
         >
-          <Button
-            variant="outline"
-            size="lg"
+          <button
             onClick={() => navigate("/expenses")}
-            className="h-auto py-4"
+            className="h-auto py-4 px-6 rounded-2xl bg-white border-2 border-primary/20 text-primary font-semibold transition-smooth hover:border-primary hover:shadow-lg hover:scale-[1.02] flex items-center justify-center gap-2"
             aria-label="View all expenses"
           >
             <span>View All</span>
-            <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
-          </Button>
-          <Button
-            size="lg"
+            <ArrowRight className="w-4 h-4" aria-hidden="true" />
+          </button>
+          <button
             onClick={() => navigate("/add")}
-            className="h-auto py-4 bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
+            className="h-auto py-4 px-6 rounded-2xl text-white font-semibold transition-smooth hover:shadow-xl hover:scale-[1.02] flex items-center justify-center gap-2 relative overflow-hidden"
+            style={{
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            }}
             aria-label="Add new expense"
           >
-            <TrendingUp className="w-4 h-4 mr-2" aria-hidden="true" />
+            <div className="absolute inset-0 shimmer"></div>
+            <TrendingUp className="w-4 h-4" aria-hidden="true" />
             <span>Add New</span>
-          </Button>
+          </button>
         </div>
 
-        {/* Empty State */}
+        {/* Empty State with Modern Design */}
         {expenses.length === 0 && (
-          <Card className="animate-fadeIn" style={{ animationDelay: "0.4s" }}>
-            <CardContent className="p-12 text-center">
-              <TrendingUp className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-              <CardTitle className="mb-2">No Expenses Yet</CardTitle>
-              <CardDescription className="mb-6">
+          <div
+            className="animate-fadeIn card-elevated rounded-2xl overflow-hidden"
+            style={{ animationDelay: "0.4s", background: "white" }}
+          >
+            <div className="p-12 text-center">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-primary flex items-center justify-center">
+                <TrendingUp className="w-10 h-10 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-foreground mb-2">
+                No Expenses Yet
+              </h3>
+              <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
                 Start tracking your spending by adding your first expense
-              </CardDescription>
-              <Button
-                size="lg"
+              </p>
+              <button
                 onClick={() => navigate("/add")}
-                className="bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
+                className="py-3 px-8 rounded-xl text-white font-semibold transition-smooth hover:shadow-xl hover:scale-[1.05] inline-flex items-center gap-2"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                }}
                 aria-label="Add your first expense"
               >
-                <TrendingUp className="w-5 h-5 mr-2" aria-hidden="true" />
+                <TrendingUp className="w-5 h-5" aria-hidden="true" />
                 Add Expense
-              </Button>
-            </CardContent>
-          </Card>
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>

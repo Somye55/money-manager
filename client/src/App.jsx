@@ -136,8 +136,8 @@ const Header = () => {
     return "Money Manager";
   };
 
-  // Show back button for all pages except dashboard
-  const showBackButton = location.pathname !== "/";
+  // Show back button only for sub-settings pages
+  const showBackButton = location.pathname.startsWith("/settings/");
 
   return (
     <Card className="flex items-center justify-between top-0 z-10 backdrop-blur-lg bg-opacity-90 rounded-none border-b p-4">
@@ -189,6 +189,16 @@ const NotificationPopup = () => {
   );
 };
 
+const ScrollToTop = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
+  return null;
+};
+
 function App() {
   useEffect(() => {
     // Initialize deep links for Capacitor
@@ -203,6 +213,7 @@ function App() {
       <DataProvider>
         <SMSProvider>
           <Router>
+            <ScrollToTop />
             <div className="pb-20">
               {" "}
               {/* Padding for bottom nav */}

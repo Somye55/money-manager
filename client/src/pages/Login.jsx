@@ -59,14 +59,7 @@ const Login = () => {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center p-4"
-      style={{
-        background: "var(--bg-secondary)",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
+    <div className="min-h-screen flex items-center justify-center p-4 bg-page-gradient relative overflow-hidden">
       {/* Animated Background Gradients */}
       <div
         style={{
@@ -101,31 +94,14 @@ const Login = () => {
         {/* Header Section */}
         <div className="text-center mb-8 animate-fade-in">
           <div className="flex justify-center mb-6">
-            <div
-              style={{
-                background: "var(--gradient-primary)",
-                padding: "1.5rem",
-                borderRadius: "2rem",
-                boxShadow: "0 10px 40px rgba(99, 102, 241, 0.3)",
-                animation: "slideUp 0.8s ease-out",
-              }}
-            >
+            <div className="p-6 rounded-2xl bg-gradient-primary shadow-2xl animate-slide-up">
               <Wallet className="w-12 h-12 text-white" strokeWidth={2.5} />
             </div>
           </div>
-          <h1
-            className="text-4xl font-extrabold mb-3"
-            style={{
-              background:
-                "linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}
-          >
+          <h1 className="text-4xl font-extrabold mb-3 text-gradient-primary">
             Welcome Back
           </h1>
-          <p className="text-secondary text-lg font-medium flex items-center justify-center gap-2">
+          <p className="text-muted-foreground text-lg font-medium flex items-center justify-center gap-2">
             <Sparkles size={18} className="text-primary" />
             Track your finances with ease
           </p>
@@ -133,21 +109,13 @@ const Login = () => {
 
         {/* Main Card */}
         <div
-          className="card animate-slide-up"
+          className="card-elevated rounded-2xl p-6 bg-white dark:bg-card animate-slide-up"
           style={{ animationDelay: "0.2s" }}
         >
           {error && (
-            <div
-              className="mb-6 p-4 rounded-lg animate-fade-in"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(252, 165, 165, 0.1) 100%)",
-                border: "2px solid rgba(239, 68, 68, 0.3)",
-                color: "var(--danger)",
-              }}
-            >
+            <div className="mb-6 p-4 rounded-xl animate-fade-in bg-gradient-danger/10 border-2 border-destructive/30">
               <div className="flex items-start gap-3">
-                <div className="bg-danger text-white rounded-full p-1 mt-0.5">
+                <div className="bg-destructive text-white rounded-full p-1 mt-0.5">
                   <svg
                     width="16"
                     height="16"
@@ -158,7 +126,9 @@ const Login = () => {
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-sm">{error}</p>
+                  <p className="font-semibold text-sm text-destructive">
+                    {error}
+                  </p>
                 </div>
               </div>
             </div>
@@ -166,7 +136,7 @@ const Login = () => {
 
           {/* Debug Info */}
           {process.env.NODE_ENV === "development" && (
-            <div className="mb-4 p-3 rounded-lg bg-gray-100 text-xs">
+            <div className="mb-4 p-3 rounded-lg bg-secondary text-xs">
               <p>
                 <strong>Debug Info:</strong>
               </p>
@@ -179,8 +149,10 @@ const Login = () => {
 
           {/* Sign in message */}
           <div className="text-center mb-6">
-            <h3 className="text-lg font-semibold mb-2">Sign in to continue</h3>
-            <p className="text-sm text-tertiary">
+            <h3 className="text-lg font-semibold mb-2 text-foreground">
+              Sign in to continue
+            </h3>
+            <p className="text-sm text-muted-foreground">
               Use your Google account to access your financial dashboard
             </p>
           </div>
@@ -188,22 +160,18 @@ const Login = () => {
           {/* Google Login Button */}
           <button
             onClick={handleGoogleLogin}
-            className="btn btn-primary btn-block group"
+            className="w-full py-4 px-6 rounded-xl btn-gradient-primary font-semibold flex items-center justify-center gap-3 group disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
             disabled={loading}
-            style={{
-              background: "var(--gradient-primary)",
-              border: "none",
-              boxShadow: "0 4px 12px rgba(99, 102, 241, 0.3)",
-            }}
           >
+            {!loading && <div className="absolute inset-0 shimmer"></div>}
             {loading ? (
               <div className="animate-pulse">Signing in...</div>
             ) : (
               <>
                 <svg
-                  width="18"
-                  height="18"
-                  className="transition-transform group-hover:scale-110"
+                  width="20"
+                  height="20"
+                  className="transition-transform group-hover:scale-110 relative z-10"
                   viewBox="0 0 24 24"
                 >
                   <path
@@ -223,27 +191,23 @@ const Login = () => {
                     fill="#EA4335"
                   />
                 </svg>
-                <span className="font-semibold">Continue with Google</span>
+                <span className="font-semibold relative z-10">
+                  Continue with Google
+                </span>
               </>
             )}
           </button>
 
           {/* Info Footer */}
-          <div
-            className="mt-6 p-4 rounded-lg"
-            style={{
-              background: "var(--gradient-bg)",
-              border: "1px solid var(--border-light)",
-            }}
-          >
-            <p className="text-xs text-center text-tertiary">
+          <div className="mt-6 p-4 rounded-xl bg-secondary/50 border border-border">
+            <p className="text-xs text-center text-muted-foreground">
               🔒 Your data is secure and encrypted
             </p>
           </div>
         </div>
 
         {/* Footer Text */}
-        <p className="text-center text-sm text-tertiary mt-6">
+        <p className="text-center text-sm text-muted-foreground mt-6">
           By continuing, you agree to our{" "}
           <a href="#" className="text-primary font-semibold hover:underline">
             Terms
