@@ -115,7 +115,7 @@ const ExpenseDetail = () => {
 
   if (!expense) {
     return (
-      <div className="flex items-center justify-center h-screen bg-page-gradient">
+      <div className="flex items-center justify-center py-32 bg-page-gradient">
         <Loader className="animate-spin text-primary" size={32} />
       </div>
     );
@@ -126,7 +126,7 @@ const ExpenseDetail = () => {
   const categoryColor = category?.color || "#6366f1";
 
   return (
-    <div className="min-h-screen bg-page-gradient pb-24 animate-fade-in">
+    <div className="bg-page-gradient min-h-full animate-fade-in">
       {/* Content with staggered animations */}
       <div className="px-3 py-6 space-y-6 w-full">
         {/* Amount Card */}

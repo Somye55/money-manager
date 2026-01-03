@@ -63,7 +63,7 @@ const Login = () => {
   };
 
   return (
-    <div className="h-screen w-full flex items-center justify-center p-4 bg-page-gradient relative overflow-hidden">
+    <div className="flex items-center justify-center p-4 bg-page-gradient relative overflow-hidden h-full">
       {/* Animated Background Gradients */}
       <div
         className="absolute top-[-50%] right-[-20%] w-[600px] h-[600px] rounded-full opacity-100 dark:opacity-70"

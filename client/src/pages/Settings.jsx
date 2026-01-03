@@ -58,7 +58,7 @@ const Settings = () => {
   ];
 
   return (
-    <div className="pb-24 space-y-4 animate-fade-in w-full bg-page-gradient min-h-screen px-3 py-6">
+    <div className="space-y-4 animate-fade-in w-full bg-page-gradient min-h-full px-3 py-6">
       {/* Settings Groups */}
       <div className="space-y-3">
         {settingsGroups.map((group, index) => {
