@@ -5,10 +5,12 @@ import { Save, X, Calendar, Tag, FileText, DollarSign } from "lucide-react";
 import * as Icons from "lucide-react";
 import { Input } from "../components/ui/input";
 import { AlertDescription } from "../components/ui/alert";
+import { useToast } from "../components/ui/use-toast";
 
 const AddExpense = () => {
   const { categories, addExpense, settings } = useData();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const [formData, setFormData] = useState({
     amount: "",
@@ -53,10 +55,23 @@ const AddExpense = () => {
 
       await addExpense(expenseData);
 
+      toast({
+        variant: "success",
+        title: "Expense added",
+        description: `${currencySymbol}${parseFloat(formData.amount).toFixed(
+          2
+        )} - ${formData.description.trim()}`,
+      });
+
       // Reset form and navigate back
       navigate("/");
     } catch (err) {
       setError("Failed to add expense. Please try again.");
+      toast({
+        variant: "error",
+        title: "Failed to add expense",
+        description: "Please try again",
+      });
       console.error("Error adding expense:", err);
     } finally {
       setSaving(false);

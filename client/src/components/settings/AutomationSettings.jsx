@@ -3,6 +3,7 @@ import { useSMS } from "../../context/SMSContext";
 import { Smartphone, RefreshCw, Loader, Check } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { useData } from "../../context/DataContext";
+import { useToast } from "../ui/use-toast";
 
 const AutomationSettings = () => {
   const {
@@ -15,8 +16,8 @@ const AutomationSettings = () => {
     scanning,
   } = useSMS();
   const { settings, modifySettings } = useData();
+  const { toast } = useToast();
   const [serviceConnected, setServiceConnected] = useState(false);
-  const [scanMessage, setScanMessage] = useState("");
   const [selectedApps, setSelectedApps] = useState([]);
 
   useEffect(() => {
@@ -49,36 +50,59 @@ const AutomationSettings = () => {
     try {
       const granted = await requestSMSPermission();
       if (granted) {
-        setScanMessage("✓ SMS Permission granted!");
+        toast({
+          variant: "success",
+          title: "SMS Permission granted",
+          description: "You can now scan past SMS messages",
+        });
       } else {
-        setScanMessage("⚠️ SMS Permission denied. Check app settings.");
+        toast({
+          variant: "error",
+          title: "Permission denied",
+          description: "Check app settings to enable SMS permission",
+        });
       }
     } catch (e) {
-      setScanMessage(
-        `❌ Error: ${e.message || "Failed to request permission"}`
-      );
+      toast({
+        variant: "error",
+        title: "Permission error",
+        description: e.message || "Failed to request permission",
+      });
     }
-    setTimeout(() => setScanMessage(""), 5000);
   };
 
   const handleNotifRequest = async () => {
     try {
       await requestNotificationPermission();
-      setScanMessage("✓ Opening settings. Please enable notification access.");
+      toast({
+        variant: "success",
+        title: "Opening settings",
+        description: "Please enable notification access",
+      });
     } catch (e) {
-      setScanMessage(`⚠️ ${e.message || "Please grant required permissions"}`);
+      toast({
+        variant: "error",
+        title: "Permission error",
+        description: e.message || "Please grant required permissions",
+      });
     }
-    setTimeout(() => setScanMessage(""), 7000);
   };
 
   const handleManualScan = async () => {
     try {
       const results = await scanSMS(30);
-      setScanMessage(`✓ Scan complete! Found ${results.length} expenses.`);
+      toast({
+        variant: "success",
+        title: "Scan complete",
+        description: `Found ${results.length} expenses`,
+      });
     } catch (err) {
-      setScanMessage("❌ Scan failed.");
+      toast({
+        variant: "error",
+        title: "Scan failed",
+        description: "Failed to scan SMS messages",
+      });
     }
-    setTimeout(() => setScanMessage(""), 3000);
   };
 
   const handleAppSelectionChange = async (apps) => {
@@ -87,8 +111,18 @@ const AutomationSettings = () => {
       await modifySettings({ selectedApps: apps });
       const smsService = (await import("../../lib/smsService")).default;
       await smsService.setSelectedApps(apps);
+      toast({
+        variant: "success",
+        title: "Apps updated",
+        description: "Selected apps have been saved",
+      });
     } catch (error) {
       console.error("Error updating selected apps:", error);
+      toast({
+        variant: "error",
+        title: "Update failed",
+        description: "Failed to update selected apps",
+      });
     }
   };
 
@@ -132,12 +166,6 @@ const AutomationSettings = () => {
 
   return (
     <div className="space-y-4">
-      {scanMessage && (
-        <div className="mb-4 p-3 rounded-xl bg-primary/10 text-primary text-sm font-medium animate-slide-up">
-          {scanMessage}
-        </div>
-      )}
-
       {/* SMS Permission */}
       <div className="animate-slide-up card-elevated rounded-2xl overflow-hidden bg-white dark:bg-card">
         <div className="p-6 border-b border-border">
@@ -258,27 +286,37 @@ const AutomationSettings = () => {
                     const status =
                       await NotificationListenerPlugin.getPermissionStatus();
                     if (!status.overlayPermission) {
-                      setScanMessage(
-                        "⚠️ Please enable 'Display over other apps' permission first"
-                      );
+                      toast({
+                        variant: "error",
+                        title: "Permission required",
+                        description:
+                          "Please enable 'Display over other apps' permission first",
+                      });
                       await NotificationListenerPlugin.requestOverlayPermission();
                       return;
                     }
                     const result =
                       await NotificationListenerPlugin.testOverlay();
                     if (result.success) {
-                      setScanMessage(
-                        "✓ Test popup triggered! Check your screen."
-                      );
+                      toast({
+                        variant: "success",
+                        title: "Test successful",
+                        description: "Check your screen for the popup",
+                      });
                     } else {
-                      setScanMessage(
-                        "❌ Failed: " + (result.error || "Unknown error")
-                      );
+                      toast({
+                        variant: "error",
+                        title: "Test failed",
+                        description: result.error || "Unknown error",
+                      });
                     }
                   } catch (e) {
-                    setScanMessage("❌ Error: " + e.message);
+                    toast({
+                      variant: "error",
+                      title: "Test error",
+                      description: e.message,
+                    });
                   }
-                  setTimeout(() => setScanMessage(""), 5000);
                 }}
                 className="flex-1 py-3 px-4 rounded-xl btn-gradient-success font-semibold text-white"
               >
@@ -382,11 +420,18 @@ const AutomationSettings = () => {
                   await import("../../lib/notificationPlugin")
                 ).default;
                 await NotificationListenerPlugin.requestOverlayPermission();
-                setScanMessage("Opening overlay permission settings...");
+                toast({
+                  variant: "success",
+                  title: "Opening settings",
+                  description: "Enable overlay permission",
+                });
               } catch (e) {
-                setScanMessage("❌ Error: " + e.message);
+                toast({
+                  variant: "error",
+                  title: "Error",
+                  description: e.message,
+                });
               }
-              setTimeout(() => setScanMessage(""), 3000);
             }}
             className="w-full py-3 px-6 rounded-xl btn-gradient-primary font-semibold"
           >

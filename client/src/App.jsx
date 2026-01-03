@@ -30,9 +30,11 @@ import AddExpense from "./pages/AddExpense";
 import Settings from "./pages/Settings";
 import SettingsGroup from "./pages/SettingsGroup";
 import Expenses from "./pages/Expenses";
+import ExpenseDetail from "./pages/ExpenseDetail";
 import AuthDebug from "./components/AuthDebug";
 import ThemeDebug from "./components/ThemeDebug";
 import CategorySelectionModal from "./components/CategorySelectionModal";
+import { Toaster } from "./components/ui/toaster";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -128,6 +130,9 @@ const Header = () => {
     if (location.pathname === "/expenses") return "Expenses";
     if (location.pathname === "/add") return "Add Expense";
     if (location.pathname === "/settings") return "Settings";
+    if (location.pathname.startsWith("/expenses/")) {
+      return "Expenses → Details";
+    }
     if (location.pathname.startsWith("/settings/")) {
       const group = location.pathname.split("/")[2];
       const groupName = group.charAt(0).toUpperCase() + group.slice(1);
@@ -136,11 +141,13 @@ const Header = () => {
     return "Money Manager";
   };
 
-  // Show back button only for sub-settings pages
-  const showBackButton = location.pathname.startsWith("/settings/");
+  // Show back button for sub-pages
+  const showBackButton =
+    location.pathname.startsWith("/settings/") ||
+    location.pathname.startsWith("/expenses/");
 
   return (
-    <Card className="flex items-center justify-between top-0 z-10 backdrop-blur-lg bg-opacity-90 rounded-none border-b p-4">
+    <Card className="flex items-center justify-between top-0 z-10 backdrop-blur-lg bg-opacity-90 rounded-none border-b border-border p-4">
       <div className="flex items-center gap-3">
         {showBackButton ? (
           <button
@@ -156,7 +163,7 @@ const Header = () => {
           </div>
         )}
         <h3
-          className="text-xl font-bold"
+          className="text-xl font-bold truncate"
           style={{
             background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
             WebkitBackgroundClip: "text",
@@ -246,6 +253,14 @@ function App() {
                     }
                   />
                   <Route
+                    path="/expenses/:id"
+                    element={
+                      <ProtectedRoute>
+                        <ExpenseDetail />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
                     path="/settings"
                     element={
                       <ProtectedRoute>
@@ -267,6 +282,7 @@ function App() {
               <NotificationPopup />
               <AuthDebug />
               <ThemeDebug />
+              <Toaster />
             </div>
           </Router>
         </SMSProvider>

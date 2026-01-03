@@ -133,7 +133,7 @@ const Dashboard = () => {
     if (active && payload && payload.length) {
       const value = payload[0].value;
       return (
-        <div className="bg-white dark:bg-card border-2 border-primary/20 rounded-xl p-3 shadow-xl">
+        <div className="bg-card border-2 border-primary/20 rounded-xl p-3 shadow-xl">
           <p className="text-sm font-bold text-foreground">
             {currencySymbol}
             {value.toLocaleString("en-IN", {
@@ -153,7 +153,7 @@ const Dashboard = () => {
       const value = payload[0].value;
       const percentage = ((value / totalExpense) * 100).toFixed(1);
       return (
-        <div className="bg-white dark:bg-card border-2 border-primary/20 rounded-xl p-3 shadow-xl">
+        <div className="bg-card border-2 border-primary/20 rounded-xl p-3 shadow-xl">
           <p className="text-sm font-bold text-foreground mb-1">
             {payload[0].name}
           </p>
@@ -180,12 +180,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div
-      className="min-h-screen pb-24"
-      style={{
-        background: "linear-gradient(to bottom, #f8f9fc 0%, #e8eaf6 100%)",
-      }}
-    >
+    <div className="min-h-screen pb-24 bg-page-gradient">
       <div className="max-w-screen-lg mx-auto px-4 py-6 space-y-6">
         {/* Balance and Expenses Cards with Premium Gradient */}
         <div className="grid grid-cols-2 gap-4 animate-fadeIn">
@@ -272,8 +267,8 @@ const Dashboard = () => {
 
         {/* Monthly Overview with Glass Effect */}
         <div
-          className="animate-fadeIn card-elevated rounded-2xl overflow-hidden"
-          style={{ animationDelay: "0.1s", background: "white" }}
+          className="animate-fadeIn card-elevated rounded-2xl overflow-hidden bg-card"
+          style={{ animationDelay: "0.1s" }}
         >
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
@@ -321,8 +316,8 @@ const Dashboard = () => {
         {/* 7-Day Spending Chart with Enhanced Card */}
         {dailySpending.length > 0 && dailySpending.some((d) => d.total > 0) && (
           <div
-            className="animate-fadeIn card-elevated rounded-2xl overflow-hidden"
-            style={{ animationDelay: "0.2s", background: "white" }}
+            className="animate-fadeIn card-elevated rounded-2xl overflow-hidden bg-card"
+            style={{ animationDelay: "0.2s" }}
           >
             <div className="p-6 pb-2">
               <h3 className="text-lg font-semibold text-foreground mb-1">
@@ -406,8 +401,8 @@ const Dashboard = () => {
         {analytics?.categoryTotals &&
           Object.keys(analytics.categoryTotals).length > 0 && (
             <div
-              className="animate-fadeIn card-elevated rounded-2xl overflow-hidden"
-              style={{ animationDelay: "0.3s", background: "white" }}
+              className="animate-fadeIn card-elevated rounded-2xl overflow-hidden bg-card"
+              style={{ animationDelay: "0.3s" }}
             >
               <div className="p-6 pb-2">
                 <h3 className="text-lg font-semibold text-foreground mb-1">
@@ -460,8 +455,8 @@ const Dashboard = () => {
         {analytics?.categoryTotals &&
           Object.keys(analytics.categoryTotals).length > 0 && (
             <div
-              className="animate-fadeIn card-elevated rounded-2xl overflow-hidden"
-              style={{ animationDelay: "0.4s", background: "white" }}
+              className="animate-fadeIn card-elevated rounded-2xl overflow-hidden bg-card"
+              style={{ animationDelay: "0.4s" }}
             >
               <div className="p-6 pb-4">
                 <h3 className="text-lg font-semibold text-foreground mb-1">
@@ -540,7 +535,7 @@ const Dashboard = () => {
         >
           <button
             onClick={() => navigate("/expenses")}
-            className="h-auto py-4 px-6 rounded-2xl bg-white border-2 border-primary/20 text-primary font-semibold transition-smooth hover:border-primary hover:shadow-lg hover:scale-[1.02] flex items-center justify-center gap-2"
+            className="h-auto py-4 px-6 rounded-2xl bg-card border-2 border-primary/20 text-primary font-semibold transition-smooth hover:border-primary hover:shadow-lg hover:scale-[1.02] flex items-center justify-center gap-2"
             aria-label="View all expenses"
           >
             <span>View All</span>
@@ -563,8 +558,8 @@ const Dashboard = () => {
         {/* Empty State with Modern Design */}
         {expenses.length === 0 && (
           <div
-            className="animate-fadeIn card-elevated rounded-2xl overflow-hidden"
-            style={{ animationDelay: "0.4s", background: "white" }}
+            className="animate-fadeIn card-elevated rounded-2xl overflow-hidden bg-card"
+            style={{ animationDelay: "0.4s" }}
           >
             <div className="p-12 text-center">
               <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-primary flex items-center justify-center">
