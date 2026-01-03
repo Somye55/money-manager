@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useData } from "../context/DataContext";
-import { Card, Typography } from "../design-system";
+import { Card, CardHeader, CardContent } from "../components/ui/card";
 import {
   DollarSign,
   TrendingUp,
@@ -44,12 +44,14 @@ const BudgetOverview = () => {
 
   if (loading) {
     return (
-      <Card padding="md" className="animate-pulse">
-        <div className="h-6 bg-bg-secondary rounded mb-4"></div>
-        <div className="space-y-3">
-          <div className="h-4 bg-bg-secondary rounded"></div>
-          <div className="h-4 bg-bg-secondary rounded w-3/4"></div>
-        </div>
+      <Card className="animate-pulse">
+        <CardContent className="p-6">
+          <div className="h-6 bg-secondary rounded mb-4"></div>
+          <div className="space-y-3">
+            <div className="h-4 bg-secondary rounded"></div>
+            <div className="h-4 bg-secondary rounded w-3/4"></div>
+          </div>
+        </CardContent>
       </Card>
     );
   }
@@ -65,26 +67,21 @@ const BudgetOverview = () => {
 
   if (categoriesWithBudgets.length === 0) {
     return (
-      <Card padding="md">
-        <div className="flex items-center gap-3 mb-4">
-          <div
-            className="p-2 rounded-lg"
-            style={{ backgroundColor: "var(--primary)", opacity: 0.1 }}
-          >
-            <DollarSign size={20} style={{ color: "var(--primary)" }} />
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <DollarSign size={20} className="text-primary" />
+            </div>
+            <h3 className="font-bold text-lg">Budget Overview</h3>
           </div>
-          <Typography variant="h3" className="font-bold">
-            Budget Overview
-          </Typography>
-        </div>
-        <Typography
-          variant="body2"
-          style={{ color: "var(--muted-foreground)" }}
-          className="text-center py-4"
-        >
-          No category budgets set. Add budgets in Settings to track your
-          spending limits.
-        </Typography>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground text-center py-4">
+            No category budgets set. Add budgets in Settings to track your
+            spending limits.
+          </p>
+        </CardContent>
       </Card>
     );
   }
@@ -111,191 +108,150 @@ const BudgetOverview = () => {
   ).length;
 
   return (
-    <Card padding="md">
-      <div className="flex items-center gap-3 mb-4">
-        <div
-          className="p-2 rounded-lg"
-          style={{ backgroundColor: "var(--primary)", opacity: 0.1 }}
-        >
-          <DollarSign size={20} style={{ color: "var(--primary)" }} />
+    <Card>
+      <CardHeader>
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <DollarSign size={20} className="text-primary" />
+          </div>
+          <h3 className="font-bold text-lg">Budget Overview</h3>
         </div>
-        <Typography variant="h3" className="font-bold">
-          Budget Overview
-        </Typography>
-      </div>
-
-      {/* Overall Budget Summary */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="text-center p-3 rounded-lg bg-bg-secondary/50">
-          <Typography variant="body2" color="tertiary" className="text-xs mb-1">
-            Total Budget
-          </Typography>
-          <Typography variant="h4" className="font-bold">
-            {currencySymbol}
-            {totalBudget.toLocaleString()}
-          </Typography>
-        </div>
-        <div className="text-center p-3 rounded-lg bg-bg-secondary/50">
-          <Typography variant="body2" color="tertiary" className="text-xs mb-1">
-            Remaining
-          </Typography>
-          <Typography
-            variant="h4"
-            className="font-bold"
-            style={{
-              color: totalRemaining > 0 ? "var(--success)" : "var(--danger)",
-            }}
-          >
-            {currencySymbol}
-            {totalRemaining.toLocaleString()}
-          </Typography>
-        </div>
-      </div>
-
-      {/* Status Indicators */}
-      {(overBudgetCount > 0 || nearLimitCount > 0) && (
-        <div className="flex gap-2 mb-4">
-          {overBudgetCount > 0 && (
-            <div
-              className="flex items-center gap-1 px-2 py-1 rounded-full border"
+      </CardHeader>
+      <CardContent>
+        {/* Overall Budget Summary */}
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="text-center p-3 rounded-lg bg-secondary/50">
+            <p className="text-xs text-muted-foreground mb-1">Total Budget</p>
+            <h4 className="font-bold text-lg">
+              {currencySymbol}
+              {totalBudget.toLocaleString()}
+            </h4>
+          </div>
+          <div className="text-center p-3 rounded-lg bg-secondary/50">
+            <p className="text-xs text-muted-foreground mb-1">Remaining</p>
+            <h4
+              className="font-bold text-lg"
               style={{
-                backgroundColor: "var(--destructive)",
-                opacity: 0.1,
-                borderColor: "var(--destructive)",
-                borderOpacity: 0.3,
+                color:
+                  totalRemaining > 0
+                    ? "hsl(var(--success))"
+                    : "hsl(var(--destructive))",
               }}
             >
-              <AlertTriangle
-                size={12}
-                style={{ color: "var(--destructive)" }}
-              />
-              <Typography
-                variant="caption"
-                className="text-xs"
-                style={{ color: "var(--destructive)" }}
-              >
-                {overBudgetCount} over budget
-              </Typography>
-            </div>
-          )}
-          {nearLimitCount > 0 && (
-            <div
-              className="flex items-center gap-1 px-2 py-1 rounded-full border"
-              style={{
-                backgroundColor: "var(--warning)",
-                opacity: 0.1,
-                borderColor: "var(--warning)",
-                borderOpacity: 0.3,
-              }}
-            >
-              <TrendingUp size={12} style={{ color: "var(--warning)" }} />
-              <Typography
-                variant="caption"
-                className="text-xs"
-                style={{ color: "var(--warning)" }}
-              >
-                {nearLimitCount} near limit
-              </Typography>
-            </div>
-          )}
+              {currencySymbol}
+              {totalRemaining.toLocaleString()}
+            </h4>
+          </div>
         </div>
-      )}
 
-      {/* Category Budget List */}
-      <div className="space-y-3">
-        {categoriesWithBudgets
-          .sort((a, b) => b.percentUsed - a.percentUsed) // Sort by usage percentage
-          .map((category) => {
-            const IconComponent = LucideIcons[category.icon] || LucideIcons.Tag;
-            const isOverBudget = category.isOverBudget;
-            const isNearLimit = !isOverBudget && category.percentUsed >= 80;
+        {/* Status Indicators */}
+        {(overBudgetCount > 0 || nearLimitCount > 0) && (
+          <div className="flex gap-2 mb-4">
+            {overBudgetCount > 0 && (
+              <div className="flex items-center gap-1 px-2 py-1 rounded-full border bg-destructive/10 border-destructive/30">
+                <AlertTriangle size={12} className="text-destructive" />
+                <span className="text-xs text-destructive">
+                  {overBudgetCount} over budget
+                </span>
+              </div>
+            )}
+            {nearLimitCount > 0 && (
+              <div className="flex items-center gap-1 px-2 py-1 rounded-full border bg-yellow-500/10 border-yellow-500/30">
+                <TrendingUp size={12} className="text-yellow-600" />
+                <span className="text-xs text-yellow-600">
+                  {nearLimitCount} near limit
+                </span>
+              </div>
+            )}
+          </div>
+        )}
 
-            return (
-              <div
-                key={category.id}
-                className="flex items-center gap-3 p-3 rounded-lg bg-bg-secondary/30"
-              >
+        {/* Category Budget List */}
+        <div className="space-y-3">
+          {categoriesWithBudgets
+            .sort((a, b) => b.percentUsed - a.percentUsed) // Sort by usage percentage
+            .map((category) => {
+              const IconComponent =
+                LucideIcons[category.icon] || LucideIcons.Tag;
+              const isOverBudget = category.isOverBudget;
+              const isNearLimit = !isOverBudget && category.percentUsed >= 80;
+
+              return (
                 <div
-                  className="p-2 rounded-lg flex-shrink-0"
-                  style={{ backgroundColor: category.color + "20" }}
+                  key={category.id}
+                  className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30"
                 >
-                  <IconComponent size={16} style={{ color: category.color }} />
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <Typography
-                      variant="body2"
-                      className="font-medium truncate"
-                    >
-                      {category.name}
-                    </Typography>
-                    <div className="flex items-center gap-1">
-                      {isOverBudget && (
-                        <AlertTriangle
-                          size={12}
-                          style={{ color: "var(--destructive)" }}
-                        />
-                      )}
-                      {isNearLimit && (
-                        <TrendingUp
-                          size={12}
-                          style={{ color: "var(--warning)" }}
-                        />
-                      )}
-                      <Typography
-                        variant="caption"
-                        color="tertiary"
-                        className="text-xs"
-                      >
-                        {Math.round(category.percentUsed)}%
-                      </Typography>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs mb-2">
-                    <Typography variant="caption" color="tertiary">
-                      {currencySymbol}
-                      {category.spent.toLocaleString()} / {currencySymbol}
-                      {category.budget.toLocaleString()}
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      style={{
-                        color:
-                          category.remaining > 0
-                            ? "var(--success)"
-                            : "var(--danger)",
-                      }}
-                    >
-                      {category.remaining > 0 ? "+" : ""}
-                      {currencySymbol}
-                      {category.remaining.toLocaleString()}
-                    </Typography>
-                  </div>
-
-                  {/* Progress Bar */}
                   <div
-                    className="w-full rounded-full h-1.5"
-                    style={{ backgroundColor: "var(--muted)" }}
+                    className="p-2 rounded-lg flex-shrink-0"
+                    style={{ backgroundColor: category.color + "20" }}
                   >
-                    <div
-                      className="h-1.5 rounded-full transition-all duration-300"
-                      style={{
-                        width: `${Math.min(100, category.percentUsed)}%`,
-                        backgroundColor: isOverBudget
-                          ? "var(--destructive)"
-                          : isNearLimit
-                          ? "var(--warning)"
-                          : category.color,
-                      }}
+                    <IconComponent
+                      size={16}
+                      style={{ color: category.color }}
                     />
                   </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="font-medium truncate text-sm">
+                        {category.name}
+                      </p>
+                      <div className="flex items-center gap-1">
+                        {isOverBudget && (
+                          <AlertTriangle
+                            size={12}
+                            className="text-destructive"
+                          />
+                        )}
+                        {isNearLimit && (
+                          <TrendingUp size={12} className="text-yellow-600" />
+                        )}
+                        <span className="text-xs text-muted-foreground">
+                          {Math.round(category.percentUsed)}%
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs mb-2">
+                      <span className="text-muted-foreground">
+                        {currencySymbol}
+                        {category.spent.toLocaleString()} / {currencySymbol}
+                        {category.budget.toLocaleString()}
+                      </span>
+                      <span
+                        style={{
+                          color:
+                            category.remaining > 0
+                              ? "hsl(var(--success))"
+                              : "hsl(var(--destructive))",
+                        }}
+                      >
+                        {category.remaining > 0 ? "+" : ""}
+                        {currencySymbol}
+                        {category.remaining.toLocaleString()}
+                      </span>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="w-full rounded-full h-1.5 bg-muted">
+                      <div
+                        className="h-1.5 rounded-full transition-all duration-300"
+                        style={{
+                          width: `${Math.min(100, category.percentUsed)}%`,
+                          backgroundColor: isOverBudget
+                            ? "hsl(var(--destructive))"
+                            : isNearLimit
+                            ? "#eab308"
+                            : category.color,
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-      </div>
+              );
+            })}
+        </div>
+      </CardContent>
     </Card>
   );
 };
