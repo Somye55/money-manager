@@ -147,7 +147,7 @@ const Header = () => {
     location.pathname.startsWith("/expenses/");
 
   return (
-    <Card className="flex items-center justify-between top-0 z-10 backdrop-blur-lg bg-opacity-90 rounded-none border-b border-border p-4">
+    <Card className="flex items-center justify-between top-0 z-10 backdrop-blur-lg bg-opacity-90 rounded-none border-b border-border p-4 w-full">
       <div className="flex items-center gap-3">
         {showBackButton ? (
           <button
@@ -225,7 +225,7 @@ function App() {
               {" "}
               {/* Padding for bottom nav */}
               <Header />
-              <main className="container mx-auto max-w-2xl px-4 sm:px-6">
+              <main className="w-full">
                 <Routes>
                   <Route path="/login" element={<Login />} />
                   <Route

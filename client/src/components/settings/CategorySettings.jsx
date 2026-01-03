@@ -264,17 +264,17 @@ const CategorySettings = () => {
     <div className="space-y-4">
       <div className="animate-slide-up card-elevated rounded-2xl overflow-hidden bg-white dark:bg-card">
         <div className="p-6 border-b border-border">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-foreground">
+          <div className="flex items-center justify-between gap-4">
+            <h3 className="text-lg font-semibold text-foreground flex-shrink-0">
               Manage Categories
             </h3>
             <button
               onClick={() => openCategoryModal()}
-              className="px-4 py-2.5 rounded-xl btn-gradient-success font-semibold flex items-center gap-2 text-sm"
+              className="px-4 py-2.5 rounded-xl btn-gradient-success font-semibold flex items-center gap-2 text-sm flex-shrink-0"
               aria-label="Add new category"
             >
               <Plus size={16} aria-hidden="true" />
-              Add Category
+              Add
             </button>
           </div>
         </div>
@@ -333,33 +333,35 @@ const CategorySettings = () => {
                         strokeWidth={2.5}
                       />
                     </div>
-                    <span className="flex-1 font-bold text-sm text-foreground">
+                    <span className="flex-1 font-bold text-sm text-foreground truncate min-w-0">
                       {category.name}
                     </span>
-                    <button
-                      onClick={() => openCategoryModal(category)}
-                      title="Edit category"
-                      className="h-10 w-10 min-h-[44px] min-w-[44px] rounded-xl hover:bg-primary/10 transition-smooth flex items-center justify-center"
-                      aria-label={`Edit ${category.name} category`}
-                    >
-                      <Edit2
-                        size={18}
-                        className="text-primary"
-                        aria-hidden="true"
-                      />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteCategory(category.id)}
-                      title="Delete category"
-                      className="h-10 w-10 min-h-[44px] min-w-[44px] rounded-xl hover:bg-destructive/10 transition-smooth flex items-center justify-center"
-                      aria-label={`Delete ${category.name} category`}
-                    >
-                      <Trash2
-                        size={18}
-                        className="text-destructive"
-                        aria-hidden="true"
-                      />
-                    </button>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => openCategoryModal(category)}
+                        title="Edit category"
+                        className="h-10 w-10 min-h-[44px] min-w-[44px] rounded-xl hover:bg-primary/10 transition-smooth flex items-center justify-center"
+                        aria-label={`Edit ${category.name} category`}
+                      >
+                        <Edit2
+                          size={18}
+                          className="text-primary"
+                          aria-hidden="true"
+                        />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCategory(category.id)}
+                        title="Delete category"
+                        className="h-10 w-10 min-h-[44px] min-w-[44px] rounded-xl hover:bg-destructive/10 transition-smooth flex items-center justify-center"
+                        aria-label={`Delete ${category.name} category`}
+                      >
+                        <Trash2
+                          size={18}
+                          className="text-destructive"
+                          aria-hidden="true"
+                        />
+                      </button>
+                    </div>
                   </div>
                 );
               })
