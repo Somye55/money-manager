@@ -139,13 +139,14 @@ const Dashboard = () => {
   // Custom tooltip for bar chart
   const CustomBarTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
+      const value = payload[0].value;
       return (
         <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-lg">
           <p className="text-sm font-semibold text-gray-900">
             {currencySymbol}
-            {payload[0].value.toLocaleString("en-IN", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
+            {value.toLocaleString("en-IN", {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: value % 1 === 0 ? 0 : 2,
             })}
           </p>
         </div>
@@ -157,7 +158,8 @@ const Dashboard = () => {
   // Custom tooltip for pie chart
   const CustomPieTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
-      const percentage = ((payload[0].value / totalExpense) * 100).toFixed(1);
+      const value = payload[0].value;
+      const percentage = ((value / totalExpense) * 100).toFixed(1);
       return (
         <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-lg">
           <p className="text-sm font-semibold text-gray-900 mb-1">
@@ -165,9 +167,9 @@ const Dashboard = () => {
           </p>
           <p className="text-sm text-gray-600">
             {currencySymbol}
-            {payload[0].value.toLocaleString("en-IN", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
+            {value.toLocaleString("en-IN", {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: value % 1 === 0 ? 0 : 2,
             })}{" "}
             ({percentage}%)
           </p>
@@ -191,30 +193,74 @@ const Dashboard = () => {
         {/* Balance and Expenses Cards with Gradient */}
         <div className="grid grid-cols-2 gap-4 animate-fadeIn">
           <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-0 shadow-lg">
-            <CardContent className="p-6">
+            <CardContent className="p-6 flex flex-col h-full">
               <div className="text-sm opacity-90 mb-1">Current Balance</div>
-              <div className="text-2xl font-semibold mb-2">
+              <div
+                className="font-semibold mb-2"
+                style={{
+                  fontSize: (() => {
+                    const formatted = `${currencySymbol}${balance.toLocaleString(
+                      "en-IN",
+                      {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: balance % 1 === 0 ? 0 : 2,
+                      }
+                    )}`;
+                    const len = formatted.length;
+                    if (len > 12) return "0.875rem";
+                    if (len > 10) return "1rem";
+                    if (len > 8) return "1.25rem";
+                    if (len > 6) return "1.5rem";
+                    return "1.75rem";
+                  })(),
+                  lineHeight: "1.2",
+                  whiteSpace: "nowrap",
+                }}
+              >
                 {currencySymbol}
                 {balance.toLocaleString("en-IN", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: balance % 1 === 0 ? 0 : 2,
                 })}
               </div>
-              <div className="text-xs opacity-75">Available to spend</div>
+              <div className="text-xs opacity-75 mt-auto">
+                Available to spend
+              </div>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-0 shadow-lg">
-            <CardContent className="p-6">
+            <CardContent className="p-6 flex flex-col h-full">
               <div className="text-sm opacity-90 mb-1">Total Expenses</div>
-              <div className="text-2xl font-semibold mb-2">
+              <div
+                className="font-semibold mb-2"
+                style={{
+                  fontSize: (() => {
+                    const formatted = `${currencySymbol}${totalExpense.toLocaleString(
+                      "en-IN",
+                      {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: totalExpense % 1 === 0 ? 0 : 2,
+                      }
+                    )}`;
+                    const len = formatted.length;
+                    if (len > 12) return "0.875rem";
+                    if (len > 10) return "1rem";
+                    if (len > 8) return "1.25rem";
+                    if (len > 6) return "1.5rem";
+                    return "1.75rem";
+                  })(),
+                  lineHeight: "1.2",
+                  whiteSpace: "nowrap",
+                }}
+              >
                 {currencySymbol}
                 {totalExpense.toLocaleString("en-IN", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: totalExpense % 1 === 0 ? 0 : 2,
                 })}
               </div>
-              <div className="text-xs opacity-75">This month</div>
+              <div className="text-xs opacity-75 mt-auto">This month</div>
             </CardContent>
           </Card>
         </div>
@@ -228,13 +274,13 @@ const Dashboard = () => {
                 <CardDescription>
                   {currencySymbol}
                   {totalExpense.toLocaleString("en-IN", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: totalExpense % 1 === 0 ? 0 : 2,
                   })}{" "}
                   of {currencySymbol}
                   {monthlyBudget.toLocaleString("en-IN", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: monthlyBudget % 1 === 0 ? 0 : 2,
                   })}
                 </CardDescription>
               </div>
@@ -265,9 +311,12 @@ const Dashboard = () => {
             <CardHeader>
               <CardTitle>7-Day Spending</CardTitle>
             </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={barChartData}>
+            <CardContent className="px-2 pb-6">
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart
+                  data={barChartData}
+                  margin={{ top: 30, right: 15, left: 0, bottom: 5 }}
+                >
                   <XAxis
                     dataKey="day"
                     tick={{ fill: "var(--text-tertiary)", fontSize: 11 }}
@@ -275,11 +324,14 @@ const Dashboard = () => {
                     tickLine={false}
                   />
                   <YAxis
-                    tick={{ fill: "var(--text-tertiary)", fontSize: 11 }}
+                    tick={{ fill: "var(--text-tertiary)", fontSize: 10 }}
                     axisLine={false}
                     tickLine={false}
+                    width={45}
+                    domain={[0, "auto"]}
+                    tickCount={5}
                     tickFormatter={(value) =>
-                      `${currencySymbol}${value.toLocaleString()}`
+                      `${currencySymbol}${Math.round(value)}`
                     }
                   />
                   <Tooltip content={<CustomBarTooltip />} cursor={false} />
@@ -287,6 +339,19 @@ const Dashboard = () => {
                     dataKey="amount"
                     fill="rgba(239, 68, 68, 0.8)"
                     radius={[8, 8, 0, 0]}
+                    label={{
+                      position: "top",
+                      fill: "var(--text-secondary)",
+                      fontSize: 11,
+                      fontWeight: 500,
+                      formatter: (value) =>
+                        value > 0
+                          ? `${currencySymbol}${value.toLocaleString("en-IN", {
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 0,
+                            })}`
+                          : "",
+                    }}
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -301,17 +366,23 @@ const Dashboard = () => {
               <CardHeader>
                 <CardTitle>Category Breakdown</CardTitle>
               </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={280}>
-                  <PieChart>
+              <CardContent className="px-2 pb-6">
+                <ResponsiveContainer width="100%" height={320}>
+                  <PieChart
+                    margin={{ top: 25, right: 10, bottom: 10, left: 10 }}
+                  >
                     <Pie
                       data={pieChartData}
                       cx="50%"
-                      cy="50%"
+                      cy="47%"
                       innerRadius={60}
-                      outerRadius={90}
-                      paddingAngle={2}
+                      outerRadius={85}
+                      paddingAngle={0}
                       dataKey="value"
+                      label={({ value, percent }) =>
+                        `${(percent * 100).toFixed(0)}%`
+                      }
+                      labelLine={false}
                     >
                       {pieChartData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
@@ -369,8 +440,9 @@ const Dashboard = () => {
                             <span className="text-foreground font-medium">
                               {currencySymbol}
                               {data.total.toLocaleString("en-IN", {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits:
+                                  data.total % 1 === 0 ? 0 : 2,
                               })}
                             </span>
                           </div>
