@@ -96,7 +96,7 @@ const AddExpense = () => {
 
   return (
     <div className="min-h-screen pb-24 bg-page-gradient">
-      <div className="max-w-screen-lg mx-auto px-4 py-6 space-y-6">
+      <div className="w-full px-3 py-6 space-y-6">
         {/* Error Message */}
         {error && (
           <div className="animate-fadeIn card-elevated rounded-2xl p-4 bg-gradient-danger text-white">

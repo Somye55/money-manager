@@ -173,7 +173,7 @@ const Expenses = () => {
   }
 
   return (
-    <div className="pb-24 space-y-6 animate-fade-in bg-page-gradient min-h-screen px-4 py-6">
+    <div className="pb-24 space-y-6 animate-fade-in bg-page-gradient min-h-screen px-3 py-6">
       {/* New Expenses Found Section */}
       {extractedExpenses.length > 0 && (
         <div className="animate-slide-up card-elevated rounded-2xl overflow-hidden bg-card p-4">

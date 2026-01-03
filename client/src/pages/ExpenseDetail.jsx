@@ -128,7 +128,7 @@ const ExpenseDetail = () => {
   return (
     <div className="min-h-screen bg-page-gradient pb-24 animate-fade-in">
       {/* Content with staggered animations */}
-      <div className="px-4 py-6 space-y-6 max-w-2xl mx-auto">
+      <div className="px-3 py-6 space-y-6 w-full">
         {/* Amount Card */}
         <div
           className="relative overflow-hidden rounded-2xl shadow-xl animate-fadeIn"

@@ -36,7 +36,7 @@ const SettingsGroup = () => {
   };
 
   return (
-    <div className="pb-24 space-y-4 animate-fade-in max-w-2xl mx-auto bg-page-gradient min-h-screen px-4 py-6">
+    <div className="pb-24 space-y-4 animate-fade-in w-full bg-page-gradient min-h-screen px-3 py-6">
       {renderGroupContent()}
     </div>
   );

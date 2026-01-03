@@ -181,7 +181,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen pb-24 bg-page-gradient">
-      <div className="max-w-screen-lg mx-auto px-4 py-6 space-y-6">
+      <div className="w-full px-3 py-6 space-y-6">
         {/* Balance and Expenses Cards with Premium Gradient */}
         <div className="grid grid-cols-2 gap-4 animate-fadeIn">
           <div className="relative overflow-hidden rounded-2xl shadow-xl transition-smooth hover:shadow-2xl hover:scale-[1.02]">
@@ -530,27 +530,27 @@ const Dashboard = () => {
 
         {/* Quick Actions with Modern Buttons */}
         <div
-          className="grid grid-cols-2 gap-4 animate-fadeIn"
+          className="flex items-stretch gap-4 animate-fadeIn"
           style={{ animationDelay: "0.5s" }}
         >
           <button
             onClick={() => navigate("/expenses")}
-            className="h-auto py-4 px-6 rounded-2xl bg-card border-2 border-primary/20 text-primary font-semibold transition-smooth hover:border-primary hover:shadow-lg hover:scale-[1.02] flex items-center justify-center gap-2"
+            className="flex-1 py-4 px-6 rounded-2xl bg-card border-2 border-primary/20 text-primary font-semibold transition-smooth hover:border-primary hover:shadow-lg hover:scale-[1.02] flex items-center justify-center gap-2 whitespace-nowrap"
             aria-label="View all expenses"
           >
             <span>View All</span>
-            <ArrowRight className="w-4 h-4" aria-hidden="true" />
+            <ArrowRight className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
           </button>
           <button
             onClick={() => navigate("/add")}
-            className="h-auto py-4 px-6 rounded-2xl text-white font-semibold transition-smooth hover:shadow-xl hover:scale-[1.02] flex items-center justify-center gap-2 relative overflow-hidden"
+            className="flex-1 py-4 px-6 rounded-2xl text-white font-semibold transition-smooth hover:shadow-xl hover:scale-[1.02] flex items-center justify-center gap-2 relative overflow-hidden whitespace-nowrap"
             style={{
               background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
             }}
             aria-label="Add new expense"
           >
             <div className="absolute inset-0 shimmer"></div>
-            <TrendingUp className="w-4 h-4" aria-hidden="true" />
+            <TrendingUp className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
             <span>Add New</span>
           </button>
         </div>
