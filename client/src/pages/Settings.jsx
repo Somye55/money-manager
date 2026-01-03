@@ -40,7 +40,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
-import { Modal } from "../design-system";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "../components/ui/dialog";
 import { ThemeToggle } from "../components/ui/theme-toggle";
 
 const Settings = () => {
@@ -1068,23 +1074,22 @@ const Settings = () => {
       </Button>
 
       {/* Category Modal */}
-      <Modal
-        isOpen={showCategoryModal}
-        onClose={closeCategoryModal}
-        size="md"
-        closeOnBackdrop={!savingCategory}
-        closeOnEscape={!savingCategory}
+      <Dialog
+        open={showCategoryModal}
+        onOpenChange={(open) =>
+          !open && !savingCategory && closeCategoryModal()
+        }
       >
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600">
                 <IconComponent size={24} style={{ color: "white" }} />
               </div>
               <div>
-                <h2 className="text-xl font-semibold">
+                <DialogTitle className="text-xl font-semibold">
                   {editingCategory ? "Edit Category" : "Create Category"}
-                </h2>
+                </DialogTitle>
                 <p className="text-sm text-muted-foreground mt-1">
                   {editingCategory
                     ? "Update your category details"
@@ -1092,15 +1097,7 @@ const Settings = () => {
                 </p>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={closeCategoryModal}
-              aria-label="Close modal"
-            >
-              <X size={22} aria-hidden="true" />
-            </Button>
-          </div>
+          </DialogHeader>
 
           <div className="space-y-5">
             {/* Preview */}
@@ -1319,8 +1316,8 @@ const Settings = () => {
               </Button>
             </div>
           </div>
-        </div>
-      </Modal>
+        </DialogContent>
+      </Dialog>
 
       <div style={{ height: "20px" }} />
     </div>

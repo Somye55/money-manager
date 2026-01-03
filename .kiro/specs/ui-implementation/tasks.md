@@ -337,7 +337,7 @@ This implementation plan focuses on migrating from the current custom design sys
   - **Property 30: Lazy loading images**
   - **Validates: Requirements 18.2**
 
-- [ ] 24. Remove old design system
+- [x] 24. Remove old design system
 
   - Remove `client/src/design-system/` directory after migration is complete
   - Update all imports to use new components/ui components
@@ -346,7 +346,7 @@ This implementation plan focuses on migrating from the current custom design sys
   - Remove `client/src/App.css` if no longer needed
   - _Requirements: All_
 
-- [ ] 25. Create comprehensive documentation
+- [x] 25. Create comprehensive documentation
 
   - Document all component APIs with TypeScript interfaces
   - Create usage examples for each component
@@ -365,7 +365,7 @@ This implementation plan focuses on migrating from the current custom design sys
   - Verify color contrast compliance
   - Ask the user if questions arise
 
-- [ ] 27. Final validation and cleanup
+- [x] 27. Final validation and cleanup
   - Validate all components follow established patterns
   - Remove any unused CSS classes or components
   - Optimize bundle size by tree-shaking unused code

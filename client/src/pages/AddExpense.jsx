@@ -16,7 +16,7 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Alert, AlertDescription } from "../components/ui/alert";
-import { ThemeToggle } from "../design-system";
+import { ThemeToggle } from "../components/ui/theme-toggle";
 
 const AddExpense = () => {
   const { categories, addExpense, settings } = useData();
