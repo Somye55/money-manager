@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { Wallet, Sparkles } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 
 const Login = () => {
   const { signInWithGoogle, user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Reset loading state when user changes (successful auth)
+  // Navigate to dashboard when user is authenticated
   useEffect(() => {
     if (user) {
+      console.log("✅ User authenticated, navigating to dashboard...");
       setLoading(false);
+      navigate("/", { replace: true });
     }
-  }, [user]);
+  }, [user, navigate]);
 
   // Reset loading state when app becomes active (for Capacitor)
   useEffect(() => {
@@ -59,66 +63,59 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-page-gradient relative overflow-hidden">
+    <div className="h-screen w-full flex items-center justify-center p-4 bg-page-gradient relative overflow-hidden">
       {/* Animated Background Gradients */}
       <div
+        className="absolute top-[-50%] right-[-20%] w-[600px] h-[600px] rounded-full opacity-100 dark:opacity-70"
         style={{
-          position: "absolute",
-          top: "-50%",
-          right: "-20%",
-          width: "600px",
-          height: "600px",
           background:
             "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
-          borderRadius: "50%",
           filter: "blur(60px)",
           animation: "pulse 4s ease-in-out infinite",
         }}
       />
       <div
+        className="absolute bottom-[-30%] left-[-10%] w-[500px] h-[500px] rounded-full opacity-100 dark:opacity-70"
         style={{
-          position: "absolute",
-          bottom: "-30%",
-          left: "-10%",
-          width: "500px",
-          height: "500px",
           background:
             "radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, transparent 70%)",
-          borderRadius: "50%",
           filter: "blur(60px)",
           animation: "pulse 5s ease-in-out infinite",
         }}
       />
 
-      <div className="container max-w-md mx-auto relative z-10">
+      <div className="w-full max-w-md mx-auto relative z-10 flex flex-col justify-center">
         {/* Header Section */}
-        <div className="text-center mb-8 animate-fade-in">
-          <div className="flex justify-center mb-6">
-            <div className="p-6 rounded-2xl bg-gradient-primary shadow-2xl animate-slide-up">
-              <Wallet className="w-12 h-12 text-white" strokeWidth={2.5} />
+        <div className="text-center mb-6 animate-fade-in">
+          <div className="flex justify-center mb-4">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-primary rounded-2xl blur-xl opacity-50 animate-pulse"></div>
+              <div className="relative p-5 rounded-2xl bg-gradient-primary shadow-2xl animate-slide-up">
+                <Wallet className="w-10 h-10 text-white" strokeWidth={2.5} />
+              </div>
             </div>
           </div>
-          <h1 className="text-4xl font-extrabold mb-3 text-gradient-primary">
-            Welcome Back
+          <h1 className="text-3xl font-extrabold mb-2 text-gradient-primary">
+            Money Manager
           </h1>
-          <p className="text-muted-foreground text-lg font-medium flex items-center justify-center gap-2">
-            <Sparkles size={18} className="text-primary" />
+          <p className="text-muted-foreground text-base font-medium flex items-center justify-center gap-2">
+            <Sparkles size={16} className="text-primary" />
             Track your finances with ease
           </p>
         </div>
 
         {/* Main Card */}
         <div
-          className="card-elevated rounded-2xl p-6 bg-white dark:bg-card animate-slide-up"
+          className="card-elevated rounded-2xl p-6 bg-card animate-slide-up"
           style={{ animationDelay: "0.2s" }}
         >
           {error && (
-            <div className="mb-6 p-4 rounded-xl animate-fade-in bg-gradient-danger/10 border-2 border-destructive/30">
+            <div className="mb-4 p-3 rounded-xl animate-fade-in bg-destructive/10 border-2 border-destructive/30">
               <div className="flex items-start gap-3">
-                <div className="bg-destructive text-white rounded-full p-1 mt-0.5">
+                <div className="bg-destructive text-white rounded-full p-1.5 mt-0.5 flex-shrink-0">
                   <svg
-                    width="16"
-                    height="16"
+                    width="14"
+                    height="14"
                     viewBox="0 0 16 16"
                     fill="currentColor"
                   >
@@ -126,7 +123,7 @@ const Login = () => {
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-sm text-destructive">
+                  <p className="font-semibold text-sm text-destructive leading-relaxed">
                     {error}
                   </p>
                 </div>
@@ -136,23 +133,29 @@ const Login = () => {
 
           {/* Debug Info */}
           {process.env.NODE_ENV === "development" && (
-            <div className="mb-4 p-3 rounded-lg bg-secondary text-xs">
-              <p>
-                <strong>Debug Info:</strong>
+            <div className="mb-4 p-3 rounded-xl bg-secondary/50 border border-border text-xs space-y-1">
+              <p className="font-semibold text-foreground mb-2">Debug Info:</p>
+              <p className="text-muted-foreground">
+                User: {user ? user.email : "Not authenticated"}
               </p>
-              <p>User: {user ? user.email : "Not authenticated"}</p>
-              <p>Loading: {loading ? "Yes" : "No"}</p>
-              <p>Platform: {Capacitor.isNativePlatform() ? "Native" : "Web"}</p>
-              <p>URL: {window.location.href}</p>
+              <p className="text-muted-foreground">
+                Loading: {loading ? "Yes" : "No"}
+              </p>
+              <p className="text-muted-foreground">
+                Platform: {Capacitor.isNativePlatform() ? "Native" : "Web"}
+              </p>
+              <p className="text-muted-foreground break-all">
+                URL: {window.location.href}
+              </p>
             </div>
           )}
 
           {/* Sign in message */}
-          <div className="text-center mb-6">
-            <h3 className="text-lg font-semibold mb-2 text-foreground">
+          <div className="text-center mb-5">
+            <h3 className="text-lg font-bold mb-1 text-foreground">
               Sign in to continue
             </h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground leading-relaxed">
               Use your Google account to access your financial dashboard
             </p>
           </div>
@@ -160,19 +163,24 @@ const Login = () => {
           {/* Google Login Button */}
           <button
             onClick={handleGoogleLogin}
-            className="w-full py-4 px-6 rounded-xl btn-gradient-primary font-semibold flex items-center justify-center gap-3 group disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
+            className="w-full py-3.5 px-6 rounded-xl btn-gradient-primary font-semibold flex items-center justify-center gap-3 group disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden transition-smooth hover:scale-[1.02] min-h-[52px]"
             disabled={loading}
+            aria-label={loading ? "Signing in..." : "Sign in with Google"}
           >
             {!loading && <div className="absolute inset-0 shimmer"></div>}
             {loading ? (
-              <div className="animate-pulse">Signing in...</div>
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <span className="whitespace-nowrap">Signing in...</span>
+              </div>
             ) : (
               <>
                 <svg
                   width="20"
                   height="20"
-                  className="transition-transform group-hover:scale-110 relative z-10"
+                  className="transition-transform group-hover:scale-110 relative z-10 flex-shrink-0"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
                 >
                   <path
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -191,7 +199,7 @@ const Login = () => {
                     fill="#EA4335"
                   />
                 </svg>
-                <span className="font-semibold relative z-10">
+                <span className="font-semibold relative z-10 whitespace-nowrap">
                   Continue with Google
                 </span>
               </>
@@ -199,21 +207,35 @@ const Login = () => {
           </button>
 
           {/* Info Footer */}
-          <div className="mt-6 p-4 rounded-xl bg-secondary/50 border border-border">
-            <p className="text-xs text-center text-muted-foreground">
-              🔒 Your data is secure and encrypted
+          <div className="mt-4 p-3 rounded-xl bg-secondary/50 border border-border">
+            <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-2">
+              <span className="text-base flex-shrink-0" aria-hidden="true">
+                🔒
+              </span>
+              <span className="whitespace-nowrap">
+                Your data is secure and encrypted
+              </span>
             </p>
           </div>
         </div>
 
         {/* Footer Text */}
-        <p className="text-center text-sm text-muted-foreground mt-6">
+        <p
+          className="text-center text-xs text-muted-foreground mt-4 animate-fade-in px-4"
+          style={{ animationDelay: "0.4s" }}
+        >
           By continuing, you agree to our{" "}
-          <a href="#" className="text-primary font-semibold hover:underline">
+          <a
+            href="#"
+            className="text-primary font-semibold hover:underline transition-smooth focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+          >
             Terms
           </a>{" "}
           and{" "}
-          <a href="#" className="text-primary font-semibold hover:underline">
+          <a
+            href="#"
+            className="text-primary font-semibold hover:underline transition-smooth focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+          >
             Privacy Policy
           </a>
         </p>

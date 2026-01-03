@@ -22,11 +22,12 @@ const AppearanceSettings = () => {
       setFormData({
         theme: settings.theme || "system",
       });
+      // Only set theme if it's different and we haven't just changed it
       if (settings.theme && settings.theme !== theme) {
         setTheme(settings.theme);
       }
     }
-  }, [settings, theme, setTheme]);
+  }, [settings]); // Remove theme and setTheme from dependencies to prevent infinite loop
 
   const autoSave = async (updates) => {
     if (saveTimeoutRef.current) {
