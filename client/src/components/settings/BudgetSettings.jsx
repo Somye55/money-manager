@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { useData } from "../../context/DataContext";
-import { Check, Loader, X } from "lucide-react";
 import { Input } from "../ui/input";
 import {
   Select,
@@ -9,14 +8,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { useToast } from "../ui/use-toast";
 
 const BudgetSettings = () => {
   const { settings, modifySettings } = useData();
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     currency: "INR",
     monthlyBudget: "",
   });
-  const [saveStatus, setSaveStatus] = useState("");
   const saveTimeoutRef = useRef(null);
 
   useEffect(() => {
@@ -35,16 +35,20 @@ const BudgetSettings = () => {
       clearTimeout(saveTimeoutRef.current);
     }
 
-    setSaveStatus("saving");
-
     saveTimeoutRef.current = setTimeout(async () => {
       try {
         await modifySettings(updates);
-        setSaveStatus("saved");
-        setTimeout(() => setSaveStatus(""), 2000);
+        toast({
+          variant: "success",
+          title: "Settings saved",
+          description: "Your preferences have been updated",
+        });
       } catch (error) {
-        setSaveStatus("error");
-        setTimeout(() => setSaveStatus(""), 3000);
+        toast({
+          variant: "error",
+          title: "Save failed",
+          description: "Failed to save settings",
+        });
       }
     }, 800);
   };
@@ -73,31 +77,6 @@ const BudgetSettings = () => {
 
   return (
     <div className="space-y-4">
-      {saveStatus && (
-        <div className="flex items-center gap-2 text-sm justify-end px-2">
-          {saveStatus === "saving" && (
-            <>
-              <Loader size={16} className="animate-spin text-primary" />
-              <span className="text-muted-foreground font-medium">
-                Saving...
-              </span>
-            </>
-          )}
-          {saveStatus === "saved" && (
-            <>
-              <Check size={16} className="text-emerald-600" />
-              <span className="text-emerald-600 font-medium">Saved</span>
-            </>
-          )}
-          {saveStatus === "error" && (
-            <>
-              <X size={16} className="text-destructive" />
-              <span className="text-destructive font-medium">Error</span>
-            </>
-          )}
-        </div>
-      )}
-
       <div className="animate-slide-up card-elevated rounded-2xl overflow-hidden bg-white dark:bg-card">
         <div className="p-6 border-b border-border">
           <h3 className="text-lg font-semibold text-foreground">Currency</h3>

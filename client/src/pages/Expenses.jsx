@@ -8,35 +8,13 @@ import {
   Search,
   Calendar,
   TrendingDown,
-  Edit2,
-  Trash2,
-  Loader,
-  ChevronDown,
-  X,
-  Save,
-  DollarSign,
-  FileText,
-  Tag as TagIcon,
   Smartphone,
   Plus,
+  Loader,
 } from "lucide-react";
 import * as Icons from "lucide-react";
 import SMSExpenseCard from "../components/SMSExpenseCard";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "../components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -44,17 +22,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
+import { useToast } from "../components/ui/use-toast";
 
 const Expenses = () => {
-  const {
-    expenses,
-    categories,
-    settings,
-    removeExpense,
-    modifyExpense,
-    loading,
-    addExpense,
-  } = useData();
+  const { expenses, categories, settings, loading } = useData();
   const {
     extractedExpenses,
     importExpense,
@@ -64,6 +35,7 @@ const Expenses = () => {
     scanSMS,
   } = useSMS();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [importingId, setImportingId] = useState(null);
 
   // Auto-scan on load if permitted
@@ -77,24 +49,6 @@ const Expenses = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("date-desc");
   const [showFilters, setShowFilters] = useState(false);
-  const [editingExpense, setEditingExpense] = useState(null);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editForm, setEditForm] = useState({
-    amount: "",
-    description: "",
-    categoryId: "",
-    date: "",
-  });
-  const [deleting, setDeleting] = useState(null);
-  const [saving, setSaving] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [addForm, setAddForm] = useState({
-    amount: "",
-    description: "",
-    categoryId: "",
-    date: new Date().toISOString().split("T")[0],
-  });
-  const [addingSaving, setAddingSaving] = useState(false);
 
   // Get currency symbol
   const currencySymbol =
@@ -172,87 +126,42 @@ const Expenses = () => {
     return groups;
   }, [filteredExpenses]);
 
-  const handleEdit = (expense) => {
-    setEditingExpense(expense);
-    setEditForm({
-      amount: expense.amount.toString(),
-      description: expense.description,
-      categoryId: expense.categoryId?.toString() || "",
-      date: new Date(expense.date).toISOString().split("T")[0],
-    });
-    setShowEditModal(true);
+  const handleSaveDescription = async () => {
+    // Removed - now handled in ExpenseDetail page
   };
 
-  const handleSaveEdit = async () => {
-    if (!editForm.amount || !editForm.description) return;
-
-    setSaving(true);
-    try {
-      await modifyExpense(editingExpense.id, {
-        amount: parseFloat(editForm.amount),
-        description: editForm.description,
-        categoryId: editForm.categoryId ? parseInt(editForm.categoryId) : null,
-        date: new Date(editForm.date).toISOString(),
-      });
-      setShowEditModal(false);
-      setEditingExpense(null);
-    } catch (error) {
-      console.error("Error updating expense:", error);
-    } finally {
-      setSaving(false);
-    }
+  const handleDelete = async () => {
+    // Removed - now handled in ExpenseDetail page
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this expense?")) return;
-
-    setDeleting(id);
-    try {
-      await removeExpense(id);
-    } catch (error) {
-      console.error("Error deleting expense:", error);
-    } finally {
-      setDeleting(null);
-    }
+  const openExpenseDetail = (expenseId) => {
+    navigate(`/expenses/${expenseId}`);
   };
 
   const handleImport = async (expense) => {
     setImportingId(expense.rawSMS);
     try {
       await importExpense(expense);
+      toast({
+        variant: "success",
+        title: "Expense imported",
+        description: `${currencySymbol}${parseFloat(expense.amount).toFixed(
+          2
+        )} - ${expense.merchant || "Expense"}`,
+      });
+    } catch (error) {
+      toast({
+        variant: "error",
+        title: "Import failed",
+        description: "Failed to import expense",
+      });
     } finally {
       setImportingId(null);
     }
   };
 
-  const handleAddExpense = async () => {
-    if (!addForm.amount || !addForm.description) return;
-
-    setAddingSaving(true);
-    try {
-      const expenseData = {
-        amount: parseFloat(addForm.amount),
-        description: addForm.description.trim(),
-        categoryId: addForm.categoryId ? parseInt(addForm.categoryId) : null,
-        date: new Date(addForm.date).toISOString(),
-        source: "MANUAL",
-      };
-
-      await addExpense(expenseData);
-
-      // Reset form and close modal
-      setAddForm({
-        amount: "",
-        description: "",
-        categoryId: "",
-        date: new Date().toISOString().split("T")[0],
-      });
-      setShowAddModal(false);
-    } catch (error) {
-      console.error("Error adding expense:", error);
-    } finally {
-      setAddingSaving(false);
-    }
+  const handleAddExpense = () => {
+    navigate("/add");
   };
 
   if (loading) {
@@ -264,10 +173,10 @@ const Expenses = () => {
   }
 
   return (
-    <div className="pb-24 space-y-4 animate-fade-in bg-page-gradient min-h-screen px-4 py-6">
+    <div className="pb-24 space-y-6 animate-fade-in bg-page-gradient min-h-screen px-4 py-6">
       {/* New Expenses Found Section */}
       {extractedExpenses.length > 0 && (
-        <div className="animate-slide-up card-elevated rounded-2xl overflow-hidden bg-white dark:bg-card p-4">
+        <div className="animate-slide-up card-elevated rounded-2xl overflow-hidden bg-card p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-xl bg-primary/10">
@@ -320,6 +229,10 @@ const Expenses = () => {
                   maximumFractionDigits: 2,
                 })}
               </h2>
+              <p className="text-xs text-white/70 mt-1">
+                {filteredExpenses.length} transaction
+                {filteredExpenses.length !== 1 ? "s" : ""}
+              </p>
             </div>
             <div className="p-3 rounded-xl bg-white/25">
               <TrendingDown size={28} className="text-white" />
@@ -328,421 +241,186 @@ const Expenses = () => {
         </div>
       </div>
 
-      {/* Search and Filter */}
-      <div className="space-y-2.5">
-        <Input
+      {/* Search Bar */}
+      <div className="relative">
+        <Search
+          className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
+          size={20}
+        />
+        <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search expenses..."
-          icon={<Search size={18} />}
+          className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-card border-2 border-border focus:border-primary outline-none transition-smooth text-foreground placeholder:text-muted-foreground"
         />
-
-        <div className="flex gap-2">
-          <Button
-            onClick={() => setShowFilters(!showFilters)}
-            variant={showFilters ? "default" : "outline"}
-            className={
-              showFilters
-                ? "bg-primary/10 text-primary border-2 border-primary/30"
-                : ""
-            }
-            aria-label={showFilters ? "Hide filters" : "Show filters"}
-            aria-expanded={showFilters}
-          >
-            <Filter size={16} aria-hidden="true" />
-            Filters
-          </Button>
-
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="flex-1 px-4 py-2.5 rounded-xl border-0 bg-input-background outline-none focus:ring-2 focus:ring-primary/20 transition text-sm font-medium"
-            style={{ color: "var(--text-primary)" }}
-            aria-label="Sort expenses by"
-          >
-            <option value="date-desc">Newest First</option>
-            <option value="date-asc">Oldest First</option>
-            <option value="amount-desc">Highest Amount</option>
-            <option value="amount-asc">Lowest Amount</option>
-          </select>
-        </div>
-
-        {showFilters && (
-          <Card className="p-4 space-y-3 animate-slide-up">
-            <div>
-              <label className="block text-xs font-semibold mb-2 text-primary">
-                Category
-              </label>
-              <Select
-                value={selectedCategory}
-                onValueChange={setSelectedCategory}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="All Categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id.toString()}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </Card>
-        )}
       </div>
+
+      {/* Filters Row */}
+      <div className="flex gap-3">
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className={`flex items-center gap-2 px-4 py-3 rounded-2xl font-semibold transition-smooth ${
+            showFilters
+              ? "bg-primary text-white shadow-lg"
+              : "bg-card border-2 border-border text-foreground hover:border-primary/50"
+          }`}
+          aria-label={showFilters ? "Hide filters" : "Show filters"}
+        >
+          <Filter size={18} />
+          Filters
+        </button>
+
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          className="flex-1 px-4 py-3 rounded-2xl bg-card border-2 border-border focus:border-primary outline-none transition-smooth text-foreground font-semibold"
+          aria-label="Sort expenses by"
+        >
+          <option value="date-desc">Newest First</option>
+          <option value="date-asc">Oldest First</option>
+          <option value="amount-desc">Highest Amount</option>
+          <option value="amount-asc">Lowest Amount</option>
+        </select>
+      </div>
+
+      {/* Filter Panel */}
+      {showFilters && (
+        <div className="animate-slide-up bg-card rounded-2xl p-4 border-2 border-border">
+          <label className="block text-sm font-bold mb-2 text-foreground">
+            Category
+          </label>
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id.toString()}>
+                  <div className="flex items-center gap-2">
+                    {cat.icon && Icons[cat.icon] && (
+                      <span style={{ color: cat.color }}>
+                        {React.createElement(Icons[cat.icon], { size: 16 })}
+                      </span>
+                    )}
+                    {cat.name}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       {/* Expenses List */}
       {filteredExpenses.length === 0 ? (
-        <Card className="p-8 text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center bg-secondary">
-            <Receipt size={32} className="text-muted-foreground" />
+        <div className="bg-card rounded-2xl p-12 text-center border-2 border-border">
+          <div className="w-20 h-20 mx-auto mb-4 rounded-2xl flex items-center justify-center bg-secondary">
+            <Receipt size={40} className="text-muted-foreground" />
           </div>
-          <p className="text-muted-foreground text-sm mb-4">
-            No expenses found
+          <h3 className="text-xl font-bold text-foreground mb-2">
+            No Expenses Found
+          </h3>
+          <p className="text-muted-foreground text-sm mb-6">
+            {searchQuery || selectedCategory !== "all"
+              ? "Try adjusting your filters"
+              : "Start tracking your spending"}
           </p>
           <Button
-            onClick={() => setShowAddModal(true)}
-            className="bg-gradient-to-br from-indigo-500 to-purple-600"
-            aria-label="Add your first expense"
+            onClick={handleAddExpense}
+            className="bg-gradient-primary text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-smooth"
           >
-            Add Your First Expense
+            <Plus size={20} />
+            Add Expense
           </Button>
-        </Card>
+        </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {Object.entries(groupedExpenses).map(([date, dayExpenses]) => (
-            <div key={date} className="space-y-2">
-              <div className="flex items-center gap-2 px-1">
-                <Calendar size={14} className="text-tertiary" />
-                <h3 className="text-xs font-bold text-tertiary">{date}</h3>
-                <div className="flex-1 h-px bg-border"></div>
-                <span className="text-xs font-bold text-tertiary">
-                  {currencySymbol}{" "}
+            <div key={date} className="space-y-3">
+              {/* Date Header */}
+              <div className="flex items-center justify-between px-2">
+                <div className="flex items-center gap-2">
+                  <Calendar size={16} className="text-muted-foreground" />
+                  <h3 className="text-sm font-bold text-foreground">{date}</h3>
+                </div>
+                <span className="text-sm font-bold text-muted-foreground">
+                  {currencySymbol}
                   {dayExpenses
                     .reduce((sum, e) => sum + parseFloat(e.amount), 0)
-                    .toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                    .toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
                 </span>
               </div>
 
+              {/* Expense Cards */}
               {dayExpenses.map((expense) => {
                 const category = expense.category;
                 const IconComponent = category?.icon
                   ? Icons[category.icon]
-                  : Icons.Circle;
+                  : Icons.Receipt;
                 const categoryColor = category?.color || "#6366f1";
 
                 return (
-                  <div
+                  <button
                     key={expense.id}
-                    className="p-4 rounded-2xl bg-white dark:bg-card border-2 border-border transition-smooth hover:shadow-lg hover:border-primary/30"
+                    onClick={() => openExpenseDetail(expense.id)}
+                    className="w-full p-4 rounded-2xl bg-card border-2 border-border transition-smooth hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] text-left"
                   >
                     <div className="flex items-center gap-3">
+                      {/* Category Icon */}
                       <div
-                        className="rounded-2xl flex items-center justify-center flex-shrink-0"
+                        className="rounded-xl flex items-center justify-center flex-shrink-0"
                         style={{
-                          width: "56px",
-                          height: "56px",
+                          width: "48px",
+                          height: "48px",
                           background: `${categoryColor}20`,
                         }}
                       >
                         <IconComponent
-                          size={28}
+                          size={24}
                           style={{ color: categoryColor }}
-                          strokeWidth={2}
+                          strokeWidth={2.5}
                         />
                       </div>
 
+                      {/* Expense Details */}
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-base truncate text-foreground mb-0.5">
+                        <p className="font-bold text-base truncate text-foreground">
                           {expense.description}
                         </p>
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
                           {category && (
                             <span className="font-medium">{category.name}</span>
                           )}
                           {category && <span>•</span>}
-                          <span className="capitalize font-medium">
+                          <span className="capitalize">
                             {expense.source.toLowerCase()}
                           </span>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <div className="text-right">
-                          <p className="font-bold text-base text-destructive whitespace-nowrap">
-                            {currencySymbol}
-                            {parseFloat(expense.amount).toLocaleString(
-                              "en-IN",
-                              { minimumFractionDigits: 2 }
-                            )}
-                          </p>
-                        </div>
-
-                        <div className="flex gap-1">
-                          <button
-                            onClick={() => handleEdit(expense)}
-                            className="h-10 w-10 min-h-[44px] min-w-[44px] rounded-xl hover:bg-primary/10 transition-smooth flex items-center justify-center"
-                            aria-label={`Edit ${expense.description}`}
-                          >
-                            <Edit2
-                              size={18}
-                              className="text-primary"
-                              aria-hidden="true"
-                            />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(expense.id)}
-                            disabled={deleting === expense.id}
-                            className="h-10 w-10 min-h-[44px] min-w-[44px] rounded-xl hover:bg-destructive/10 transition-smooth flex items-center justify-center"
-                            aria-label={`Delete ${expense.description}`}
-                          >
-                            {deleting === expense.id ? (
-                              <Loader
-                                size={18}
-                                className="animate-spin text-destructive"
-                                aria-hidden="true"
-                              />
-                            ) : (
-                              <Trash2
-                                size={18}
-                                className="text-destructive"
-                                aria-hidden="true"
-                              />
-                            )}
-                          </button>
-                        </div>
+                      {/* Amount */}
+                      <div className="text-right">
+                        <p className="font-bold text-lg text-destructive whitespace-nowrap">
+                          {currencySymbol}
+                          {parseFloat(expense.amount).toLocaleString("en-IN", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </p>
                       </div>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
           ))}
         </div>
       )}
-
-      {/* Edit Modal */}
-      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Expense</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div>
-              <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
-                <DollarSign size={16} className="text-primary" />
-                Amount
-              </label>
-              <div className="relative flex items-center">
-                <span className="absolute left-3 font-bold text-muted-foreground pointer-events-none">
-                  {currencySymbol}
-                </span>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={editForm.amount}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, amount: e.target.value })
-                  }
-                  className="pl-8"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
-                <FileText size={16} className="text-primary" />
-                Description
-              </label>
-              <Input
-                type="text"
-                value={editForm.description}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, description: e.target.value })
-                }
-              />
-            </div>
-
-            <div>
-              <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
-                <TagIcon size={16} className="text-primary" />
-                Category
-              </label>
-              <Select
-                value={editForm.categoryId}
-                onValueChange={(value) =>
-                  setEditForm({ ...editForm, categoryId: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="No Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">No Category</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id.toString()}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
-                <Calendar size={16} className="text-primary" />
-                Date
-              </label>
-              <Input
-                type="date"
-                value={editForm.date}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, date: e.target.value })
-                }
-                max={new Date().toISOString().split("T")[0]}
-              />
-            </div>
-          </div>
-
-          <DialogFooter className="gap-3 sm:gap-2">
-            <Button
-              onClick={() => setShowEditModal(false)}
-              variant="secondary"
-              className="flex-1 sm:flex-none"
-              aria-label="Cancel editing"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSaveEdit}
-              disabled={saving || !editForm.amount || !editForm.description}
-              loading={saving}
-              className="flex-1 sm:flex-none bg-gradient-to-br from-indigo-500 to-purple-600"
-              aria-label={saving ? "Saving changes" : "Save changes"}
-            >
-              <Save size={18} aria-hidden="true" />
-              Save
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Add Expense Modal */}
-      <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Add Expense</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div>
-              <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
-                <DollarSign size={16} className="text-primary" />
-                Amount
-              </label>
-              <div className="relative flex items-center">
-                <span className="absolute left-3 font-bold text-muted-foreground pointer-events-none">
-                  {currencySymbol}
-                </span>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={addForm.amount}
-                  onChange={(e) =>
-                    setAddForm({ ...addForm, amount: e.target.value })
-                  }
-                  placeholder="0.00"
-                  className="pl-8"
-                  autoFocus
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
-                <FileText size={16} className="text-primary" />
-                Description
-              </label>
-              <Input
-                type="text"
-                value={addForm.description}
-                onChange={(e) =>
-                  setAddForm({ ...addForm, description: e.target.value })
-                }
-                placeholder="What did you spend on?"
-              />
-            </div>
-
-            <div>
-              <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
-                <TagIcon size={16} className="text-primary" />
-                Category
-              </label>
-              <Select
-                value={addForm.categoryId}
-                onValueChange={(value) =>
-                  setAddForm({ ...addForm, categoryId: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="No Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">No Category</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id.toString()}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="flex items-center gap-2 mb-2 font-semibold text-sm">
-                <Calendar size={16} className="text-primary" />
-                Date
-              </label>
-              <Input
-                type="date"
-                value={addForm.date}
-                onChange={(e) =>
-                  setAddForm({ ...addForm, date: e.target.value })
-                }
-                max={new Date().toISOString().split("T")[0]}
-              />
-            </div>
-          </div>
-
-          <DialogFooter className="gap-3 sm:gap-2">
-            <Button
-              onClick={() => setShowAddModal(false)}
-              variant="secondary"
-              className="flex-1 sm:flex-none"
-              aria-label="Cancel adding expense"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAddExpense}
-              disabled={addingSaving || !addForm.amount || !addForm.description}
-              loading={addingSaving}
-              className="flex-1 sm:flex-none bg-gradient-to-br from-green-500 to-green-600"
-              aria-label={addingSaving ? "Adding expense" : "Add expense"}
-            >
-              <Plus size={18} aria-hidden="true" />
-              Add Expense
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <div style={{ height: "20px" }} />
     </div>
   );
 };

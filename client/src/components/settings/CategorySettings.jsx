@@ -17,6 +17,7 @@ import {
 import * as LucideIcons from "lucide-react";
 import { Input } from "../ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { useToast } from "../ui/use-toast";
 
 const CategorySettings = () => {
   const {
@@ -27,6 +28,7 @@ const CategorySettings = () => {
     reorderCategories,
     loading: dataLoading,
   } = useData();
+  const { toast } = useToast();
 
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [editingCategory, setEditingCategory] = useState(null);
@@ -39,7 +41,6 @@ const CategorySettings = () => {
   });
   const [categoryFormErrors, setCategoryFormErrors] = useState({});
   const [savingCategory, setSavingCategory] = useState(false);
-  const [categorySuccessMessage, setCategorySuccessMessage] = useState("");
 
   const handleDragStart = (index) => {
     setDraggedIndex(index);
@@ -142,22 +143,30 @@ const CategorySettings = () => {
 
       if (editingCategory) {
         await modifyCategory(editingCategory.id, categoryData);
-        setCategorySuccessMessage(
-          `✓ "${categoryData.name}" updated successfully!`
-        );
+        toast({
+          variant: "success",
+          title: "Category updated",
+          description: `"${categoryData.name}" updated successfully`,
+        });
       } else {
         const maxOrder = Math.max(...categories.map((c) => c.order || 0), -1);
         categoryData.order = maxOrder + 1;
         await addCategory(categoryData);
-        setCategorySuccessMessage(
-          `✓ "${categoryData.name}" created successfully!`
-        );
+        toast({
+          variant: "success",
+          title: "Category created",
+          description: `"${categoryData.name}" created successfully`,
+        });
       }
 
       closeCategoryModal();
-      setTimeout(() => setCategorySuccessMessage(""), 3000);
     } catch (error) {
       console.error("Error saving category:", error);
+      toast({
+        variant: "error",
+        title: editingCategory ? "Update failed" : "Create failed",
+        description: error.message || "Failed to save category",
+      });
       setCategoryFormErrors({
         general: error.message || "Failed to save category. Please try again.",
       });
@@ -167,6 +176,7 @@ const CategorySettings = () => {
   };
 
   const handleDeleteCategory = async (id) => {
+    const category = categories.find((c) => c.id === id);
     if (
       window.confirm(
         "Delete this category? Expenses will become uncategorized."
@@ -174,8 +184,18 @@ const CategorySettings = () => {
     ) {
       try {
         await removeCategory(id);
+        toast({
+          variant: "success",
+          title: "Category deleted",
+          description: `"${category?.name || "Category"}" removed successfully`,
+        });
       } catch (error) {
         console.error("Error deleting category:", error);
+        toast({
+          variant: "error",
+          title: "Delete failed",
+          description: "Failed to delete category",
+        });
       }
     }
   };
@@ -259,11 +279,6 @@ const CategorySettings = () => {
           </div>
         </div>
         <div className="p-6">
-          {categorySuccessMessage && (
-            <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 text-emerald-600 text-sm font-medium animate-slide-up">
-              {categorySuccessMessage}
-            </div>
-          )}
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs text-muted-foreground">
               Drag to reorder categories
