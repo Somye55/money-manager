@@ -66,9 +66,12 @@ const BudgetOverview = () => {
   if (categoriesWithBudgets.length === 0) {
     return (
       <Card padding="md">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <DollarSign size={20} className="text-primary" />
+        <div className="flex items-center gap-3 mb-4">
+          <div
+            className="p-2 rounded-lg"
+            style={{ backgroundColor: "var(--primary)", opacity: 0.1 }}
+          >
+            <DollarSign size={20} style={{ color: "var(--primary)" }} />
           </div>
           <Typography variant="h3" className="font-bold">
             Budget Overview
@@ -76,7 +79,7 @@ const BudgetOverview = () => {
         </div>
         <Typography
           variant="body2"
-          color="tertiary"
+          style={{ color: "var(--muted-foreground)" }}
           className="text-center py-4"
         >
           No category budgets set. Add budgets in Settings to track your
@@ -110,8 +113,11 @@ const BudgetOverview = () => {
   return (
     <Card padding="md">
       <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 rounded-lg bg-primary/10">
-          <DollarSign size={20} className="text-primary" />
+        <div
+          className="p-2 rounded-lg"
+          style={{ backgroundColor: "var(--primary)", opacity: 0.1 }}
+        >
+          <DollarSign size={20} style={{ color: "var(--primary)" }} />
         </div>
         <Typography variant="h3" className="font-bold">
           Budget Overview
@@ -150,17 +156,44 @@ const BudgetOverview = () => {
       {(overBudgetCount > 0 || nearLimitCount > 0) && (
         <div className="flex gap-2 mb-4">
           {overBudgetCount > 0 && (
-            <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-red-500/10 border border-red-500/30">
-              <AlertTriangle size={12} className="text-red-600" />
-              <Typography variant="caption" className="text-red-600 text-xs">
+            <div
+              className="flex items-center gap-1 px-2 py-1 rounded-full border"
+              style={{
+                backgroundColor: "var(--destructive)",
+                opacity: 0.1,
+                borderColor: "var(--destructive)",
+                borderOpacity: 0.3,
+              }}
+            >
+              <AlertTriangle
+                size={12}
+                style={{ color: "var(--destructive)" }}
+              />
+              <Typography
+                variant="caption"
+                className="text-xs"
+                style={{ color: "var(--destructive)" }}
+              >
                 {overBudgetCount} over budget
               </Typography>
             </div>
           )}
           {nearLimitCount > 0 && (
-            <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/30">
-              <TrendingUp size={12} className="text-yellow-600" />
-              <Typography variant="caption" className="text-yellow-600 text-xs">
+            <div
+              className="flex items-center gap-1 px-2 py-1 rounded-full border"
+              style={{
+                backgroundColor: "var(--warning)",
+                opacity: 0.1,
+                borderColor: "var(--warning)",
+                borderOpacity: 0.3,
+              }}
+            >
+              <TrendingUp size={12} style={{ color: "var(--warning)" }} />
+              <Typography
+                variant="caption"
+                className="text-xs"
+                style={{ color: "var(--warning)" }}
+              >
                 {nearLimitCount} near limit
               </Typography>
             </div>
@@ -199,10 +232,16 @@ const BudgetOverview = () => {
                     </Typography>
                     <div className="flex items-center gap-1">
                       {isOverBudget && (
-                        <AlertTriangle size={12} className="text-red-600" />
+                        <AlertTriangle
+                          size={12}
+                          style={{ color: "var(--destructive)" }}
+                        />
                       )}
                       {isNearLimit && (
-                        <TrendingUp size={12} className="text-yellow-600" />
+                        <TrendingUp
+                          size={12}
+                          style={{ color: "var(--warning)" }}
+                        />
                       )}
                       <Typography
                         variant="caption"
@@ -236,15 +275,18 @@ const BudgetOverview = () => {
                   </div>
 
                   {/* Progress Bar */}
-                  <div className="w-full bg-bg-secondary rounded-full h-1.5">
+                  <div
+                    className="w-full rounded-full h-1.5"
+                    style={{ backgroundColor: "var(--muted)" }}
+                  >
                     <div
                       className="h-1.5 rounded-full transition-all duration-300"
                       style={{
                         width: `${Math.min(100, category.percentUsed)}%`,
                         backgroundColor: isOverBudget
-                          ? "#ef4444"
+                          ? "var(--destructive)"
                           : isNearLimit
-                          ? "#f59e0b"
+                          ? "var(--warning)"
                           : category.color,
                       }}
                     />

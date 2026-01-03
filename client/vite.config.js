@@ -1,12 +1,18 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    tailwindcss(),
+  ],
+  // OPTIONAL: Force Vite to ignore any cached PostCSS settings
+  css: {
+    postcss: {} 
+  },
   server: {
-    host: "0.0.0.0", // Allow external connections
+    host: "0.0.0.0",
     port: 3000,
-    strictPort: false, // Try other ports if 3000 is busy
   },
 });

@@ -321,318 +321,238 @@ const Dashboard = () => {
   });
 
   return (
-    <div className="p-4 pb-24 space-y-6 animate-fade-in">
-      {/* Balance and Expenses Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div
-          className="card p-5 animate-slide-up"
-          style={{
-            background: "linear-gradient(135deg, #0ea5e9 0%, #10b981 100%)",
-            border: "none",
-            boxShadow: "0 8px 24px rgba(16, 185, 129, 0.25)",
-            borderRadius: "1.25rem",
-            minHeight: "140px",
-          }}
-        >
-          <div className="flex flex-col h-full justify-between">
-            <div
-              style={{
-                background: "rgba(255, 255, 255, 0.25)",
-                padding: "0.5rem",
-                borderRadius: "0.75rem",
-                width: "fit-content",
-              }}
-            >
-              <Wallet size={18} className="text-white" />
+    <div className="min-h-screen pb-24">
+      {/* Header */}
+      <header className="glass border-b sticky top-0 z-40">
+        <div className="max-w-screen-lg mx-auto px-4 py-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-gradient-to-br from-primary to-secondary p-2 rounded-xl">
+              <Wallet className="w-6 h-6 text-primary-foreground" />
             </div>
-            <div>
-              <p className="text-sm text-white opacity-90 font-medium mb-1">
-                Balance
-              </p>
-              <h2 className="text-2xl font-extrabold text-white">
-                {currencySymbol}{" "}
-                {balance.toLocaleString("en-IN", {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0,
-                })}
-              </h2>
+            <h1 className="gradient-text">Money Manager</h1>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-screen-lg mx-auto px-4 py-6 space-y-6">
+        {/* Balance and Expenses Cards */}
+        <div className="grid grid-cols-2 gap-4 animate-fadeIn">
+          <div className="p-6 bg-gradient-to-br from-primary to-secondary text-primary-foreground border-0 rounded-lg shadow-lg">
+            <div className="text-sm opacity-90 mb-1">Current Balance</div>
+            <div className="text-2xl mb-2">
+              {currencySymbol}
+              {balance.toLocaleString("en-IN", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
             </div>
+            <div className="text-xs opacity-75">Available to spend</div>
+          </div>
+
+          <div className="p-6 bg-gradient-to-br from-primary to-secondary text-primary-foreground border-0 rounded-lg shadow-lg">
+            <div className="text-sm opacity-90 mb-1">Total Expenses</div>
+            <div className="text-2xl mb-2">
+              {currencySymbol}
+              {totalExpense.toLocaleString("en-IN", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </div>
+            <div className="text-xs opacity-75">This month</div>
           </div>
         </div>
 
+        {/* Monthly Overview */}
         <div
-          className="card p-5 animate-slide-up"
-          style={{
-            background: "linear-gradient(135deg, #f43f5e 0%, #ec4899 100%)",
-            border: "none",
-            boxShadow: "0 8px 24px rgba(239, 68, 68, 0.25)",
-            borderRadius: "1.25rem",
-            minHeight: "140px",
-            animationDelay: "0.05s",
-          }}
+          className="card p-6 animate-fadeIn"
+          style={{ animationDelay: "0.1s" }}
         >
-          <div className="flex flex-col h-full justify-between">
-            <div
-              style={{
-                background: "rgba(255, 255, 255, 0.25)",
-                padding: "0.5rem",
-                borderRadius: "0.75rem",
-                width: "fit-content",
-              }}
-            >
-              <TrendingDown size={18} className="text-white" />
-            </div>
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-sm text-white opacity-90 font-medium mb-1">
-                Expenses
-              </p>
-              <h2 className="text-2xl font-extrabold text-white">
-                {currencySymbol}{" "}
+              <h3 className="text-foreground">Monthly Budget</h3>
+              <p className="text-sm text-muted-foreground">
+                {currencySymbol}
                 {totalExpense.toLocaleString("en-IN", {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0,
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}{" "}
+                of {currencySymbol}
+                {monthlyBudget.toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
                 })}
-              </h2>
+              </p>
+            </div>
+            <div
+              className="text-2xl"
+              style={{
+                color:
+                  (totalExpense / monthlyBudget) * 100 > 100
+                    ? "var(--destructive)"
+                    : "var(--success)",
+              }}
+            >
+              {((totalExpense / monthlyBudget) * 100).toFixed(0)}%
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Monthly Overview */}
-      <div
-        className="card p-4 animate-slide-up"
-        style={{ animationDelay: "0.1s", borderRadius: "1.25rem" }}
-      >
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-base font-bold">Monthly Overview</h3>
-          <TrendingUp size={18} className="text-primary" />
-        </div>
-        <p className="text-xs text-tertiary mb-4">{currentMonth}</p>
-
-        <div className="space-y-2">
-          <div className="w-full bg-bg-secondary rounded-full h-2 overflow-hidden">
+          <div className="w-full h-3 bg-muted rounded-full overflow-hidden">
             <div
-              className="h-full rounded-full transition-all duration-500"
+              className="h-full transition-all duration-500 bg-gradient-to-r from-primary to-secondary"
               style={{
                 width: `${Math.min(
                   (totalExpense / monthlyBudget) * 100,
                   100
                 )}%`,
-                background:
-                  totalExpense > monthlyBudget
-                    ? "linear-gradient(90deg, #f43f5e 0%, #ec4899 100%)"
-                    : "linear-gradient(90deg, #667eea 0%, #764ba2 100%)",
+                opacity: (totalExpense / monthlyBudget) * 100 > 100 ? 0.7 : 1,
               }}
             />
           </div>
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-tertiary font-medium">
-              {((totalExpense / monthlyBudget) * 100).toFixed(1)}% of budget
-              spent
-            </span>
-            <span
-              className={`font-bold ${
-                balance >= 0 ? "text-success" : "text-danger"
-              }`}
-            >
-              {currencySymbol}{" "}
-              {Math.abs(balance).toLocaleString("en-IN", {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0,
-              })}{" "}
-              {balance >= 0 ? "left" : "over"}
-            </span>
-          </div>
         </div>
-      </div>
 
-      {/* Budget Overview */}
-      <div className="animate-slide-up" style={{ animationDelay: "0.15s" }}>
-        <BudgetOverview />
-      </div>
-
-      {dailySpending.length > 0 && dailySpending.some((d) => d.total > 0) && (
-        <div
-          className="card p-4 animate-slide-up"
-          style={{ animationDelay: "0.3s" }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-lg font-bold">Last 7 Days</h3>
-              <p className="text-sm text-tertiary">Daily spending trend</p>
-            </div>
-            <Calendar size={20} className="text-primary" />
-          </div>
-          <div style={{ height: "220px" }}>
-            <Bar data={barData} options={barOptions} />
-          </div>
-        </div>
-      )}
-
-      {analytics?.categoryTotals &&
-        Object.keys(analytics.categoryTotals).length > 0 && (
+        {/* 7-Day Spending Chart */}
+        {dailySpending.length > 0 && dailySpending.some((d) => d.total > 0) && (
           <div
-            className="card p-4 animate-slide-up"
-            style={{ animationDelay: "0.4s" }}
+            className="card p-6 animate-fadeIn"
+            style={{ animationDelay: "0.2s" }}
           >
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-bold">Category Breakdown</h3>
-                <p className="text-sm text-tertiary">Spending by category</p>
-              </div>
-              <PieChart size={20} className="text-primary" />
-            </div>
-            <div style={{ height: "280px" }}>
-              <Doughnut data={doughnutData} options={doughnutOptions} />
+            <h3 className="text-foreground mb-4">7-Day Spending</h3>
+            <div style={{ height: "220px" }}>
+              <Bar data={barData} options={barOptions} />
             </div>
           </div>
         )}
 
-      {analytics?.categoryTotals &&
-        Object.keys(analytics.categoryTotals).length > 0 && (
-          <div
-            className="card p-4 animate-slide-up"
-            style={{ animationDelay: "0.5s" }}
-          >
-            <h3 className="text-lg font-bold mb-4">Top Categories</h3>
-            <div className="space-y-3">
-              {Object.entries(analytics.categoryTotals)
-                .sort((a, b) => b[1].total - a[1].total)
-                .slice(0, 5)
-                .map(([name, data], index) => {
-                  const percentage = (
-                    (data.total / totalExpense) *
-                    100
-                  ).toFixed(1);
-                  const category = categories.find((c) => c.name === name);
-                  const IconComponent = category?.icon
-                    ? Icons[category.icon]
-                    : Icons.Circle;
+        {/* Category Breakdown */}
+        {analytics?.categoryTotals &&
+          Object.keys(analytics.categoryTotals).length > 0 && (
+            <div
+              className="card p-6 animate-fadeIn"
+              style={{ animationDelay: "0.3s" }}
+            >
+              <h3 className="text-foreground mb-4">Category Breakdown</h3>
+              <div style={{ height: "280px" }}>
+                <Doughnut data={doughnutData} options={doughnutOptions} />
+              </div>
+            </div>
+          )}
 
-                  return (
-                    <div key={name} className="flex items-center gap-3">
-                      <div
-                        className="rounded-lg flex items-center justify-center flex-shrink-0"
-                        style={{
-                          width: "40px",
-                          height: "40px",
-                          background: `${data.color}20`,
-                        }}
-                      >
-                        <IconComponent
-                          size={20}
-                          style={{ color: data.color }}
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <p className="font-semibold text-sm">{name}</p>
-                          <p className="font-bold text-sm text-danger">
+        {/* Top Categories */}
+        {analytics?.categoryTotals &&
+          Object.keys(analytics.categoryTotals).length > 0 && (
+            <div
+              className="card p-6 animate-fadeIn"
+              style={{ animationDelay: "0.4s" }}
+            >
+              <h3 className="text-foreground mb-4">Top Categories</h3>
+              <div className="space-y-4">
+                {Object.entries(analytics.categoryTotals)
+                  .sort((a, b) => b[1].total - a[1].total)
+                  .slice(0, 5)
+                  .map(([name, data], index) => {
+                    const percentage = (
+                      (data.total / totalExpense) *
+                      100
+                    ).toFixed(1);
+                    const category = categories.find((c) => c.name === name);
+                    const IconComponent = category?.icon
+                      ? Icons[category.icon]
+                      : Icons.Circle;
+
+                    return (
+                      <div key={name}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl">
+                              <IconComponent
+                                size={24}
+                                style={{ color: data.color }}
+                              />
+                            </span>
+                            <span className="text-foreground">{name}</span>
+                          </div>
+                          <span className="text-foreground font-medium">
                             {currencySymbol}
                             {data.total.toLocaleString("en-IN", {
-                              minimumFractionDigits: 0,
-                              maximumFractionDigits: 0,
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
                             })}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 bg-bg-secondary rounded-full h-1.5 overflow-hidden">
-                            <div
-                              className="h-full rounded-full transition-all duration-500"
-                              style={{
-                                width: `${percentage}%`,
-                                backgroundColor: data.color,
-                              }}
-                            />
-                          </div>
-                          <span className="text-xs text-tertiary font-medium">
-                            {percentage}%
                           </span>
                         </div>
+                        <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full transition-all duration-500"
+                            style={{
+                              width: `${Math.min(percentage, 100)}%`,
+                              backgroundColor: data.color,
+                            }}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-      {/* Quick Actions */}
-      <div
-        className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-slide-up"
-        style={{ animationDelay: "0.15s" }}
-      >
-        <button
-          onClick={() => navigate("/expenses")}
-          className="card p-5 flex flex-col items-start hover:shadow-lg transition min-h-[120px]"
-          style={{ borderRadius: "1.25rem" }}
-        >
-          <div
-            className="p-2.5 rounded-xl mb-3"
-            style={{
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            }}
-          >
-            <Receipt size={20} className="text-white" />
-          </div>
-          <div className="text-left">
-            <p className="font-bold text-base mb-0.5">View All</p>
-            <p className="text-xs text-tertiary">{expenses.length} expenses</p>
-          </div>
-          <ArrowRight size={16} className="text-tertiary mt-auto self-end" />
-        </button>
-
-        <button
-          onClick={() => navigate("/add")}
-          className="card p-5 flex flex-col items-start hover:shadow-lg transition min-h-[120px]"
-          style={{ borderRadius: "1.25rem" }}
-        >
-          <div
-            className="p-2.5 rounded-xl mb-3"
-            style={{
-              background: "linear-gradient(135deg, #f59e0b 0%, #f97316 100%)",
-            }}
-          >
-            <TrendingUp size={20} className="text-white" />
-          </div>
-          <div className="text-left">
-            <p className="font-bold text-base mb-0.5">Add New</p>
-            <p className="text-xs text-tertiary">Track expense</p>
-          </div>
-          <ArrowRight size={16} className="text-tertiary mt-auto self-end" />
-        </button>
-      </div>
-
-      {expenses.length === 0 && (
+        {/* Quick Actions */}
         <div
-          className="card p-6 sm:p-8 text-center animate-slide-up"
-          style={{ animationDelay: "0.2s", borderRadius: "1.25rem" }}
+          className="grid grid-cols-2 gap-4 animate-fadeIn"
+          style={{ animationDelay: "0.5s" }}
         >
-          <div
-            className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center"
-            style={{ background: "var(--bg-secondary)" }}
+          <button
+            onClick={() => navigate("/expenses")}
+            className="card p-4 hover:shadow-xl transition flex items-center justify-center"
           >
-            <Receipt size={32} className="text-tertiary" />
-          </div>
-          <p className="text-tertiary mb-4 text-sm">
-            No expenses yet. Add your first expense to get started!
-          </p>
+            <span>View All</span>
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </button>
           <button
             onClick={() => navigate("/add")}
-            className="btn btn-primary"
-            style={{
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              border: "none",
-              padding: "0.875rem 1.75rem",
-              borderRadius: "0.75rem",
-            }}
+            className="bg-gradient-to-br from-primary to-secondary text-primary-foreground p-4 rounded-lg shadow-md hover:shadow-lg transition flex items-center justify-center"
           >
-            Add Your First Expense
+            <TrendingUp className="w-4 h-4 mr-2" />
+            <span>Add New</span>
           </button>
         </div>
-      )}
 
-      <div style={{ height: "20px" }} />
+        {/* Empty State */}
+        {expenses.length === 0 && (
+          <div
+            className="card p-12 text-center animate-fadeIn"
+            style={{ animationDelay: "0.4s" }}
+          >
+            <TrendingUp className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-foreground mb-2">No Expenses Yet</h3>
+            <p className="text-muted-foreground mb-6">
+              Start tracking your spending by adding your first expense
+            </p>
+            <button
+              onClick={() => navigate("/add")}
+              className="bg-gradient-to-br from-primary to-secondary text-primary-foreground px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition inline-flex items-center"
+            >
+              <TrendingUp className="w-5 h-5 mr-2" />
+              Add Expense
+            </button>
+          </div>
+        )}
+      </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.6s ease-out forwards;
+          opacity: 0;
+        }
+      `}</style>
     </div>
   );
 };
