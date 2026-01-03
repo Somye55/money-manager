@@ -254,7 +254,7 @@ const CategorySettings = () => {
 
   if (dataLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center py-32">
         <Loader className="animate-spin text-primary" size={32} />
       </div>
     );

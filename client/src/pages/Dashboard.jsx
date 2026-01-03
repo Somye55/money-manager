@@ -173,14 +173,14 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center py-32">
         <Loader className="animate-spin text-primary" size={32} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen pb-24 bg-page-gradient">
+    <div className="bg-page-gradient min-h-full">
       <div className="w-full px-3 py-6 space-y-6">
         {/* Balance and Expenses Cards with Premium Gradient */}
         <div className="grid grid-cols-2 gap-4 animate-fadeIn">

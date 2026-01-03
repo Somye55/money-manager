@@ -166,14 +166,14 @@ const Expenses = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center py-32">
         <Loader className="animate-spin text-primary" size={32} />
       </div>
     );
   }
 
   return (
-    <div className="pb-24 space-y-6 animate-fade-in bg-page-gradient min-h-screen px-3 py-6">
+    <div className="space-y-6 animate-fade-in bg-page-gradient min-h-full px-3 py-6">
       {/* New Expenses Found Section */}
       {extractedExpenses.length > 0 && (
         <div className="animate-slide-up card-elevated rounded-2xl overflow-hidden bg-card p-4">

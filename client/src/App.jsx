@@ -147,7 +147,7 @@ const Header = () => {
     location.pathname.startsWith("/expenses/");
 
   return (
-    <Card className="flex items-center justify-between top-0 z-10 backdrop-blur-lg bg-opacity-90 rounded-none border-b border-border p-4 w-full">
+    <Card className="fixed top-0 left-0 right-0 flex items-center justify-between z-50 backdrop-blur-lg bg-opacity-90 rounded-none border-b border-border p-4 w-full">
       <div className="flex items-center gap-3">
         {showBackButton ? (
           <button
@@ -221,11 +221,9 @@ function App() {
         <SMSProvider>
           <Router>
             <ScrollToTop />
-            <div className="pb-20">
-              {" "}
-              {/* Padding for bottom nav */}
+            <div className="flex flex-col h-screen overflow-hidden">
               <Header />
-              <main className="w-full">
+              <main className="flex-1 overflow-y-auto w-full pb-20 pt-[72px]">
                 <Routes>
                   <Route path="/login" element={<Login />} />
                   <Route

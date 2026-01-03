@@ -95,7 +95,7 @@ const AddExpense = () => {
       : "₹"; // Default to INR
 
   return (
-    <div className="min-h-screen pb-24 bg-page-gradient">
+    <div className="bg-page-gradient min-h-full">
       <div className="w-full px-3 py-6 space-y-6">
         {/* Error Message */}
         {error && (
