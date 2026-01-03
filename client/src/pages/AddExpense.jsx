@@ -184,9 +184,14 @@ const AddExpense = () => {
                       <button
                         key={category.id}
                         type="button"
-                        onClick={() =>
-                          handleChange("categoryId", category.id.toString())
-                        }
+                        onClick={() => {
+                          // Toggle category selection - click again to deselect
+                          if (isSelected) {
+                            handleChange("categoryId", "");
+                          } else {
+                            handleChange("categoryId", category.id.toString());
+                          }
+                        }}
                         className="p-4 flex flex-col items-center gap-2 rounded-xl transition-all min-h-[44px] border-2"
                         style={{
                           background: isSelected
