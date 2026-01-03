@@ -74,46 +74,28 @@ const BudgetSettings = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div
-            className="p-3 rounded-xl"
-            style={{
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            }}
-          >
-            <DollarSign className="text-white" size={24} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">Budget & Currency</h1>
-            <p className="text-xs text-muted-foreground">
-              Manage your financial preferences
-            </p>
-          </div>
+      {saveStatus && (
+        <div className="flex items-center gap-2 text-sm justify-end">
+          {saveStatus === "saving" && (
+            <>
+              <Loader size={16} className="animate-spin text-indigo-600" />
+              <span className="text-muted-foreground">Saving...</span>
+            </>
+          )}
+          {saveStatus === "saved" && (
+            <>
+              <Check size={16} className="text-emerald-600" />
+              <span className="text-emerald-600">Saved</span>
+            </>
+          )}
+          {saveStatus === "error" && (
+            <>
+              <X size={16} className="text-destructive" />
+              <span className="text-destructive">Error</span>
+            </>
+          )}
         </div>
-        {saveStatus && (
-          <div className="flex items-center gap-2 text-sm">
-            {saveStatus === "saving" && (
-              <>
-                <Loader size={16} className="animate-spin text-indigo-600" />
-                <span className="text-muted-foreground">Saving...</span>
-              </>
-            )}
-            {saveStatus === "saved" && (
-              <>
-                <Check size={16} className="text-emerald-600" />
-                <span className="text-emerald-600">Saved</span>
-              </>
-            )}
-            {saveStatus === "error" && (
-              <>
-                <X size={16} className="text-destructive" />
-                <span className="text-destructive">Error</span>
-              </>
-            )}
-          </div>
-        )}
-      </div>
+      )}
 
       <Card className="animate-slide-up">
         <CardHeader>

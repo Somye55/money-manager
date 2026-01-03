@@ -61,24 +61,6 @@ const Settings = () => {
 
   return (
     <div className="p-4 pb-24 space-y-4 animate-fade-in max-w-2xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <div
-          className="p-3 rounded-xl"
-          style={{
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-          }}
-        >
-          <SettingsIcon className="text-white" size={24} />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold">Settings</h1>
-          <p className="text-xs text-muted-foreground">
-            Manage your preferences
-          </p>
-        </div>
-      </div>
-
       {/* Settings Groups */}
       <div className="space-y-3">
         {settingsGroups.map((group, index) => {

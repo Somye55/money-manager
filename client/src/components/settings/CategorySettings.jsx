@@ -244,23 +244,6 @@ const CategorySettings = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3 mb-4">
-        <div
-          className="p-3 rounded-xl"
-          style={{
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-          }}
-        >
-          <Tag className="text-white" size={24} />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold">Categories</h1>
-          <p className="text-xs text-muted-foreground">
-            Organize your expenses
-          </p>
-        </div>
-      </div>
-
       <Card className="animate-slide-up">
         <CardHeader>
           <div className="flex items-center justify-between">

@@ -122,22 +122,6 @@ const AutomationSettings = () => {
   if (!isSupported) {
     return (
       <div className="space-y-4">
-        <div className="flex items-center gap-3 mb-4">
-          <div
-            className="p-3 rounded-xl"
-            style={{
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            }}
-          >
-            <Smartphone className="text-white" size={24} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">Automation</h1>
-            <p className="text-xs text-muted-foreground">
-              Automatic expense tracking
-            </p>
-          </div>
-        </div>
         <Card>
           <CardContent className="pt-6">
             <p className="text-muted-foreground text-center">
@@ -151,23 +135,6 @@ const AutomationSettings = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3 mb-4">
-        <div
-          className="p-3 rounded-xl"
-          style={{
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-          }}
-        >
-          <Smartphone className="text-white" size={24} />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold">Automation</h1>
-          <p className="text-xs text-muted-foreground">
-            Automatic expense tracking
-          </p>
-        </div>
-      </div>
-
       {scanMessage && (
         <div className="mb-4 p-3 rounded-xl bg-indigo-500/10 text-indigo-600 text-sm font-medium animate-slide-up">
           {scanMessage}

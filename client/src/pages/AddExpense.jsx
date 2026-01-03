@@ -94,22 +94,6 @@ const AddExpense = () => {
   return (
     <div className="min-h-screen pb-24">
       <div className="max-w-screen-lg mx-auto px-4 py-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600">
-              <PlusCircle className="text-white" size={24} />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">Add Expense</h1>
-              <p className="text-sm text-muted-foreground">
-                Track your spending
-              </p>
-            </div>
-          </div>
-          <ThemeToggle size="md" />
-        </div>
-
         {/* Error Message */}
         {error && (
           <Alert variant="destructive" className="animate-fadeIn">

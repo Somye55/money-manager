@@ -9,23 +9,6 @@ const SystemSettings = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3 mb-4">
-        <div
-          className="p-3 rounded-xl"
-          style={{
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-          }}
-        >
-          <Database className="text-white" size={24} />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold">System</h1>
-          <p className="text-xs text-muted-foreground">
-            App status and information
-          </p>
-        </div>
-      </div>
-
       <Card className="animate-slide-up">
         <CardHeader>
           <CardTitle className="text-base">Database Status</CardTitle>
