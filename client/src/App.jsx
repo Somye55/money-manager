@@ -26,6 +26,7 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import AddExpense from "./pages/AddExpense";
 import Settings from "./pages/Settings";
+import SettingsGroup from "./pages/SettingsGroup";
 import Expenses from "./pages/Expenses";
 import AuthDebug from "./components/AuthDebug";
 import ThemeDebug from "./components/ThemeDebug";
@@ -211,6 +212,14 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <Settings />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/settings/:group"
+                    element={
+                      <ProtectedRoute>
+                        <SettingsGroup />
                       </ProtectedRoute>
                     }
                   />

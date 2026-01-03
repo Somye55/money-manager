@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Expense Test</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .test-section {
+        background: white;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #333;
+      }
+      h2 {
+        color: #666;
+        margin-top: 0;
+      }
+      .status {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 4px;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .warning {
+        background: #fff3cd;
+        color: #856404;
+      }
+      .info {
+        background: #d1ecf1;
+        color: #0c5460;
+      }
+      button {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background: #5568d3;
+      }
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      pre {
+        background: #f4f4f4;
+        padding: 10px;
+        border-radius: 4px;
+        overflow-x: auto;
+      }
+      .test-result {
+        margin: 10px 0;
+        padding: 10px;
+        border-left: 4px solid #667eea;
+        background: #f8f9fa;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🧪 Add Expense Flow Test</h1>
+
+    <div class="test-section">
+      <h2>Test Instructions</h2>
+      <div class="info status">
+        <strong>Note:</strong> This test page helps verify the add expense
+        functionality. Open your browser console (F12) to see detailed logs.
+      </div>
+      <ol>
+        <li>Make sure you're logged in to the app</li>
+        <li>Navigate to <code>/add</code> route</li>
+        <li>Open browser DevTools (F12) → Console tab</li>
+        <li>Try adding an expense with and without a category</li>
+        <li>Check the console for any errors</li>
+      </ol>
+    </div>
+
+    <div class="test-section">
+      <h2>✅ Checklist: Add Expense Page</h2>
+      <div class="test-result">
+        <h3>Visual Elements</h3>
+        <ul>
+          <li>[ ] Page header shows "Add Expense"</li>
+          <li>[ ] Amount input field is visible and focused</li>
+          <li>[ ] Description input field is visible</li>
+          <li>[ ] Category grid displays all categories</li>
+          <li>[ ] Date input shows today's date by default</li>
+          <li>[ ] Cancel and Add Expense buttons are visible</li>
+        </ul>
+      </div>
+
+      <div class="test-result">
+        <h3>Category Display</h3>
+        <ul>
+          <li>[ ] Categories load without errors</li>
+          <li>[ ] Each category shows icon, name, and color</li>
+          <li>[ ] Categories are clickable</li>
+          <li>
+            [ ] Selected category has visual feedback (gradient background)
+          </li>
+          <li>[ ] Can deselect a category by clicking again</li>
+        </ul>
+      </div>
+
+      <div class="test-result">
+        <h3>Form Validation</h3>
+        <ul>
+          <li>[ ] Empty amount shows error: "Please enter a valid amount"</li>
+          <li>[ ] Zero or negative amount shows error</li>
+          <li>
+            [ ] Empty description shows error: "Please enter a description"
+          </li>
+          <li>[ ] Valid form can be submitted</li>
+        </ul>
+      </div>
+
+      <div class="test-result">
+        <h3>Submission Flow</h3>
+        <ul>
+          <li>[ ] Submit button shows loading state while saving</li>
+          <li>[ ] Console shows: "🔄 Adding expense with data:"</li>
+          <li>[ ] Console shows: "✅ Expense created successfully:"</li>
+          <li>[ ] After success, redirects to dashboard (/)</li>
+          <li>[ ] New expense appears in dashboard expense list</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h2>🔍 Common Issues & Solutions</h2>
+
+      <div class="test-result">
+        <h3>Issue: Categories not loading</h3>
+        <strong>Symptoms:</strong>
+        <ul>
+          <li>Shows "Loading categories..." indefinitely</li>
+          <li>Empty category grid</li>
+        </ul>
+        <strong>Check:</strong>
+        <ul>
+          <li>Console for errors: "Error fetching categories"</li>
+          <li>
+            Database: Run
+            <code>SELECT * FROM "Category" WHERE "userId" = YOUR_USER_ID;</code>
+          </li>
+          <li>
+            RLS Policies: Verify "Users can view own categories" policy exists
+          </li>
+        </ul>
+      </div>
+
+      <div class="test-result">
+        <h3>Issue: Expense not saving</h3>
+        <strong>Symptoms:</strong>
+        <ul>
+          <li>Error message: "Failed to add expense. Please try again."</li>
+          <li>Console error: "❌ Error creating expense:"</li>
+        </ul>
+        <strong>Check:</strong>
+        <ul>
+          <li>User authentication: Console should show user ID</li>
+          <li>
+            RLS Policies: Verify "Users can insert own expenses" policy exists
+          </li>
+          <li>
+            Database schema: Verify all required columns exist in Expense table
+          </li>
+          <li>Console for specific error message</li>
+        </ul>
+      </div>
+
+      <div class="test-result">
+        <h3>Issue: Category ID not saving correctly</h3>
+        <strong>Symptoms:</strong>
+        <ul>
+          <li>Expense saves but categoryId is null when it shouldn't be</li>
+          <li>Category not displayed in expense list</li>
+        </ul>
+        <strong>Check:</strong>
+        <ul>
+          <li>Console log: Verify categoryId is being converted to integer</li>
+          <li>Database: Check if categoryId column allows NULL</li>
+          <li>Foreign key constraint: Verify Category ID exists</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h2>📊 Test Scenarios</h2>
+
+      <div class="test-result">
+        <h3>Scenario 1: Add expense with category</h3>
+        <ol>
+          <li>Navigate to /add</li>
+          <li>Enter amount: <code>100</code></li>
+          <li>Enter description: <code>Test expense with category</code></li>
+          <li>Click on "Food" category</li>
+          <li>Click "Add Expense"</li>
+          <li>
+            <strong>Expected:</strong> Expense saved, redirected to dashboard
+          </li>
+          <li>
+            <strong>Verify:</strong> Expense appears with Food category icon
+          </li>
+        </ol>
+      </div>
+
+      <div class="test-result">
+        <h3>Scenario 2: Add expense without category</h3>
+        <ol>
+          <li>Navigate to /add</li>
+          <li>Enter amount: <code>50</code></li>
+          <li>Enter description: <code>Test expense no category</code></li>
+          <li>Don't select any category</li>
+          <li>Click "Add Expense"</li>
+          <li><strong>Expected:</strong> Expense saved with null categoryId</li>
+          <li>
+            <strong>Verify:</strong> Expense appears without category icon
+          </li>
+        </ol>
+      </div>
+
+      <div class="test-result">
+        <h3>Scenario 3: Validation errors</h3>
+        <ol>
+          <li>Navigate to /add</li>
+          <li>Leave amount empty, enter description</li>
+          <li>Click "Add Expense"</li>
+          <li>
+            <strong>Expected:</strong> Error "Please enter a valid amount"
+          </li>
+          <li>Enter amount, clear description</li>
+          <li>Click "Add Expense"</li>
+          <li><strong>Expected:</strong> Error "Please enter a description"</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h2>🛠️ Database Verification</h2>
+      <div class="info status">
+        Run these SQL queries in your Supabase SQL Editor to verify the setup:
+      </div>
+
+      <h3>1. Check Expense table structure</h3>
+      <pre>
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_name = 'Expense'
+AND table_schema = 'public'
+ORDER BY ordinal_position;</pre
+      >
+
+      <h3>2. Check RLS policies</h3>
+      <pre>
+SELECT schemaname, tablename, policyname, permissive, roles, cmd, qual
+FROM pg_policies
+WHERE tablename IN ('Expense', 'Category')
+ORDER BY tablename, policyname;</pre
+      >
+
+      <h3>3. Check recent expenses</h3>
+      <pre>
+SELECT e.id, e.amount, e.description, e."categoryId", 
+       c.name as category_name, e.date, e.source
+FROM "Expense" e
+LEFT JOIN "Category" c ON e."categoryId" = c.id
+ORDER BY e."createdAt" DESC
+LIMIT 10;</pre
+      >
+
+      <h3>4. Check categories</h3>
+      <pre>
+SELECT id, name, icon, color, "userId", "order"
+FROM "Category"
+ORDER BY "userId", "order";</pre
+      >
+    </div>
+
+    <div class="test-section">
+      <h2>📝 Console Commands</h2>
+      <div class="info status">
+        Open browser console and run these commands while on the /add page:
+      </div>
+
+      <h3>Check if categories loaded</h3>
+      <pre>
+// In React DevTools, find DataContext and check:
+// categories array should have items</pre
+      >
+
+      <h3>Monitor form state</h3>
+      <pre>
+// Watch the form data as you type
+// Should see categoryId update when selecting category</pre
+      >
+
+      <h3>Check user authentication</h3>
+      <pre>
+// In console, check if user is authenticated
+// Should see user object with id and email</pre
+      >
+    </div>
+
+    <div class="test-section">
+      <h2>✨ Expected Behavior Summary</h2>
+      <div class="success status">
+        <strong>When everything works correctly:</strong>
+        <ul>
+          <li>✅ Categories load and display in a grid</li>
+          <li>✅ Clicking a category highlights it with gradient background</li>
+          <li>✅ Form validates amount and description</li>
+          <li>✅ Submit button shows loading state</li>
+          <li>✅ Console shows success message</li>
+          <li>✅ Redirects to dashboard after save</li>
+          <li>✅ New expense appears in dashboard list</li>
+          <li>✅ Category icon shows if category was selected</li>
+        </ul>
+      </div>
+    </div>
+
+    <script>
+      console.log("🧪 Add Expense Test Page Loaded");
+      console.log(
+        "📋 Follow the checklist above to test the add expense functionality"
+      );
+      console.log("🔍 Watch this console for any errors while testing");
+    </script>
+  </body>
+</html>
