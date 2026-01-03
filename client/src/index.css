@@ -56,39 +56,40 @@
     0 8px 10px -6px rgb(0 0 0 / 0.1);
 }
 
-/* Dark Mode Color Variables */
-@media (prefers-color-scheme: dark) {
-  @theme {
-    --color-background: oklch(0.145 0 0);
-    --color-foreground: oklch(0.985 0 0);
-    --color-card: oklch(0.145 0 0);
-    --color-card-foreground: oklch(0.985 0 0);
-    --color-popover: oklch(0.145 0 0);
-    --color-popover-foreground: oklch(0.985 0 0);
-    --color-primary: oklch(0.985 0 0);
-    --color-primary-foreground: oklch(0.145 0 0);
-    --color-secondary: oklch(0.2 0 0);
-    --color-secondary-foreground: oklch(0.985 0 0);
-    --color-muted: oklch(0.2 0 0);
-    --color-muted-foreground: oklch(0.6 0 0);
-    --color-accent: oklch(0.2 0 0);
-    --color-accent-foreground: oklch(0.985 0 0);
-    --color-destructive: oklch(0.6 0.25 25);
-    --color-destructive-foreground: oklch(0.985 0 0);
-    --color-border: rgba(255, 255, 255, 0.1);
-    --color-input-background: oklch(0.2 0 0);
-    --color-switch-background: oklch(0.3 0 0);
-    --color-ring: oklch(0.708 0 0);
-  }
-}
-
 /* Typography Styles */
 @layer base {
+  /* Ensure light mode is default */
+  :root {
+    --color-background: #ffffff;
+    --color-foreground: oklch(0.145 0 0);
+    --color-card: #ffffff;
+    --color-card-foreground: oklch(0.145 0 0);
+    --color-popover: oklch(1 0 0);
+    --color-popover-foreground: oklch(0.145 0 0);
+    --color-primary: #030213;
+    --color-primary-foreground: oklch(1 0 0);
+    --color-secondary: oklch(0.95 0.0058 264.53);
+    --color-secondary-foreground: #030213;
+    --color-muted: #ececf0;
+    --color-muted-foreground: #717182;
+    --color-accent: #e9ebef;
+    --color-accent-foreground: #030213;
+    --color-destructive: #d4183d;
+    --color-destructive-foreground: #ffffff;
+    --color-border: rgba(0, 0, 0, 0.1);
+    --color-input: transparent;
+    --color-input-background: #f3f3f5;
+    --color-switch-background: #cbced4;
+    --color-ring: oklch(0.708 0 0);
+  }
+
   body {
     font-family: "TikTok Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
       "Roboto", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
   }
 
   h1 {

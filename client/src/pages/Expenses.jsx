@@ -278,7 +278,7 @@ const Expenses = () => {
           </div>
           <div>
             <h1 className="text-2xl font-bold">Expenses</h1>
-            <p className="text-xs text-tertiary">
+            <p className="text-xs text-muted-foreground">
               {filteredExpenses.length} transactions
             </p>
           </div>
@@ -777,17 +777,6 @@ const Expenses = () => {
       </Dialog>
 
       <div style={{ height: "20px" }} />
-
-      {/* Floating Action Button */}
-      <Button
-        onClick={() => setShowAddModal(true)}
-        size="icon"
-        className="fixed bottom-20 right-4 w-14 h-14 min-w-[56px] min-h-[56px] rounded-full shadow-lg transition-all duration-200 hover:scale-110 z-40 bg-gradient-to-br from-green-500 to-green-600"
-        aria-label="Add new expense"
-      >
-        <Plus size={24} className="text-white" aria-hidden="true" />
-        <span className="sr-only">Add new expense</span>
-      </Button>
     </div>
   );
 };

@@ -187,18 +187,6 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen pb-24">
-      {/* Header with Glassmorphism */}
-      <header className="glass border-b sticky top-0 z-40 backdrop-blur-xl">
-        <div className="max-w-screen-lg mx-auto px-4 py-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2 rounded-xl">
-              <Wallet className="w-6 h-6 text-white" />
-            </div>
-            <h1 className="text-xl font-semibold">Money Manager</h1>
-          </div>
-        </div>
-      </header>
-
       <div className="max-w-screen-lg mx-auto px-4 py-6 space-y-6">
         {/* Balance and Expenses Cards with Gradient */}
         <div className="grid grid-cols-2 gap-4 animate-fadeIn">

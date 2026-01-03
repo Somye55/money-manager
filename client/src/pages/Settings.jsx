@@ -45,9 +45,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "../components/ui/dialog";
-import { ThemeToggle } from "../components/ui/theme-toggle";
 
 const Settings = () => {
   const { user: authUser, signOut } = useAuth();
@@ -500,31 +498,28 @@ const Settings = () => {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <ThemeToggle size="md" />
-          {saveStatus && (
-            <div className="flex items-center gap-2 text-sm">
-              {saveStatus === "saving" && (
-                <>
-                  <Loader size={16} className="animate-spin text-indigo-600" />
-                  <span className="text-muted-foreground">Saving...</span>
-                </>
-              )}
-              {saveStatus === "saved" && (
-                <>
-                  <Check size={16} className="text-emerald-600" />
-                  <span className="text-emerald-600">Saved</span>
-                </>
-              )}
-              {saveStatus === "error" && (
-                <>
-                  <X size={16} className="text-destructive" />
-                  <span className="text-destructive">Error</span>
-                </>
-              )}
-            </div>
-          )}
-        </div>
+        {saveStatus && (
+          <div className="flex items-center gap-2 text-sm">
+            {saveStatus === "saving" && (
+              <>
+                <Loader size={16} className="animate-spin text-indigo-600" />
+                <span className="text-muted-foreground">Saving...</span>
+              </>
+            )}
+            {saveStatus === "saved" && (
+              <>
+                <Check size={16} className="text-emerald-600" />
+                <span className="text-emerald-600">Saved</span>
+              </>
+            )}
+            {saveStatus === "error" && (
+              <>
+                <X size={16} className="text-destructive" />
+                <span className="text-destructive">Error</span>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Profile Section */}

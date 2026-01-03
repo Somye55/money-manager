@@ -179,7 +179,7 @@ function App() {
               {" "}
               {/* Padding for bottom nav */}
               <Header />
-              <main className="container mx-auto max-w-sm sm:max-w-md px-4 sm:px-6">
+              <main className="container mx-auto max-w-2xl px-4 sm:px-6">
                 <Routes>
                   <Route path="/login" element={<Login />} />
                   <Route
