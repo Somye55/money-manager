@@ -22,6 +22,7 @@ import {
   DialogFooter,
 } from "../components/ui/dialog";
 import { useToast } from "../components/ui/use-toast";
+import { capitalizeFirst } from "../lib/textUtils";
 
 const ExpenseDetail = () => {
   const { id } = useParams();
@@ -215,7 +216,7 @@ const ExpenseDetail = () => {
             </div>
           ) : (
             <p className="text-foreground text-base leading-relaxed bg-secondary rounded-xl p-4">
-              {expense.description}
+              {capitalizeFirst(expense.description)}
             </p>
           )}
         </div>
@@ -247,7 +248,7 @@ const ExpenseDetail = () => {
               </div>
               <div>
                 <p className="font-bold text-lg text-foreground">
-                  {category.name}
+                  {capitalizeFirst(category.name)}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Expense category
@@ -347,7 +348,7 @@ const ExpenseDetail = () => {
                   })}
                 </h2>
                 <p className="text-white/90 font-semibold">
-                  {expense.description}
+                  {capitalizeFirst(expense.description)}
                 </p>
               </div>
             </div>

@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "../components/ui/select";
 import { useToast } from "../components/ui/use-toast";
+import { capitalizeFirst } from "../lib/textUtils";
 
 const Expenses = () => {
   const { expenses, categories, settings, loading } = useData();
@@ -407,11 +408,13 @@ const Expenses = () => {
                       {/* Expense Details */}
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-base truncate text-foreground">
-                          {expense.description}
+                          {capitalizeFirst(expense.description)}
                         </p>
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
                           {category && (
-                            <span className="font-medium">{category.name}</span>
+                            <span className="font-medium">
+                              {capitalizeFirst(category.name)}
+                            </span>
                           )}
                           {category && <span>•</span>}
                           <span className="capitalize">
