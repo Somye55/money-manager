@@ -281,7 +281,7 @@ export function parseNotification(notification) {
     source: sourceApp === "SMS" ? "SMS" : "NOTIFICATION",
     transactionType,
     rawSMS: `${title}: ${text}`,
-    sender: title,
+    // Removed 'sender' field - not in database schema
     smsDate: date.toISOString(),
     suggestedCategory,
     merchant,

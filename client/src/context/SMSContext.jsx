@@ -2,7 +2,12 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import smsService from "../lib/smsService";
 import { parseSMSList, parseNotification } from "../lib/smsParser";
 import { useData } from "./DataContext";
-import { getUserSettings } from "../lib/dataService";
+import { useAuth } from "./AuthContext";
+import {
+  getUserSettings,
+  getOrCreateUser,
+  createExpense,
+} from "../lib/dataService";
 
 const SMSContext = createContext();
 
@@ -10,6 +15,7 @@ export const useSMS = () => useContext(SMSContext);
 
 export const SMSProvider = ({ children }) => {
   const { addExpense, categories, user, settings } = useData();
+  const { user: authUser } = useAuth(); // Get auth user directly
   const [isSupported, setIsSupported] = useState(false);
 
   // Permissions state
@@ -81,30 +87,36 @@ export const SMSProvider = ({ children }) => {
 
       await smsService.startNotificationListener(
         (data) => {
-          console.log("Notification received in SMSContext:", data);
+          console.log("📱 Notification received in SMSContext:", data);
 
           // Parse the notification
           const parsed = parseNotification(data);
-          console.log("Parsed notification:", parsed);
+          console.log("💰 Parsed notification:", parsed);
 
           if (parsed && parsed.confidence > 40) {
-            // Check for duplicates
+            console.log(
+              "✅ Notification parsed, Android overlay will show popup"
+            );
+
+            // Don't show React popup - Android overlay handles it
+            // Just add to extracted expenses list for history
             setExtractedExpenses((prev) => {
+              const now = Date.now();
               const exists = prev.some(
-                (e) => e.amount === parsed.amount && e.rawSMS === parsed.rawSMS
+                (e) =>
+                  e.amount === parsed.amount &&
+                  e.rawSMS === parsed.rawSMS &&
+                  now - new Date(e.smsDate).getTime() < 5000 // Within 5 seconds
               );
 
               if (!exists) {
-                // Show popup immediately for categorization
-                setPendingExpense(parsed);
-                setShowCategoryModal(true);
-
-                // Also add to extracted expenses list as backup
                 return [parsed, ...prev];
               }
 
               return prev;
             });
+          } else {
+            console.log("❌ Confidence too low or parsing failed");
           }
         },
         (data) => {
@@ -225,6 +237,8 @@ export const SMSProvider = ({ children }) => {
   // Handle category selection from popup
   const handleCategoryConfirm = async (expense, categoryId) => {
     try {
+      console.log("💾 Saving expense from popup:", { expense, categoryId });
+
       const {
         confidence,
         rawSMS,
@@ -250,46 +264,76 @@ export const SMSProvider = ({ children }) => {
             : new Date().toISOString()),
       };
 
+      console.log("💾 Final expense data:", finalData);
       await addExpense(finalData);
+      console.log("✅ Expense saved successfully");
 
       // Remove from extracted expenses list
       setExtractedExpenses((prev) => prev.filter((e) => e !== expense));
 
-      // Close modal
+      // Close modal and reset state
       setShowCategoryModal(false);
       setPendingExpense(null);
+
+      console.log("✅ Modal closed and state reset");
     } catch (error) {
-      console.error("Failed to save expense from notification:", error);
+      console.error("❌ Failed to save expense from notification:", error);
       throw error;
     }
   };
 
   const handleCategoryModalClose = () => {
+    console.log("🚪 Closing category modal");
     setShowCategoryModal(false);
     setPendingExpense(null);
   };
 
   const handleExpenseSavedFromOverlay = async (data) => {
     try {
-      console.log("Handling expense saved from overlay:", data);
+      console.log("💾 Handling expense saved from overlay:", data);
 
       // Validate required data
       if (!data.amount || data.amount <= 0) {
-        console.error("Invalid amount in overlay data:", data.amount);
+        console.error("❌ Invalid amount in overlay data:", data.amount);
+        Toast.makeText(
+          this,
+          "Error: Invalid amount",
+          Toast.LENGTH_SHORT
+        ).show();
         return;
       }
 
       if (!data.category) {
-        console.error("No category in overlay data");
+        console.error("❌ No category in overlay data");
+        Toast.makeText(
+          this,
+          "Error: No category selected",
+          Toast.LENGTH_SHORT
+        ).show();
         return;
       }
 
-      // Validate user is authenticated
-      if (!user) {
-        console.error(
-          "User not authenticated when saving expense from overlay"
-        );
+      // Check if user is authenticated
+      if (!authUser) {
+        console.error("❌ User not authenticated");
+        alert("Please log in to save expenses");
         return;
+      }
+
+      console.log("✅ User authenticated:", authUser.email);
+
+      // Get or ensure user profile exists
+      let userProfile = user;
+      if (!userProfile) {
+        console.log("⏳ User profile not loaded, fetching...");
+        try {
+          userProfile = await getOrCreateUser(authUser);
+          console.log("✅ User profile loaded:", userProfile.email);
+        } catch (error) {
+          console.error("❌ Failed to load user profile:", error);
+          alert("Failed to load user profile. Please try again.");
+          return;
+        }
       }
 
       // Use the parsed data from Android
@@ -302,12 +346,25 @@ export const SMSProvider = ({ children }) => {
       const overlayCategory = data.category;
       let categoryId = null;
 
-      if (categories && categories.length > 0) {
+      // Wait for categories to load if not available
+      let availableCategories = categories;
+      if (!availableCategories || availableCategories.length === 0) {
+        console.log("⏳ Categories not loaded, fetching...");
+        try {
+          const { getCategories } = await import("../lib/dataService");
+          availableCategories = await getCategories(userProfile.id);
+          console.log("✅ Categories loaded:", availableCategories.length);
+        } catch (error) {
+          console.error("❌ Failed to load categories:", error);
+        }
+      }
+
+      if (availableCategories && availableCategories.length > 0) {
         console.log(
-          "Available categories:",
-          categories.map((c) => c.name)
+          "📋 Available categories:",
+          availableCategories.map((c) => c.name)
         );
-        console.log("Overlay category:", overlayCategory);
+        console.log("🎯 Overlay category:", overlayCategory);
 
         // Create mapping for common overlay categories to database categories
         const categoryMappings = {
@@ -335,7 +392,7 @@ export const SMSProvider = ({ children }) => {
         };
 
         // Try exact match first
-        let match = categories.find(
+        let match = availableCategories.find(
           (c) => c.name.toLowerCase() === overlayCategory.toLowerCase()
         );
 
@@ -343,11 +400,11 @@ export const SMSProvider = ({ children }) => {
           // Try mapping-based match
           const possibleNames = categoryMappings[overlayCategory] || [];
           for (const possibleName of possibleNames) {
-            match = categories.find(
+            match = availableCategories.find(
               (c) => c.name.toLowerCase() === possibleName.toLowerCase()
             );
             if (match) {
-              console.log(`Mapped "${overlayCategory}" to "${match.name}"`);
+              console.log(`✅ Mapped "${overlayCategory}" to "${match.name}"`);
               break;
             }
           }
@@ -355,7 +412,7 @@ export const SMSProvider = ({ children }) => {
 
         if (!match) {
           // Try partial matches
-          match = categories.find(
+          match = availableCategories.find(
             (c) =>
               overlayCategory.toLowerCase().includes(c.name.toLowerCase()) ||
               c.name.toLowerCase().includes(overlayCategory.toLowerCase())
@@ -364,22 +421,41 @@ export const SMSProvider = ({ children }) => {
 
         // Fallback to "Other" category
         if (!match) {
-          match = categories.find((c) => c.name.toLowerCase() === "other");
+          match = availableCategories.find(
+            (c) => c.name.toLowerCase() === "other"
+          );
         }
 
         if (match) {
           categoryId = match.id;
           console.log(
-            `Final category mapping: "${overlayCategory}" -> "${match.name}" (ID: ${categoryId})`
+            `✅ Final category mapping: "${overlayCategory}" -> "${match.name}" (ID: ${categoryId})`
           );
         } else {
           console.warn(
-            "No category match found, expense will be saved without category"
+            "⚠️ No category match found, expense will be saved without category"
           );
         }
       } else {
-        console.warn("No categories available for mapping");
+        console.warn("⚠️ No categories available for mapping");
       }
+
+      // Ensure timestamp is valid
+      let validTimestamp = transactionTimestamp;
+      if (!validTimestamp || validTimestamp <= 0) {
+        validTimestamp = Date.now();
+      }
+
+      // Convert to ISO date string for database
+      const dateObj = new Date(validTimestamp);
+      const isoDate = dateObj.toISOString();
+
+      // For the date field, use just the date part (YYYY-MM-DD)
+      const dateOnly = isoDate.split("T")[0];
+
+      console.log("📅 Timestamp:", validTimestamp);
+      console.log("📅 ISO Date:", isoDate);
+      console.log("📅 Date Only:", dateOnly);
 
       const finalData = {
         amount,
@@ -387,20 +463,35 @@ export const SMSProvider = ({ children }) => {
         source: "NOTIFICATION_OVERLAY",
         type,
         notes: data.text,
-        smsTimestamp: transactionTimestamp,
         description: data.title || "Transaction",
-        date: new Date(transactionTimestamp).toISOString(), // Required field!
+        date: dateOnly, // Use date only (YYYY-MM-DD)
+        userId: userProfile.id,
       };
 
-      console.log("Final expense data:", finalData);
-      console.log("User ID:", user.id);
+      console.log("💾 Final expense data:", finalData);
+      console.log("👤 User ID:", userProfile.id);
 
-      await addExpense(finalData);
-      console.log("✅ Expense saved from overlay successfully");
+      // Save directly to database (bypass DataContext user check)
+      try {
+        const savedExpense = await createExpense(finalData);
+        console.log(
+          "✅ Expense saved from overlay successfully:",
+          savedExpense
+        );
+
+        // Show success message
+        alert(`Expense saved: ₹${amount.toFixed(2)} in ${overlayCategory}`);
+
+        // Trigger a custom event to refresh expenses in the UI
+        window.dispatchEvent(new CustomEvent("refreshExpenses"));
+      } catch (saveError) {
+        console.error("❌ Failed to save expense:", saveError);
+        alert(`Failed to save expense: ${saveError.message}`);
+      }
     } catch (error) {
       console.error("❌ Error saving expense from overlay:", error);
       console.error("❌ Error details:", error.message, error.stack);
-      // You might want to show a user notification here
+      alert(`Error: ${error.message}`);
     }
   };
 

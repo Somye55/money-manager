@@ -109,6 +109,27 @@ export const DataProvider = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authUser]);
 
+  // Listen for expense refresh events from overlay
+  useEffect(() => {
+    const handleRefreshExpenses = async () => {
+      if (user) {
+        console.log("🔄 DataContext: Refreshing expenses from event");
+        try {
+          const expensesData = await getCurrentMonthExpenses(user.id);
+          setExpenses(expensesData);
+          console.log("✅ DataContext: Expenses refreshed");
+        } catch (err) {
+          console.error("❌ DataContext: Error refreshing expenses:", err);
+        }
+      }
+    };
+
+    window.addEventListener("refreshExpenses", handleRefreshExpenses);
+    return () => {
+      window.removeEventListener("refreshExpenses", handleRefreshExpenses);
+    };
+  }, [user]);
+
   // Category operations
   const addCategory = async (categoryData) => {
     if (!user) {

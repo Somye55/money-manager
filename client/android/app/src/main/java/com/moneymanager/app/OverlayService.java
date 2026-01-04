@@ -148,6 +148,20 @@ public class OverlayService extends Service {
         return "debit"; // default
     }
 
+    private String extractMerchant(String text) {
+        if (text == null) return null;
+        
+        // Try to extract merchant name from common SMS patterns
+        // Pattern: "at MERCHANT_NAME"
+        Pattern pattern = Pattern.compile("at\\s+([A-Za-z0-9\\s&.-]+?)\\s*\\(", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(text);
+        if (matcher.find()) {
+            return matcher.group(1).trim();
+        }
+        
+        return null;
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "=== OverlayService onStartCommand called ===");
@@ -240,27 +254,39 @@ public class OverlayService extends Service {
                 LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 overlayView = inflater.inflate(R.layout.overlay_notification, null);
 
-                TextView titleView = overlayView.findViewById(R.id.overlay_title);
-                TextView textView = overlayView.findViewById(R.id.overlay_text);
-                TextView appView = overlayView.findViewById(R.id.overlay_app);
-                View closeButton = overlayView.findViewById(R.id.overlay_close);
+                TextView merchantView = overlayView.findViewById(R.id.overlay_merchant);
+                TextView dateView = overlayView.findViewById(R.id.overlay_date);
+                TextView amountView = overlayView.findViewById(R.id.overlay_amount);
                 Spinner categorySpinner = overlayView.findViewById(R.id.category_spinner);
                 Button dismissButton = overlayView.findViewById(R.id.btn_dismiss);
                 Button saveButton = overlayView.findViewById(R.id.btn_save);
 
-                if (titleView != null) titleView.setText(title != null ? title : "Notification");
-                 if (textView != null) textView.setText(text != null ? text : "");
-                 if (appView != null) appView.setText(getAppName(packageName));
+                // Parse amount, timestamp, and type
+                parsedAmount = parseAmount(text);
+                parsedTimestamp = parseTimestamp(text);
+                parsedType = parseType(text);
 
-                 // Parse amount, timestamp, and type
-                 parsedAmount = parseAmount(text);
-                 parsedTimestamp = parseTimestamp(text);
-                 parsedType = parseType(text);
+                // Extract merchant name
+                String merchant = extractMerchant(text);
+                if (merchant == null || merchant.isEmpty()) {
+                    merchant = title != null && !title.isEmpty() ? title : "Unknown Merchant";
+                }
 
-                 TextView amountView = overlayView.findViewById(R.id.overlay_amount);
-                 if (amountView != null) {
-                     amountView.setText("Amount: Rs. " + String.format("%.2f", parsedAmount));
-                 }
+                // Set merchant and date
+                if (merchantView != null) {
+                    merchantView.setText(merchant);
+                }
+                
+                if (dateView != null) {
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("MMM d", java.util.Locale.getDefault());
+                    String dateStr = sdf.format(new java.util.Date(parsedTimestamp > 0 ? parsedTimestamp : System.currentTimeMillis()));
+                    dateView.setText(dateStr);
+                }
+
+                // Set amount with currency symbol
+                if (amountView != null) {
+                    amountView.setText("₹" + String.format("%.2f", parsedAmount));
+                }
 
                 // Setup category spinner
                 if (categorySpinner != null) {
@@ -271,7 +297,6 @@ public class OverlayService extends Service {
                 }
 
                 // Setup buttons
-                if (closeButton != null) closeButton.setOnClickListener(v -> removeOverlay());
                 if (dismissButton != null) dismissButton.setOnClickListener(v -> removeOverlay());
                 if (saveButton != null) {
                     saveButton.setOnClickListener(v -> {

@@ -281,26 +281,19 @@ public class NotificationListener extends NotificationListenerService {
         Log.d(TAG, "Is Financial Content: " + isFinContent);
         Log.d(TAG, "========================================");
 
-        // Only show popup for notifications matching the specific SMS format
+        // Show Android popup for notifications matching the specific SMS format
         if (matchesSMSFormat(fullText)) {
-            Log.d(TAG, ">>> SMS FORMAT MATCHED - Attempting to show overlay...");
+            Log.d(TAG, ">>> SMS FORMAT MATCHED - Showing Android overlay...");
 
             try {
+                // Show Android overlay (works when app is open or closed)
                 showOverlayPopup(title, fullText, packageName);
                 Log.d(TAG, "showOverlayPopup() completed");
             } catch (Exception e) {
                 Log.e(TAG, "Exception in showOverlayPopup: " + e.getMessage(), e);
             }
         } else {
-            Log.d(TAG, "Skipping popup for non-matching notification");
-        }
-
-        // Broadcast notification to the app
-        try {
-            broadcastNotification(packageName, title, fullText);
-            Log.d(TAG, "broadcastNotification() completed");
-        } catch (Exception e) {
-            Log.e(TAG, "Exception in broadcastNotification: " + e.getMessage(), e);
+            Log.d(TAG, "Skipping notification - doesn't match SMS format");
         }
     }
 
