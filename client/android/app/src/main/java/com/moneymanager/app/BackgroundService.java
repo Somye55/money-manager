@@ -146,25 +146,20 @@ public class BackgroundService extends Service {
 
     private void forceRebindNotificationListener() {
         if (rebindAttempts >= MAX_REBIND_ATTEMPTS) {
-            Log.w(TAG, "Max rebind attempts reached, will retry after longer delay");
-            // Reset attempts after a longer delay
-            handler.postDelayed(() -> rebindAttempts = 0, 60000); // 1 minute
+            Log.w(TAG, "Max rebind attempts reached, opening settings for user to toggle");
+            openNotificationListenerSettings();
+            rebindAttempts = 0;
             return;
         }
 
         rebindAttempts++;
-        Log.d(TAG, "Attempting to signal notification listener to reconnect (attempt " + rebindAttempts + ")");
+        Log.d(TAG, "Notification listener not bound (attempt " + rebindAttempts + "/" + MAX_REBIND_ATTEMPTS + ")");
 
-        try {
-            // Signal the existing service to attempt reconnection
-            // NotificationListenerService should NEVER be manually started/stopped
-            // It's automatically bound by Android when permission is granted
-            Intent reconnectIntent = new Intent("com.moneymanager.app.RECONNECT_LISTENER");
-            sendBroadcast(reconnectIntent);
-            Log.d(TAG, "Sent reconnection broadcast to notification listener");
-
-        } catch (Exception e) {
-            Log.e(TAG, "Error in force rebind: " + e.getMessage(), e);
+        // After first few attempts, just open settings
+        if (rebindAttempts >= 2) {
+            Log.d(TAG, "Opening settings for manual toggle");
+            openNotificationListenerSettings();
+            rebindAttempts = 0; // Reset after opening settings
         }
     }
 

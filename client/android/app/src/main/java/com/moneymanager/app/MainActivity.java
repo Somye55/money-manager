@@ -204,35 +204,34 @@ public class MainActivity extends BridgeActivity {
             if (enabledListeners != null) {
                 String myListener = getPackageName() + "/" + NotificationListener.class.getName();
                 isEnabled = enabledListeners.contains(myListener);
-                Log.d(TAG, "Enabled listeners: " + enabledListeners);
                 Log.d(TAG, "My listener: " + myListener);
             }
 
             Log.d(TAG, "Notification listener enabled: " + isEnabled);
 
-            if (!isEnabled) {
-                Log.d(TAG, "Notification listener not enabled, opening settings...");
-                // Open notification listener settings
-                Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-
-                // Also show a toast to guide the user
-                android.widget.Toast.makeText(this,
-                    "Please enable 'Money Manager' in Notification Access settings",
-                    android.widget.Toast.LENGTH_LONG).show();
-            } else {
-                if (!NotificationListener.isServiceConnected()) {
-                    Log.d(TAG, "Service enabled but not connected, opening settings to toggle permission");
+            if (isEnabled) {
+                // Permission is granted, check connection status
+                boolean isConnected = NotificationListener.isServiceConnected();
+                boolean isCreated = NotificationListener.isServiceCreated();
+                
+                Log.d(TAG, "Service connected: " + isConnected + ", created: " + isCreated);
+                
+                if (!isConnected || !isCreated) {
+                    // Service not connected after rebuild - open settings for quick toggle
+                    Log.d(TAG, "Service not connected - opening settings for manual toggle");
+                    
                     Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
+                    
                     android.widget.Toast.makeText(this,
-                        "Please disable and re-enable 'Money Manager' in Notification Access settings to connect the service",
+                        "Please grant notification access permission for Money Manager",
                         android.widget.Toast.LENGTH_LONG).show();
                 } else {
                     Log.d(TAG, "Notification listener is enabled and connected");
                 }
+            } else {
+                Log.d(TAG, "Notification listener not enabled - user should enable it from app settings");
             }
         } catch (Exception e) {
             Log.e(TAG, "Error checking notification listener: " + e.getMessage(), e);
