@@ -127,6 +127,14 @@ public class OverlayService extends Service {
                 int minute = Integer.parseInt(matcher.group(5));
                 int second = Integer.parseInt(matcher.group(6));
 
+                // Validate year - if it's in the past, use current year
+                java.util.Calendar now = java.util.Calendar.getInstance();
+                int currentYear = now.get(java.util.Calendar.YEAR);
+                if (year < currentYear) {
+                    Log.w(TAG, "Parsed year " + year + " is in the past, using current year " + currentYear);
+                    year = currentYear;
+                }
+
                 java.util.Calendar cal = java.util.Calendar.getInstance();
                 cal.set(year, month, day, hour, minute, second);
                 return cal.getTimeInMillis();

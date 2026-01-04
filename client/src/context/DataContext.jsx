@@ -83,7 +83,7 @@ export const DataProvider = ({ children }) => {
           const [categoriesData, expensesData, settingsData] =
             await Promise.all([
               getCategories(userData.id),
-              getCurrentMonthExpenses(userData.id),
+              getExpenses(userData.id), // Load all expenses, not just current month
               getUserSettings(userData.id),
             ]);
 
@@ -115,7 +115,7 @@ export const DataProvider = ({ children }) => {
       if (user) {
         console.log("🔄 DataContext: Refreshing expenses from event");
         try {
-          const expensesData = await getCurrentMonthExpenses(user.id);
+          const expensesData = await getExpenses(user.id); // Load all expenses
           setExpenses(expensesData);
           console.log("✅ DataContext: Expenses refreshed");
         } catch (err) {
@@ -217,9 +217,7 @@ export const DataProvider = ({ children }) => {
   const refreshExpenses = async (filters) => {
     if (!user) return;
 
-    const data = filters
-      ? await getExpenses(user.id, filters)
-      : await getCurrentMonthExpenses(user.id);
+    const data = await getExpenses(user.id, filters); // Always use getExpenses with optional filters
     setExpenses(data);
   };
 
@@ -231,7 +229,7 @@ export const DataProvider = ({ children }) => {
       console.log("🔄 DataContext: Refreshing all data");
       const [categoriesData, expensesData, settingsData] = await Promise.all([
         getCategories(user.id),
-        getCurrentMonthExpenses(user.id),
+        getExpenses(user.id), // Load all expenses
         getUserSettings(user.id),
       ]);
 

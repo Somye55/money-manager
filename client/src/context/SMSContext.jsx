@@ -450,12 +450,9 @@ export const SMSProvider = ({ children }) => {
       const dateObj = new Date(validTimestamp);
       const isoDate = dateObj.toISOString();
 
-      // For the date field, use just the date part (YYYY-MM-DD)
-      const dateOnly = isoDate.split("T")[0];
-
       console.log("📅 Timestamp:", validTimestamp);
       console.log("📅 ISO Date:", isoDate);
-      console.log("📅 Date Only:", dateOnly);
+      console.log("📅 Local Time:", dateObj.toLocaleString());
 
       const finalData = {
         amount,
@@ -464,7 +461,7 @@ export const SMSProvider = ({ children }) => {
         type,
         notes: data.text,
         description: data.title || "Transaction",
-        date: dateOnly, // Use date only (YYYY-MM-DD)
+        date: isoDate, // Use full ISO timestamp
         userId: userProfile.id,
       };
 
