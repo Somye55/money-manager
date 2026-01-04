@@ -73,12 +73,14 @@ const AutomationSettings = () => {
 
   const handleNotifRequest = async () => {
     try {
-      await requestNotificationPermission();
-      toast({
-        variant: "success",
-        title: "Opening settings",
-        description: "Please enable notification access",
-      });
+      const result = await requestNotificationPermission();
+      if (result?.opened) {
+        toast({
+          variant: "success",
+          title: "Opening settings",
+          description: "Find 'Money Manager' and enable notification access",
+        });
+      }
     } catch (e) {
       toast({
         variant: "error",
@@ -270,59 +272,100 @@ const AutomationSettings = () => {
             </div>
           )}
           {notifPermissionGranted ? (
-            <div className="flex gap-2">
-              <button
-                onClick={handleNotifRequest}
-                className="flex-1 py-3 px-4 rounded-xl bg-secondary text-secondary-foreground font-semibold transition-smooth hover:bg-secondary/80"
-              >
-                Manage Settings
-              </button>
-              <button
-                onClick={async () => {
-                  try {
-                    const NotificationListenerPlugin = (
-                      await import("../../lib/notificationPlugin")
-                    ).default;
-                    const status =
-                      await NotificationListenerPlugin.getPermissionStatus();
-                    if (!status.overlayPermission) {
+            <>
+              {!serviceConnected && (
+                <div className="text-xs bg-amber-500/20 border border-amber-500/30 p-4 rounded-xl mb-4">
+                  <p className="font-semibold mb-2 text-amber-700 dark:text-amber-400">
+                    ⚠ Service Not Connected
+                  </p>
+                  <p className="text-amber-600 dark:text-amber-300 mb-2">
+                    Permission is granted but Android hasn't bound the service.
+                  </p>
+                  <p className="font-semibold mb-1 text-amber-700 dark:text-amber-400">
+                    To fix:
+                  </p>
+                  <ol className="list-decimal list-inside space-y-1 text-amber-600 dark:text-amber-300">
+                    <li>Click "Manage Settings" below</li>
+                    <li>Toggle OFF "Money Manager"</li>
+                    <li>Wait 2 seconds</li>
+                    <li>Toggle it back ON</li>
+                    <li>Return to app</li>
+                  </ol>
+                </div>
+              )}
+              <div className="flex gap-2">
+                <button
+                  onClick={async () => {
+                    try {
+                      const result = await requestNotificationPermission();
+                      if (result?.opened) {
+                        toast({
+                          variant: "success",
+                          title: "Opening settings",
+                          description: !serviceConnected
+                            ? "Toggle OFF then ON to reconnect"
+                            : "You can review or disable notification access here",
+                        });
+                      }
+                    } catch (e) {
                       toast({
                         variant: "error",
-                        title: "Permission required",
-                        description:
-                          "Please enable 'Display over other apps' permission first",
+                        title: "Error",
+                        description: e.message,
                       });
-                      await NotificationListenerPlugin.requestOverlayPermission();
-                      return;
                     }
-                    const result =
-                      await NotificationListenerPlugin.testOverlay();
-                    if (result.success) {
-                      toast({
-                        variant: "success",
-                        title: "Test successful",
-                        description: "Check your screen for the popup",
-                      });
-                    } else {
+                  }}
+                  className="flex-1 py-3 px-4 rounded-xl bg-secondary text-secondary-foreground font-semibold transition-smooth hover:bg-secondary/80"
+                >
+                  Manage Settings
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      const NotificationListenerPlugin = (
+                        await import("../../lib/notificationPlugin")
+                      ).default;
+                      const status =
+                        await NotificationListenerPlugin.getPermissionStatus();
+                      if (!status.overlayPermission) {
+                        toast({
+                          variant: "error",
+                          title: "Permission required",
+                          description:
+                            "Please enable 'Display over other apps' permission first",
+                        });
+                        await NotificationListenerPlugin.requestOverlayPermission();
+                        return;
+                      }
+                      const result =
+                        await NotificationListenerPlugin.testOverlay();
+                      if (result.success) {
+                        toast({
+                          variant: "success",
+                          title: "Test successful",
+                          description: "Check your screen for the popup",
+                        });
+                      } else {
+                        toast({
+                          variant: "error",
+                          title: "Test failed",
+                          description: result.error || "Unknown error",
+                        });
+                      }
+                    } catch (e) {
                       toast({
                         variant: "error",
-                        title: "Test failed",
-                        description: result.error || "Unknown error",
+                        title: "Test error",
+                        description: e.message,
                       });
                     }
-                  } catch (e) {
-                    toast({
-                      variant: "error",
-                      title: "Test error",
-                      description: e.message,
-                    });
-                  }
-                }}
-                className="flex-1 py-3 px-4 rounded-xl btn-gradient-success font-semibold text-white"
-              >
-                Test Popup
-              </button>
-            </div>
+                  }}
+                  className="flex-1 py-3 px-4 rounded-xl btn-gradient-success font-semibold text-white"
+                >
+                  Test Popup
+                </button>
+              </div>
+            </>
           ) : (
             <button
               onClick={handleNotifRequest}
@@ -419,12 +462,16 @@ const AutomationSettings = () => {
                 const NotificationListenerPlugin = (
                   await import("../../lib/notificationPlugin")
                 ).default;
-                await NotificationListenerPlugin.requestOverlayPermission();
-                toast({
-                  variant: "success",
-                  title: "Opening settings",
-                  description: "Enable overlay permission",
-                });
+                const result =
+                  await NotificationListenerPlugin.requestOverlayPermission();
+                if (result?.opened) {
+                  toast({
+                    variant: "success",
+                    title: "Opening settings",
+                    description:
+                      "Find 'Display over other apps' and enable it for Money Manager",
+                  });
+                }
               } catch (e) {
                 toast({
                   variant: "error",

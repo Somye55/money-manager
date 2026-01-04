@@ -31,6 +31,8 @@ import Settings from "./pages/Settings";
 import SettingsGroup from "./pages/SettingsGroup";
 import Expenses from "./pages/Expenses";
 import ExpenseDetail from "./pages/ExpenseDetail";
+import TestExpenseSave from "./pages/TestExpenseSave";
+import TestNotificationPopup from "./pages/TestNotificationPopup";
 import AuthDebug from "./components/AuthDebug";
 import ThemeDebug from "./components/ThemeDebug";
 import CategorySelectionModal from "./components/CategorySelectionModal";
@@ -271,6 +273,22 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <SettingsGroup />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/test-expense-save"
+                    element={
+                      <ProtectedRoute>
+                        <TestExpenseSave />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/test-notification-popup"
+                    element={
+                      <ProtectedRoute>
+                        <TestNotificationPopup />
                       </ProtectedRoute>
                     }
                   />

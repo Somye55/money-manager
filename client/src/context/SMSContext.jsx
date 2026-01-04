@@ -47,9 +47,27 @@ export const SMSProvider = ({ children }) => {
     };
     init();
 
+    // Listen for test notifications (for testing popup)
+    const handleTestNotification = (event) => {
+      console.log("🧪 Test notification received:", event.detail);
+      const parsedExpense = event.detail;
+
+      // Show popup immediately
+      setPendingExpense(parsedExpense);
+      setShowCategoryModal(true);
+
+      console.log("✅ Popup triggered for test notification");
+    };
+
+    window.addEventListener("testNotificationReceived", handleTestNotification);
+
     // Cleanup listener on unmount
     return () => {
       smsService.stopNotificationListener();
+      window.removeEventListener(
+        "testNotificationReceived",
+        handleTestNotification
+      );
     };
   }, []);
 
@@ -224,6 +242,12 @@ export const SMSProvider = ({ children }) => {
         type: transactionType === "income" ? "credit" : "debit",
         notes: rawSMS,
         smsTimestamp: smsDate,
+        // Ensure date is set - use expense date or smsDate or current date
+        date:
+          expense.date ||
+          (smsDate
+            ? new Date(smsDate).toISOString()
+            : new Date().toISOString()),
       };
 
       await addExpense(finalData);
@@ -257,6 +281,14 @@ export const SMSProvider = ({ children }) => {
 
       if (!data.category) {
         console.error("No category in overlay data");
+        return;
+      }
+
+      // Validate user is authenticated
+      if (!user) {
+        console.error(
+          "User not authenticated when saving expense from overlay"
+        );
         return;
       }
 
@@ -357,13 +389,17 @@ export const SMSProvider = ({ children }) => {
         notes: data.text,
         smsTimestamp: transactionTimestamp,
         description: data.title || "Transaction",
+        date: new Date(transactionTimestamp).toISOString(), // Required field!
       };
 
       console.log("Final expense data:", finalData);
+      console.log("User ID:", user.id);
+
       await addExpense(finalData);
       console.log("✅ Expense saved from overlay successfully");
     } catch (error) {
       console.error("❌ Error saving expense from overlay:", error);
+      console.error("❌ Error details:", error.message, error.stack);
       // You might want to show a user notification here
     }
   };

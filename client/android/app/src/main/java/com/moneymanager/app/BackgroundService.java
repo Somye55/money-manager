@@ -153,33 +153,15 @@ public class BackgroundService extends Service {
         }
 
         rebindAttempts++;
-        Log.d(TAG, "Attempting to force rebind notification listener (attempt " + rebindAttempts + ")");
+        Log.d(TAG, "Attempting to signal notification listener to reconnect (attempt " + rebindAttempts + ")");
 
         try {
             // Signal the existing service to attempt reconnection
+            // NotificationListenerService should NEVER be manually started/stopped
+            // It's automatically bound by Android when permission is granted
             Intent reconnectIntent = new Intent("com.moneymanager.app.RECONNECT_LISTENER");
             sendBroadcast(reconnectIntent);
             Log.d(TAG, "Sent reconnection broadcast to notification listener");
-
-            // Also try to restart our own service after a delay
-            handler.postDelayed(() -> {
-                try {
-                    Intent intent = new Intent(this, NotificationListener.class);
-                    stopService(intent);
-                    
-                    // Small delay before restart
-                    handler.postDelayed(() -> {
-                        try {
-                            startService(intent);
-                            Log.d(TAG, "Attempted to restart notification listener service");
-                        } catch (Exception e) {
-                            Log.e(TAG, "Error restarting notification listener: " + e.getMessage());
-                        }
-                    }, 1000);
-                } catch (Exception e) {
-                    Log.e(TAG, "Error stopping notification listener: " + e.getMessage());
-                }
-            }, REBIND_DELAY);
 
         } catch (Exception e) {
             Log.e(TAG, "Error in force rebind: " + e.getMessage(), e);

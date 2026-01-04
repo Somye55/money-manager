@@ -576,17 +576,24 @@ export const createExpense = async (expense) => {
 
     // Ensure timestamps are set
     const now = new Date().toISOString();
-    const expenseWithTimestamps = {
+
+    // Set defaults for optional fields
+    const expenseWithDefaults = {
+      source: "MANUAL",
+      type: "debit",
       ...expense,
       createdAt: now,
       updatedAt: now,
     };
 
-    console.log("🔄 Expense with timestamps:", expenseWithTimestamps);
+    console.log(
+      "🔄 Expense with timestamps and defaults:",
+      expenseWithDefaults
+    );
 
     const { data, error } = await supabase
       .from("Expense")
-      .insert([expenseWithTimestamps])
+      .insert([expenseWithDefaults])
       .select(
         `
         *,
