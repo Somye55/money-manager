@@ -11,6 +11,9 @@
     <!-- Required for overlay popup -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     
+    <!-- Required for posting notifications (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    
     <!-- Required for foreground services -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />

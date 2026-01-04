@@ -41,8 +41,10 @@ public class NotificationListener extends NotificationListenerService {
         boolean hasPermission = checkNotificationListenerPermission();
         Log.d(TAG, "Permission check on create: " + hasPermission);
 
-        // Start proactive connection monitoring
-        startConnectionMonitoring();
+        if (!hasPermission) {
+            Log.e(TAG, "!!! NOTIFICATION LISTENER PERMISSION NOT GRANTED !!!");
+            Log.e(TAG, "Please enable notification access in Settings > Apps > Special app access > Notification access");
+        }
     }
 
     private void setupReconnectionReceiver() {
@@ -57,27 +59,15 @@ public class NotificationListener extends NotificationListenerService {
         };
 
         IntentFilter filter = new IntentFilter("com.moneymanager.app.RECONNECT_LISTENER");
-        registerReceiver(reconnectionReceiver, filter);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(reconnectionReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(reconnectionReceiver, filter);
+        }
         Log.d(TAG, "Reconnection receiver registered");
     }
 
-    private void startConnectionMonitoring() {
-        // Periodically check and maintain connection
-        Runnable connectionMonitor = new Runnable() {
-            @Override
-            public void run() {
-                if (!isConnected) {
-                    Log.d(TAG, "Connection monitor: Service not connected, attempting reconnection");
-                    attemptReconnection();
-                }
-                // Schedule next check
-                reconnectionHandler.postDelayed(this, 30000); // Check every 30 seconds
-            }
-        };
-        
-        // Start monitoring after initial delay
-        reconnectionHandler.postDelayed(connectionMonitor, 10000); // Start after 10 seconds
-    }
+
 
     private void attemptReconnection() {
         try {
@@ -85,28 +75,21 @@ public class NotificationListener extends NotificationListenerService {
             
             // Check permission first
             if (!checkNotificationListenerPermission()) {
-                Log.w(TAG, "Cannot reconnect - permission not granted");
+                Log.e(TAG, "Cannot reconnect - permission not granted");
+                Log.e(TAG, "Go to: Settings > Apps > Special app access > Notification access");
+                Log.e(TAG, "Enable notification access for Money Manager");
                 return;
             }
 
-            // Try to request rebind
-            requestRebind(null);
-            Log.d(TAG, "Rebind requested during reconnection attempt");
-
-            // Also try to refresh the service binding
-            reconnectionHandler.postDelayed(() -> {
-                try {
-                    if (!isConnected) {
-                        Log.d(TAG, "Still not connected after rebind, trying service refresh");
-                        // Force a service state refresh by accessing active notifications
-                        StatusBarNotification[] notifications = getActiveNotifications();
-                        Log.d(TAG, "Service refresh attempt completed, notifications: " + 
-                              (notifications != null ? notifications.length : "null"));
-                    }
-                } catch (Exception e) {
-                    Log.w(TAG, "Error during service refresh: " + e.getMessage());
-                }
-            }, 3000);
+            // Try to request rebind with proper ComponentName
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                android.content.ComponentName componentName = new android.content.ComponentName(
+                    this, NotificationListener.class);
+                requestRebind(componentName);
+                Log.d(TAG, "Rebind requested successfully");
+            } else {
+                Log.w(TAG, "requestRebind() not available on this Android version (< N)");
+            }
 
         } catch (Exception e) {
             Log.e(TAG, "Error during reconnection attempt: " + e.getMessage(), e);
@@ -151,82 +134,47 @@ public class NotificationListener extends NotificationListenerService {
 
         // Show a toast to confirm service is running
         try {
-            Toast.makeText(this, "Money Manager: Notification monitoring active", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Money Manager: Notification monitoring active", Toast.LENGTH_LONG).show();
         } catch (Exception e) {
             Log.w(TAG, "Could not show toast: " + e.getMessage());
         }
-
-        // Proactively maintain connection
-        maintainConnection();
 
         // Log current active notifications to verify we can access them
         try {
             StatusBarNotification[] activeNotifications = getActiveNotifications();
             Log.d(TAG, "Active notifications count: " + (activeNotifications != null ? activeNotifications.length : 0));
+            
+            // Log some details about active notifications for debugging
+            if (activeNotifications != null && activeNotifications.length > 0) {
+                Log.d(TAG, "Sample active notifications:");
+                for (int i = 0; i < Math.min(3, activeNotifications.length); i++) {
+                    Log.d(TAG, "  - " + activeNotifications[i].getPackageName());
+                }
+            }
         } catch (Exception e) {
             Log.e(TAG, "Error getting active notifications: " + e.getMessage(), e);
         }
     }
 
-    private void maintainConnection() {
-        try {
-            // Request rebind to ensure stable connection
-            requestRebind(null);
-            Log.d(TAG, "Rebind requested on connect for stability");
 
-            // Schedule periodic connection maintenance
-            reconnectionHandler.postDelayed(() -> {
-                if (isConnected) {
-                    try {
-                        // Perform a light operation to keep the service active
-                        StatusBarNotification[] notifications = getActiveNotifications();
-                        Log.d(TAG, "Connection maintenance check - notifications: " + 
-                              (notifications != null ? notifications.length : "null"));
-                        
-                        // Schedule next maintenance
-                        maintainConnection();
-                    } catch (Exception e) {
-                        Log.w(TAG, "Error during connection maintenance: " + e.getMessage());
-                    }
-                }
-            }, 60000); // Every minute when connected
-
-        } catch (Exception e) {
-            Log.w(TAG, "Could not maintain connection: " + e.getMessage());
-        }
-    }
 
     @Override
     public void onListenerDisconnected() {
         super.onListenerDisconnected();
         isConnected = false;
-        Log.d(TAG, "=== NotificationListener DISCONNECTED ===");
-        Log.d(TAG, "Disconnected at: " + System.currentTimeMillis());
-        Log.d(TAG, "Service hash: " + this.hashCode());
+        Log.e(TAG, "=== NotificationListener DISCONNECTED ===");
+        Log.e(TAG, "Disconnected at: " + System.currentTimeMillis());
+        Log.e(TAG, "Service hash: " + this.hashCode());
 
         // Check if permission is still granted
         boolean stillHasPermission = checkNotificationListenerPermission();
         Log.d(TAG, "Permission still granted after disconnect: " + stillHasPermission);
 
-        // Immediate reconnection attempt
-        attemptReconnection();
-
-        // Also schedule multiple reconnection attempts with increasing delays
-        scheduleReconnectionAttempts();
-    }
-
-    private void scheduleReconnectionAttempts() {
-        // Multiple reconnection attempts with exponential backoff
-        int[] delays = {2000, 5000, 10000, 20000, 30000}; // 2s, 5s, 10s, 20s, 30s
-        
-        for (int i = 0; i < delays.length; i++) {
-            final int attempt = i + 1;
-            reconnectionHandler.postDelayed(() -> {
-                if (!isConnected) {
-                    Log.d(TAG, "Scheduled reconnection attempt " + attempt);
-                    attemptReconnection();
-                }
-            }, delays[i]);
+        // Request rebind on API 24+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            attemptReconnection();
+        } else {
+            Log.w(TAG, "Cannot auto-reconnect on Android < N. User must toggle notification access manually.");
         }
     }
 
@@ -264,14 +212,22 @@ public class NotificationListener extends NotificationListenerService {
         String packageName = sbn.getPackageName();
         Log.d(TAG, "Package name: " + packageName);
 
-        // Skip our own notifications
-        if (packageName.equals(getPackageName())) {
-            Log.d(TAG, "Skipping our own notification");
-            return;
+        // Check if this is a test notification from our app
+        boolean isTestNotification = packageName.equals(getPackageName());
+        
+        if (isTestNotification) {
+            Log.d(TAG, ">>> TEST NOTIFICATION DETECTED <<<");
+            // Allow test notifications to proceed for testing purposes
+        } else {
+            // Skip other notifications from our own app
+            if (packageName.equals(getPackageName())) {
+                Log.d(TAG, "Skipping our own notification");
+                return;
+            }
         }
 
-        // Check if app is selected for listening
-        if (!isAppSelected(packageName)) {
+        // Check if app is selected for listening (skip check for test notifications)
+        if (!isTestNotification && !isAppSelected(packageName)) {
             Log.d(TAG, "Skipping notification from unselected app: " + packageName);
             return;
         }
