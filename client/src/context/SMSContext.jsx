@@ -271,11 +271,11 @@ export const SMSProvider = ({ children }) => {
       // Remove from extracted expenses list
       setExtractedExpenses((prev) => prev.filter((e) => e !== expense));
 
-      // Close modal and reset state
+      // Close modal and reset state immediately (no Android modal will show)
       setShowCategoryModal(false);
       setPendingExpense(null);
 
-      console.log("✅ Modal closed and state reset");
+      console.log("✅ Modal closed and state reset - no Android modal shown");
     } catch (error) {
       console.error("❌ Failed to save expense from notification:", error);
       throw error;
@@ -477,7 +477,7 @@ export const SMSProvider = ({ children }) => {
         );
 
         // Show success message
-        alert(`Expense saved: ₹${amount.toFixed(2)} in ${overlayCategory}`);
+        // alert(`Expense saved: ₹${amount.toFixed(2)} in ${overlayCategory}`);
 
         // Trigger a custom event to refresh expenses in the UI
         window.dispatchEvent(new CustomEvent("refreshExpenses"));

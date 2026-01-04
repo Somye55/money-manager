@@ -17,6 +17,7 @@ import { useSMS } from "../context/SMSContext";
 import { useNavigate } from "react-router-dom";
 import * as Icons from "lucide-react";
 import { Progress } from "../components/ui/progress";
+import { capitalizeFirst } from "../lib/textUtils";
 
 const Dashboard = () => {
   const { expenses, categories, settings, loading, refreshAllData } = useData();
@@ -634,7 +635,7 @@ const Dashboard = () => {
                                 />
                               </div>
                               <span className="text-foreground font-medium">
-                                {name}
+                                {capitalizeFirst(name)}
                               </span>
                             </div>
                             <span className="text-foreground font-semibold">

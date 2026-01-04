@@ -203,7 +203,14 @@ const ScrollToTop = () => {
   const location = useLocation();
 
   useEffect(() => {
+    // Scroll both window and main container to top
     window.scrollTo(0, 0);
+
+    // Also scroll the main content container
+    const mainElement = document.querySelector("main");
+    if (mainElement) {
+      mainElement.scrollTo(0, 0);
+    }
   }, [location.pathname]);
 
   return null;

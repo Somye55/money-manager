@@ -8,6 +8,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
+import { capitalizeFirst } from "../lib/textUtils";
 
 const BudgetOverview = () => {
   const { getBudgetAnalysis, settings } = useData();
@@ -194,7 +195,7 @@ const BudgetOverview = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                       <p className="font-medium truncate text-sm">
-                        {category.name}
+                        {capitalizeFirst(category.name)}
                       </p>
                       <div className="flex items-center gap-1">
                         {isOverBudget && (

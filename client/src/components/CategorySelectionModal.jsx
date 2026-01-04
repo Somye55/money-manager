@@ -3,6 +3,7 @@ import { Check, Loader, Sparkles, ChevronDown } from "lucide-react";
 import * as Icons from "lucide-react";
 import { useData } from "../context/DataContext";
 import { useToast } from "./ui/use-toast";
+import { capitalizeFirst } from "../lib/textUtils";
 
 const CategorySelectionModal = ({ expense, isOpen, onClose, onConfirm }) => {
   const { categories, settings } = useData();
@@ -154,9 +155,11 @@ const CategorySelectionModal = ({ expense, isOpen, onClose, onConfirm }) => {
                     Merchant
                   </p>
                   <h4 className="text-sm font-bold text-foreground truncate">
-                    {expense.merchant ||
-                      expense.description ||
-                      "Unknown Merchant"}
+                    {capitalizeFirst(
+                      expense.merchant ||
+                        expense.description ||
+                        "Unknown Merchant"
+                    )}
                   </h4>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {new Date(expense.date).toLocaleDateString("en-US", {
@@ -213,7 +216,7 @@ const CategorySelectionModal = ({ expense, isOpen, onClose, onConfirm }) => {
                       className="text-sm font-semibold truncate"
                       style={{ color: selectedCategory.color }}
                     >
-                      {selectedCategory.name}
+                      {capitalizeFirst(selectedCategory.name)}
                     </span>
                   </div>
                 ) : (
@@ -263,7 +266,7 @@ const CategorySelectionModal = ({ expense, isOpen, onClose, onConfirm }) => {
                           />
                         </div>
                         <span className="text-sm font-semibold flex-1 text-left text-foreground">
-                          {category.name}
+                          {capitalizeFirst(category.name)}
                         </span>
                         {isSelected && (
                           <div
