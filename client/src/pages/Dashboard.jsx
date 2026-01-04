@@ -103,10 +103,23 @@ const Dashboard = () => {
       return;
     }
 
+    // Filter expenses to current month only for dashboard analytics
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    const currentMonthExpenses = expenses.filter((expense) => {
+      const expenseDate = new Date(expense.date);
+      return (
+        expenseDate.getMonth() === currentMonth &&
+        expenseDate.getFullYear() === currentYear
+      );
+    });
+
     const categoryTotals = {};
     let totalExpense = 0;
 
-    expenses.forEach((expense) => {
+    currentMonthExpenses.forEach((expense) => {
       const amount = parseFloat(expense.amount);
       totalExpense += amount;
 
@@ -140,7 +153,7 @@ const Dashboard = () => {
       dailyTotals[dateStr] = 0;
     }
 
-    expenses.forEach((expense) => {
+    currentMonthExpenses.forEach((expense) => {
       const expenseDate = new Date(expense.date).toISOString().split("T")[0];
       if (dailyTotals.hasOwnProperty(expenseDate)) {
         dailyTotals[expenseDate] += parseFloat(expense.amount);
@@ -518,14 +531,39 @@ const Dashboard = () => {
                       data={pieChartData}
                       cx="50%"
                       cy="47%"
-                      innerRadius={65}
-                      outerRadius={90}
+                      innerRadius={60}
+                      outerRadius={80}
                       paddingAngle={2}
                       dataKey="value"
-                      label={({ value, percent }) =>
-                        `${(percent * 100).toFixed(0)}%`
-                      }
-                      labelLine={false}
+                      labelLine={(props) => {
+                        const { points, fill } = props;
+                        return (
+                          <polyline
+                            points={points
+                              .map((p) => `${p.x},${p.y}`)
+                              .join(",")}
+                            stroke={fill}
+                            strokeWidth={2}
+                            fill="none"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            opacity={0.6}
+                          />
+                        );
+                      }}
+                      label={({ cx, x, y, percent, fill }) => (
+                        <text
+                          x={x}
+                          y={y}
+                          fill={fill}
+                          textAnchor={x > cx ? "start" : "end"}
+                          dominantBaseline="central"
+                          fontSize={12}
+                          fontWeight={700}
+                        >
+                          {`${(percent * 100).toFixed(0)}%`}
+                        </text>
+                      )}
                     >
                       {pieChartData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
@@ -653,7 +691,7 @@ const Dashboard = () => {
         </div>
 
         {/* Empty State with Modern Design */}
-        {expenses.length === 0 && (
+        {(!expenses || expenses.length === 0) && (
           <div
             className="animate-fadeIn card-elevated rounded-2xl overflow-hidden bg-card"
             style={{ animationDelay: "0.4s" }}

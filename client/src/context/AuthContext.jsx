@@ -56,12 +56,23 @@ export const AuthProvider = ({ children }) => {
       ) {
         console.log("🔄 Processing OAuth callback from hash...");
         try {
-          const { data, error } = await supabase.auth.getSessionFromUrl();
-          if (error) {
-            console.error("❌ Error processing hash callback:", error);
-          } else if (data.session) {
-            console.log("✅ Session from hash:", data.session.user?.email);
-            setUser(data.session.user);
+          const hashParams = new URLSearchParams(
+            window.location.hash.substring(1)
+          );
+          const accessToken = hashParams.get("access_token");
+          const refreshToken = hashParams.get("refresh_token");
+
+          if (accessToken) {
+            const { data, error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            if (error) {
+              console.error("❌ Error processing hash callback:", error);
+            } else if (data.session) {
+              console.log("✅ Session from hash:", data.session.user?.email);
+              setUser(data.session.user);
+            }
           }
         } catch (err) {
           console.error("❌ Hash processing error:", err);
@@ -78,12 +89,41 @@ export const AuthProvider = ({ children }) => {
     // Also check for URL parameters (some OAuth flows use search params instead of hash)
     const checkUrlParams = async () => {
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get("access_token") || urlParams.get("code")) {
-        console.log("🔄 Processing OAuth callback from URL params...");
+      const code = urlParams.get("code");
+      const accessToken = urlParams.get("access_token");
+      const refreshToken = urlParams.get("refresh_token");
+
+      if (code) {
+        console.log(
+          "🔄 Processing OAuth callback with code from URL params..."
+        );
         try {
-          const { data, error } = await supabase.auth.getSessionFromUrl();
+          const { data, error } = await supabase.auth.exchangeCodeForSession(
+            code
+          );
           if (error) {
-            console.error("❌ Error processing URL params callback:", error);
+            console.error("❌ Error exchanging code:", error);
+          } else if (data.session) {
+            console.log(
+              "✅ Session from URL params:",
+              data.session.user?.email
+            );
+            setUser(data.session.user);
+          }
+        } catch (err) {
+          console.error("❌ URL params processing error:", err);
+        }
+      } else if (accessToken) {
+        console.log(
+          "🔄 Processing OAuth callback with tokens from URL params..."
+        );
+        try {
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (error) {
+            console.error("❌ Error setting session:", error);
           } else if (data.session) {
             console.log(
               "✅ Session from URL params:",

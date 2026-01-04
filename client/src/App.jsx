@@ -33,6 +33,7 @@ import Expenses from "./pages/Expenses";
 import ExpenseDetail from "./pages/ExpenseDetail";
 import TestExpenseSave from "./pages/TestExpenseSave";
 import TestNotificationPopup from "./pages/TestNotificationPopup";
+import DebugExpenses from "./pages/DebugExpenses";
 import AuthDebug from "./components/AuthDebug";
 import ThemeDebug from "./components/ThemeDebug";
 import CategorySelectionModal from "./components/CategorySelectionModal";
@@ -289,6 +290,14 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <TestNotificationPopup />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/debug-expenses"
+                    element={
+                      <ProtectedRoute>
+                        <DebugExpenses />
                       </ProtectedRoute>
                     }
                   />

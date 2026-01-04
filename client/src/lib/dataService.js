@@ -508,6 +508,8 @@ export const updateCategoryOrders = async (categories) => {
  * Get all expenses for a user
  */
 export const getExpenses = async (userId, filters = {}) => {
+  console.log("🔄 getExpenses called with:", { userId, filters });
+
   let query = supabase
     .from("Expense")
     .select(
@@ -539,8 +541,13 @@ export const getExpenses = async (userId, filters = {}) => {
   const { data, error } = await query;
 
   if (error) {
-    console.error("Error fetching expenses:", error);
+    console.error("❌ Error fetching expenses:", error);
     throw error;
+  }
+
+  console.log("✅ getExpenses returned:", data?.length || 0, "expenses");
+  if (data && data.length > 0) {
+    console.log("📋 Sample expense:", data[0]);
   }
 
   return data || [];
@@ -561,10 +568,20 @@ export const getCurrentMonthExpenses = async (userId) => {
     59
   );
 
-  return getExpenses(userId, {
+  console.log("🔄 Fetching expenses for current month:", {
+    userId,
     startDate: startOfMonth.toISOString(),
     endDate: endOfMonth.toISOString(),
   });
+
+  const expenses = await getExpenses(userId, {
+    startDate: startOfMonth.toISOString(),
+    endDate: endOfMonth.toISOString(),
+  });
+
+  console.log("✅ Fetched expenses:", expenses.length);
+
+  return expenses;
 };
 
 /**
