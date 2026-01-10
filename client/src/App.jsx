@@ -12,6 +12,7 @@ import { useTheme } from "next-themes";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { DataProvider } from "./context/DataContext";
 import { SMSProvider, useSMS } from "./context/SMSContext";
+import { ScreenshotProvider } from "./context/ScreenshotContext";
 import { Capacitor } from "@capacitor/core";
 import { initializeDeepLinks } from "./lib/deepLinks";
 import {
@@ -229,94 +230,96 @@ function App() {
     <AuthProvider>
       <DataProvider>
         <SMSProvider>
-          <Router>
-            <ScrollToTop />
-            <div className="flex flex-col h-screen overflow-hidden">
-              <Header />
-              <main className="flex-1 overflow-y-auto w-full pb-20 pt-[72px]">
-                <Routes>
-                  <Route path="/login" element={<Login />} />
-                  <Route
-                    path="/"
-                    element={
-                      <ProtectedRoute>
-                        <Dashboard />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/add"
-                    element={
-                      <ProtectedRoute>
-                        <AddExpense />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/expenses"
-                    element={
-                      <ProtectedRoute>
-                        <Expenses />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/expenses/:id"
-                    element={
-                      <ProtectedRoute>
-                        <ExpenseDetail />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/settings"
-                    element={
-                      <ProtectedRoute>
-                        <Settings />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/settings/:group"
-                    element={
-                      <ProtectedRoute>
-                        <SettingsGroup />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/test-expense-save"
-                    element={
-                      <ProtectedRoute>
-                        <TestExpenseSave />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/test-notification-popup"
-                    element={
-                      <ProtectedRoute>
-                        <TestNotificationPopup />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/debug-expenses"
-                    element={
-                      <ProtectedRoute>
-                        <DebugExpenses />
-                      </ProtectedRoute>
-                    }
-                  />
-                </Routes>
-              </main>
-              <Navigation />
-              <NotificationPopup />
-              <AuthDebug />
-              <ThemeDebug />
-              <Toaster />
-            </div>
-          </Router>
+          <ScreenshotProvider>
+            <Router>
+              <ScrollToTop />
+              <div className="flex flex-col h-screen overflow-hidden">
+                <Header />
+                <main className="flex-1 overflow-y-auto w-full pb-20 pt-[72px]">
+                  <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route
+                      path="/"
+                      element={
+                        <ProtectedRoute>
+                          <Dashboard />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/add"
+                      element={
+                        <ProtectedRoute>
+                          <AddExpense />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/expenses"
+                      element={
+                        <ProtectedRoute>
+                          <Expenses />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/expenses/:id"
+                      element={
+                        <ProtectedRoute>
+                          <ExpenseDetail />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/settings"
+                      element={
+                        <ProtectedRoute>
+                          <Settings />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/settings/:group"
+                      element={
+                        <ProtectedRoute>
+                          <SettingsGroup />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/test-expense-save"
+                      element={
+                        <ProtectedRoute>
+                          <TestExpenseSave />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/test-notification-popup"
+                      element={
+                        <ProtectedRoute>
+                          <TestNotificationPopup />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/debug-expenses"
+                      element={
+                        <ProtectedRoute>
+                          <DebugExpenses />
+                        </ProtectedRoute>
+                      }
+                    />
+                  </Routes>
+                </main>
+                <Navigation />
+                <NotificationPopup />
+                <AuthDebug />
+                <ThemeDebug />
+                <Toaster />
+              </div>
+            </Router>
+          </ScreenshotProvider>
         </SMSProvider>
       </DataProvider>
     </AuthProvider>

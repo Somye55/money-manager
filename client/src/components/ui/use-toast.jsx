@@ -1,7 +1,7 @@
 import * as React from "react";
 import { triggerHaptic } from "../../lib/haptics";
 
-const TOAST_LIMIT = 2;
+const TOAST_LIMIT = 4;
 const TOAST_REMOVE_DELAY = 3500;
 
 const actionTypes = {

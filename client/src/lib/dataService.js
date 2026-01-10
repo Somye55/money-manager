@@ -591,6 +591,23 @@ export const createExpense = async (expense) => {
   try {
     console.log("🔄 Creating expense:", expense);
 
+    // Verify auth session before creating expense
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+    if (sessionError) {
+      console.error("❌ Session error:", sessionError);
+      throw new Error("Authentication error: " + sessionError.message);
+    }
+
+    if (!session) {
+      console.error("❌ No active session");
+      throw new Error("No active session. Please log in again.");
+    }
+
+    console.log("✅ Session verified for user:", session.user.email);
+
     // Ensure timestamps are set
     const now = new Date().toISOString();
 
@@ -621,6 +638,12 @@ export const createExpense = async (expense) => {
 
     if (error) {
       console.error("❌ Error creating expense:", error);
+      console.error("❌ Error details:", {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      });
       throw error;
     }
 

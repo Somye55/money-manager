@@ -11,13 +11,14 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { TrendingUp, Loader, ArrowRight, RefreshCw } from "lucide-react";
+import { TrendingUp, ArrowRight, RefreshCw } from "lucide-react";
 import { useData } from "../context/DataContext";
 import { useSMS } from "../context/SMSContext";
 import { useNavigate } from "react-router-dom";
 import * as Icons from "lucide-react";
 import { Progress } from "../components/ui/progress";
 import { capitalizeFirst } from "../lib/textUtils";
+import DashboardSkeleton from "../components/ui/DashboardSkeleton";
 
 const Dashboard = () => {
   const { expenses, categories, settings, loading, refreshAllData } = useData();
@@ -28,7 +29,10 @@ const Dashboard = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const [isPulling, setIsPulling] = useState(false);
+  const [rotation, setRotation] = useState(0);
   const startY = useRef(0);
+  const lastY = useRef(0);
+  const lastTime = useRef(0);
   const containerRef = useRef(null);
 
   // Auto-scan on load if permitted
@@ -63,9 +67,21 @@ const Dashboard = () => {
 
   // Pull-to-refresh handlers
   const handleTouchStart = (e) => {
-    if (containerRef.current && containerRef.current.scrollTop === 0) {
-      startY.current = e.touches[0].clientY;
+    const touch = e.touches[0];
+    const screenHeight = window.innerHeight;
+    const topThreshold = screenHeight * 0.2; // Top 20% of screen
+
+    // Only allow pull-to-refresh if touch starts in top 20% and container is at top
+    if (
+      containerRef.current &&
+      containerRef.current.scrollTop === 0 &&
+      touch.clientY <= topThreshold
+    ) {
+      startY.current = touch.clientY;
+      lastY.current = touch.clientY;
+      lastTime.current = Date.now();
       setIsPulling(true);
+      setRotation(0);
     }
   };
 
@@ -73,10 +89,26 @@ const Dashboard = () => {
     if (!isPulling || isRefreshing) return;
 
     const currentY = e.touches[0].clientY;
+    const currentTime = Date.now();
     const distance = currentY - startY.current;
 
     if (distance > 0 && containerRef.current.scrollTop === 0) {
-      setPullDistance(distance); // Remove the limit
+      // Calculate velocity for rotation speed
+      const timeDelta = currentTime - lastTime.current;
+      const yDelta = currentY - lastY.current;
+      const velocity = timeDelta > 0 ? Math.abs(yDelta / timeDelta) : 0;
+
+      // Update rotation based on velocity and distance
+      // Slower rotation: reduced multiplier from 50 to 15
+      const rotationSpeed = Math.min(velocity * 15, 10); // Slower cap
+      const newRotation = rotation + rotationSpeed;
+
+      setPullDistance(distance);
+      setRotation(newRotation);
+
+      lastY.current = currentY;
+      lastTime.current = currentTime;
+
       if (distance > 80) {
         e.preventDefault();
       }
@@ -91,6 +123,7 @@ const Dashboard = () => {
     } else {
       // If not enough pull, reset immediately
       setPullDistance(0);
+      setRotation(0);
     }
 
     setIsPulling(false);
@@ -249,11 +282,7 @@ const Dashboard = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-32">
-        <Loader className="animate-spin text-primary" size={32} />
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
@@ -280,13 +309,11 @@ const Dashboard = () => {
       >
         <div className="bg-card rounded-full p-3 shadow-xl border-2 border-primary/30 backdrop-blur-sm">
           <RefreshCw
-            className="text-primary"
+            className={`text-primary ${isRefreshing ? "animate-spin" : ""}`}
             size={24}
             style={{
-              transform: isRefreshing ? "rotate(360deg)" : "rotate(0deg)",
-              transition: isRefreshing
-                ? "transform 0.8s linear infinite"
-                : "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+              transform: !isRefreshing ? `rotate(${rotation}deg)` : undefined,
+              transition: "none",
             }}
           />
         </div>
