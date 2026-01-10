@@ -185,14 +185,36 @@ public class OverlayService extends Service {
         }
         
         if (intent != null) {
-            String title = intent.getStringExtra("title");
-            String text = intent.getStringExtra("text");
-            String packageName = intent.getStringExtra("package");
+            String source = intent.getStringExtra("source");
             
-            Log.d(TAG, "Received intent - Title: " + title + ", Text: " + text);
-            
-            // Run on main thread
-            mainHandler.post(() -> showOverlay(title, text, packageName));
+            if ("screenshot".equals(source) || "shared".equals(source)) {
+                // Handle screenshot-based or shared image expense
+                String title = intent.getStringExtra("title");
+                double amount = intent.getDoubleExtra("amount", 0.0);
+                String type = intent.getStringExtra("type");
+                long timestamp = intent.getLongExtra("timestamp", System.currentTimeMillis());
+                String rawText = intent.getStringExtra("rawText");
+                
+                Log.d(TAG, source + " expense - Title: " + title + ", Amount: " + amount);
+                
+                // Set parsed values
+                parsedAmount = amount;
+                parsedTimestamp = timestamp;
+                parsedType = type != null ? type : "debit";
+                
+                // Run on main thread
+                mainHandler.post(() -> showOverlay(title, rawText, null));
+            } else {
+                // Handle notification-based expense
+                String title = intent.getStringExtra("title");
+                String text = intent.getStringExtra("text");
+                String packageName = intent.getStringExtra("package");
+                
+                Log.d(TAG, "Notification expense - Title: " + title + ", Text: " + text);
+                
+                // Run on main thread
+                mainHandler.post(() -> showOverlay(title, text, packageName));
+            }
         } else {
             Log.d(TAG, "Intent is null");
         }
@@ -269,10 +291,16 @@ public class OverlayService extends Service {
                 Button dismissButton = overlayView.findViewById(R.id.btn_dismiss);
                 Button saveButton = overlayView.findViewById(R.id.btn_save);
 
-                // Parse amount, timestamp, and type
-                parsedAmount = parseAmount(text);
-                parsedTimestamp = parseTimestamp(text);
-                parsedType = parseType(text);
+                // Parse amount, timestamp, and type (only if not already set from screenshot)
+                if (parsedAmount == 0.0) {
+                    parsedAmount = parseAmount(text);
+                }
+                if (parsedTimestamp == 0) {
+                    parsedTimestamp = parseTimestamp(text);
+                }
+                if (parsedType == null || parsedType.isEmpty()) {
+                    parsedType = parseType(text);
+                }
 
                 // Extract merchant name
                 String merchant = extractMerchant(text);

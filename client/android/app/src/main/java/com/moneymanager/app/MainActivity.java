@@ -27,10 +27,11 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         registerPlugin(SettingsHelper.class);
         registerPlugin(NotificationListenerPlugin.class);
+        registerPlugin(ScreenshotListenerPlugin.class);
         
         super.onCreate(savedInstanceState);
         
-        Log.d(TAG, "Plugins registered: SettingsHelper, NotificationListenerPlugin");
+        Log.d(TAG, "Plugins registered: SettingsHelper, NotificationListenerPlugin, ScreenshotListenerPlugin");
 
         serviceMonitorHandler = new Handler(Looper.getMainLooper());
 
@@ -51,6 +52,170 @@ public class MainActivity extends BridgeActivity {
 
         // Start proactive service monitoring
         startServiceMonitoring();
+
+        // Handle shared images (from GPay, PhonePe, etc.)
+        handleSharedImage(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        
+        // Handle shared images when app is already running
+        handleSharedImage(intent);
+    }
+
+    private void handleSharedImage(Intent intent) {
+        if (intent == null) return;
+
+        String action = intent.getAction();
+        String type = intent.getType();
+
+        Log.d(TAG, "Intent received - Action: " + action + ", Type: " + type);
+
+        if (Intent.ACTION_SEND.equals(action) && type != null && type.startsWith("image/")) {
+            android.net.Uri imageUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+            if (imageUri != null) {
+                Log.d(TAG, "Shared image received: " + imageUri);
+                processSharedImage(imageUri);
+            }
+        } else if (Intent.ACTION_SEND_MULTIPLE.equals(action) && type != null && type.startsWith("image/")) {
+            java.util.ArrayList<android.net.Uri> imageUris = intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
+            if (imageUris != null && !imageUris.isEmpty()) {
+                Log.d(TAG, "Multiple shared images received: " + imageUris.size());
+                // Process the first image
+                processSharedImage(imageUris.get(0));
+            }
+        }
+    }
+
+    private void processSharedImage(android.net.Uri imageUri) {
+        Log.d(TAG, "Processing shared image with OCR...");
+        Log.d(TAG, "Image URI: " + imageUri.toString());
+
+        // Try to extract amount from filename as fallback
+        double fallbackAmount = extractAmountFromUri(imageUri);
+        if (fallbackAmount > 0) {
+            Log.d(TAG, "Extracted fallback amount from URI: " + fallbackAmount);
+        }
+
+        // Use OCRProcessor to extract expense data
+        OCRProcessor ocrProcessor = new OCRProcessor(this);
+        
+        final double finalFallbackAmount = fallbackAmount;
+        
+        ocrProcessor.processImage(imageUri, new OCRProcessor.OCRCallback() {
+            @Override
+            public void onSuccess(OCRProcessor.ExpenseData expenseData) {
+                // If OCR didn't find amount but we have fallback, use it
+                if (expenseData.amount == 0.0 && finalFallbackAmount > 0) {
+                    expenseData.amount = finalFallbackAmount;
+                    Log.d(TAG, "Using fallback amount: " + finalFallbackAmount);
+                }
+                
+                Log.d(TAG, "OCR Success - Amount: " + expenseData.amount + ", Merchant: " + expenseData.merchant);
+                
+                // Show overlay with parsed expense data
+                showExpenseOverlay(expenseData);
+                
+                // Show toast notification
+                runOnUiThread(() -> {
+                    android.widget.Toast.makeText(MainActivity.this, 
+                        "Expense detected: ₹" + String.format("%.2f", expenseData.amount), 
+                        android.widget.Toast.LENGTH_SHORT).show();
+                });
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Log.w(TAG, "OCR failed for shared image: " + error);
+                
+                // If we have fallback amount, try to use it anyway
+                if (finalFallbackAmount > 0) {
+                    Log.d(TAG, "OCR failed but using fallback amount: " + finalFallbackAmount);
+                    OCRProcessor.ExpenseData fallbackData = new OCRProcessor.ExpenseData();
+                    fallbackData.amount = finalFallbackAmount;
+                    fallbackData.merchant = "Payment";
+                    fallbackData.type = "debit";
+                    fallbackData.timestamp = System.currentTimeMillis();
+                    
+                    showExpenseOverlay(fallbackData);
+                    
+                    runOnUiThread(() -> {
+                        android.widget.Toast.makeText(MainActivity.this, 
+                            "Expense detected: ₹" + String.format("%.2f", finalFallbackAmount), 
+                            android.widget.Toast.LENGTH_SHORT).show();
+                    });
+                } else {
+                    runOnUiThread(() -> {
+                        android.widget.Toast.makeText(MainActivity.this, 
+                            "Could not extract expense from image", 
+                            android.widget.Toast.LENGTH_SHORT).show();
+                    });
+                }
+            }
+        });
+    }
+
+    private double extractAmountFromUri(android.net.Uri uri) {
+        try {
+            String uriString = uri.toString();
+            Log.d(TAG, "Extracting amount from URI: " + uriString);
+            
+            // Google Pay format: "1767896187 - 1.00 To Nisha Sharma on Google Pay.png"
+            // Pattern: number - amount To/to
+            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("[-_\\s]([0-9]+\\.?[0-9]*)\\s*(?:To|to|TO)\\s", java.util.regex.Pattern.CASE_INSENSITIVE);
+            java.util.regex.Matcher matcher = pattern.matcher(uriString);
+            
+            if (matcher.find()) {
+                String amountStr = matcher.group(1);
+                double amount = Double.parseDouble(amountStr);
+                if (amount > 0 && amount < 1000000) {
+                    Log.d(TAG, "Amount extracted from URI: " + amount);
+                    return amount;
+                }
+            }
+            
+            // Try another pattern: just look for decimal numbers in filename
+            pattern = java.util.regex.Pattern.compile("([0-9]+\\.[0-9]{2})");
+            matcher = pattern.matcher(uriString);
+            
+            if (matcher.find()) {
+                String amountStr = matcher.group(1);
+                double amount = Double.parseDouble(amountStr);
+                if (amount > 0 && amount < 1000000) {
+                    Log.d(TAG, "Amount extracted from URI (decimal): " + amount);
+                    return amount;
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Error extracting amount from URI: " + e.getMessage());
+        }
+        
+        return 0.0;
+    }
+
+    private void showExpenseOverlay(OCRProcessor.ExpenseData expenseData) {
+        try {
+            Intent intent = new Intent(this, OverlayService.class);
+            intent.putExtra("source", "shared");
+            intent.putExtra("title", expenseData.merchant);
+            intent.putExtra("amount", expenseData.amount);
+            intent.putExtra("type", expenseData.type);
+            intent.putExtra("timestamp", expenseData.timestamp);
+            intent.putExtra("rawText", expenseData.rawText);
+            
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent);
+            } else {
+                startService(intent);
+            }
+            
+            Log.d(TAG, "Overlay service started for shared image expense");
+        } catch (Exception e) {
+            Log.e(TAG, "Error starting overlay service: " + e.getMessage());
+        }
     }
 
     private void createTestNotificationChannel() {
@@ -216,17 +381,10 @@ public class MainActivity extends BridgeActivity {
                 
                 Log.d(TAG, "Service connected: " + isConnected + ", created: " + isCreated);
                 
+                // Only log the status, don't open settings automatically
+                // The user can manually enable it from the app's settings page if needed
                 if (!isConnected || !isCreated) {
-                    // Service not connected after rebuild - open settings for quick toggle
-                    Log.d(TAG, "Service not connected - opening settings for manual toggle");
-                    
-                    Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-                    
-                    android.widget.Toast.makeText(this,
-                        "Please grant notification access permission for Money Manager",
-                        android.widget.Toast.LENGTH_LONG).show();
+                    Log.d(TAG, "Service not connected - will attempt reconnection in background");
                 } else {
                     Log.d(TAG, "Notification listener is enabled and connected");
                 }

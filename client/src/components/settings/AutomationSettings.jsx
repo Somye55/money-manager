@@ -294,31 +294,31 @@ const AutomationSettings = () => {
                 </div>
               )}
               <div className="flex gap-2">
-                <button
-                  onClick={async () => {
-                    try {
-                      const result = await requestNotificationPermission();
-                      if (result?.opened) {
+                {!serviceConnected && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        const result = await requestNotificationPermission();
+                        if (result?.opened) {
+                          toast({
+                            variant: "success",
+                            title: "Opening settings",
+                            description: "Toggle OFF then ON to reconnect",
+                          });
+                        }
+                      } catch (e) {
                         toast({
-                          variant: "success",
-                          title: "Opening settings",
-                          description: !serviceConnected
-                            ? "Toggle OFF then ON to reconnect"
-                            : "You can review or disable notification access here",
+                          variant: "error",
+                          title: "Error",
+                          description: e.message,
                         });
                       }
-                    } catch (e) {
-                      toast({
-                        variant: "error",
-                        title: "Error",
-                        description: e.message,
-                      });
-                    }
-                  }}
-                  className="flex-1 py-3 px-4 rounded-xl bg-secondary text-secondary-foreground font-semibold transition-smooth hover:bg-secondary/80"
-                >
-                  Manage Settings
-                </button>
+                    }}
+                    className="flex-1 py-3 px-4 rounded-xl bg-secondary text-secondary-foreground font-semibold transition-smooth hover:bg-secondary/80"
+                  >
+                    Manage Settings
+                  </button>
+                )}
                 <button
                   onClick={async () => {
                     try {
@@ -360,7 +360,9 @@ const AutomationSettings = () => {
                       });
                     }
                   }}
-                  className="flex-1 py-3 px-4 rounded-xl btn-gradient-success font-semibold text-white"
+                  className={`${
+                    !serviceConnected ? "flex-1" : "w-full"
+                  } py-3 px-4 rounded-xl btn-gradient-success font-semibold text-white`}
                 >
                   Test Popup
                 </button>

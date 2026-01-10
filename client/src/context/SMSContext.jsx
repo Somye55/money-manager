@@ -295,43 +295,51 @@ export const SMSProvider = ({ children }) => {
       // Validate required data
       if (!data.amount || data.amount <= 0) {
         console.error("❌ Invalid amount in overlay data:", data.amount);
-        Toast.makeText(
-          this,
-          "Error: Invalid amount",
-          Toast.LENGTH_SHORT
-        ).show();
         return;
       }
 
       if (!data.category) {
         console.error("❌ No category in overlay data");
-        Toast.makeText(
-          this,
-          "Error: No category selected",
-          Toast.LENGTH_SHORT
-        ).show();
         return;
       }
 
-      // Check if user is authenticated
-      if (!authUser) {
-        console.error("❌ User not authenticated");
-        alert("Please log in to save expenses");
+      // CRITICAL: Get fresh session from Supabase when app is in background
+      // The authUser from context might be stale or null
+      const { supabase } = await import("../lib/supabase");
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        console.error("❌ Error getting session:", sessionError);
         return;
       }
 
-      console.log("✅ User authenticated:", authUser.email);
+      if (!session || !session.user) {
+        console.error("❌ No active session found");
+        console.log(
+          "⚠️ User needs to be logged in. AuthUser from context:",
+          authUser?.email || "null"
+        );
+        return;
+      }
 
-      // Get or ensure user profile exists
+      console.log("✅ Active session found:", session.user.email);
+      console.log(
+        "✅ Session expires at:",
+        new Date(session.expires_at * 1000).toLocaleString()
+      );
+
+      // Get or ensure user profile exists using the session user
       let userProfile = user;
-      if (!userProfile) {
-        console.log("⏳ User profile not loaded, fetching...");
+      if (!userProfile || userProfile.id !== session.user.id) {
+        console.log("⏳ User profile not loaded or mismatched, fetching...");
         try {
-          userProfile = await getOrCreateUser(authUser);
+          userProfile = await getOrCreateUser(session.user);
           console.log("✅ User profile loaded:", userProfile.email);
         } catch (error) {
           console.error("❌ Failed to load user profile:", error);
-          alert("Failed to load user profile. Please try again.");
           return;
         }
       }
@@ -457,7 +465,7 @@ export const SMSProvider = ({ children }) => {
       const finalData = {
         amount,
         categoryId,
-        source: "NOTIFICATION_OVERLAY",
+        source: "NOTIFICATION", // Use NOTIFICATION instead of NOTIFICATION_OVERLAY to match enum
         type,
         notes: data.text,
         description: data.title || "Transaction",
@@ -467,23 +475,37 @@ export const SMSProvider = ({ children }) => {
 
       console.log("💾 Final expense data:", finalData);
       console.log("👤 User ID:", userProfile.id);
+      console.log("🔐 Session user ID:", session.user.id);
 
-      // Save directly to database (bypass DataContext user check)
+      // Save directly to database with explicit auth context
       try {
+        // Ensure we're using the authenticated Supabase client
+        console.log("🔐 Verifying auth before save...");
+        const {
+          data: { session: verifySession },
+        } = await supabase.auth.getSession();
+        if (!verifySession) {
+          console.error("❌ Session lost before save");
+          return;
+        }
+        console.log("✅ Auth verified, proceeding with save");
+
         const savedExpense = await createExpense(finalData);
         console.log(
           "✅ Expense saved from overlay successfully:",
           savedExpense
         );
 
-        // Show success message
-        // alert(`Expense saved: ₹${amount.toFixed(2)} in ${overlayCategory}`);
-
         // Trigger a custom event to refresh expenses in the UI
         window.dispatchEvent(new CustomEvent("refreshExpenses"));
       } catch (saveError) {
         console.error("❌ Failed to save expense:", saveError);
-        alert(`Failed to save expense: ${saveError.message}`);
+        console.error("❌ Error details:", {
+          message: saveError.message,
+          code: saveError.code,
+          details: saveError.details,
+          hint: saveError.hint,
+        });
       }
     } catch (error) {
       console.error("❌ Error saving expense from overlay:", error);
