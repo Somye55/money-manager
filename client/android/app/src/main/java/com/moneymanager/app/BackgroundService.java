@@ -146,8 +146,7 @@ public class BackgroundService extends Service {
 
     private void forceRebindNotificationListener() {
         if (rebindAttempts >= MAX_REBIND_ATTEMPTS) {
-            Log.w(TAG, "Max rebind attempts reached, opening settings for user to toggle");
-            openNotificationListenerSettings();
+            Log.w(TAG, "Max rebind attempts reached - user should manually enable from app settings");
             rebindAttempts = 0;
             return;
         }
@@ -155,12 +154,9 @@ public class BackgroundService extends Service {
         rebindAttempts++;
         Log.d(TAG, "Notification listener not bound (attempt " + rebindAttempts + "/" + MAX_REBIND_ATTEMPTS + ")");
 
-        // After first few attempts, just open settings
-        if (rebindAttempts >= 2) {
-            Log.d(TAG, "Opening settings for manual toggle");
-            openNotificationListenerSettings();
-            rebindAttempts = 0; // Reset after opening settings
-        }
+        // Don't automatically open settings - it interrupts user flows like OCR
+        // User can manually enable from app settings page if needed
+        Log.d(TAG, "Notification listener not connected - will retry in background");
     }
 
     private void attemptServiceReconnection() {

@@ -193,30 +193,31 @@ public class OCRProcessor {
         });
     }
 
-    private String createGeminiPrompt(String ocrText) {
-        return "You are an expert at parsing financial transaction information from OCR text extracted from payment app screenshots (Google Pay, PhonePe, Paytm, etc.).\n\n" +
-               "Extract the following information from the text below:\n" +
-               "1. Amount (numeric value only, no currency symbols)\n" +
-               "2. Merchant/Payee name\n" +
-               "3. Transaction type (either \"debit\" or \"credit\")\n\n" +
-               "OCR Text:\n" +
-               "\"\"\"\n" +
-               ocrText + "\n" +
-               "\"\"\"\n\n" +
-               "Respond ONLY with a valid JSON object in this exact format (no markdown, no explanation):\n" +
-               "{\n" +
-               "  \"amount\": <number>,\n" +
-               "  \"merchant\": \"<string>\",\n" +
-               "  \"type\": \"<debit|credit>\",\n" +
-               "  \"confidence\": <0-100>\n" +
-               "}\n\n" +
-               "Rules:\n" +
-               "- If amount is not found, set amount to 0\n" +
-               "- If merchant is not found, set merchant to \"Payment\"\n" +
-               "- Type should be \"debit\" for payments/sent money, \"credit\" for received/refund\n" +
-               "- Confidence should be 0-100 based on how clear the information is\n" +
-               "- Return ONLY the JSON object, nothing else";
-    }
+private String createGeminiPrompt(String ocrText) {
+    return "You are an intelligent financial data parser. You will receive OCR text from either a digital payment screenshot (Google Pay, PhonePe, Paytm) OR a physical receipt (Cafe, Hotel, Shop).\n\n" +
+           "Your task: Extract structured data into JSON.\n\n" +
+           "CRITICAL RULES FOR AMOUNT DETECTION:\n" +
+           "1. IGNORE Phone Numbers: Never pick a number starting with +91 or a 10-digit number like '9758134039' as the amount.\n" +
+           "2. IGNORE Transaction IDs: Never pick long strings of numbers (12+ digits).\n" +
+           "3. IF SCREENSHOT (UPI/GPay/PhonePe): The amount is often a standalone number (e.g., '1', '150') appearing EARLY in the text. It might be on its own line. It usually lacks the '₹' symbol in OCR. \n" +
+           "4. IF PHYSICAL RECEIPT: Look for keywords 'Total', 'Grand Total', 'Net Amount' at the BOTTOM. The amount is usually the largest number associated with these words.\n\n" +
+           "CRITICAL RULES FOR TRANSACTION TYPE:\n" +
+           "1. 'Received from', 'Credited to' -> CREDIT\n" +
+           "2. 'Paid to', 'Sent to', 'Bill Total', 'Purchase' -> DEBIT\n" +
+           "3. If unclear, default to DEBIT.\n\n" +
+           "OCR Text to Parse:\n" +
+           "\"\"\"\n" +
+           ocrText + "\n" +
+           "\"\"\"\n\n" +
+           "Respond ONLY with this JSON structure (no markdown, no other text):\n" +
+           "{\n" +
+           "  \"amount\": <number>,\n" +
+           "  \"merchant\": \"<string_name_of_person_or_shop>\",\n" +
+           "  \"type\": \"<debit|credit>\",\n" +
+           "  \"category\": \"<food|shopping|travel|bills|transfer|other>\",\n" +
+           "  \"confidence\": <number_0_to_100>\n" +
+           "}";
+}
 
     private JSONObject createGeminiPayload(String prompt) throws Exception {
         JSONObject payload = new JSONObject();

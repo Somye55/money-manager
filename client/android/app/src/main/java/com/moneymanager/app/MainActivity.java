@@ -118,9 +118,11 @@ public class MainActivity extends BridgeActivity {
 
     private void navigateToQuickExpense(OCRProcessor.ExpenseData expenseData, String status, String error) {
         try {
-            // Build JavaScript to set window.ocrData and navigate
+            // Build JavaScript to set sessionStorage (survives page reload) and navigate
             StringBuilder jsCode = new StringBuilder();
-            jsCode.append("window.ocrData = {");
+            
+            // Create OCR data object (use var to allow redeclaration)
+            jsCode.append("var ocrData = {");
             jsCode.append("  status: '").append(status).append("'");
             
             if ("success".equals(status) && expenseData != null) {
@@ -134,19 +136,29 @@ public class MainActivity extends BridgeActivity {
             }
             
             jsCode.append("};");
+            
+            // Store in sessionStorage (survives page reload)
+            jsCode.append("sessionStorage.setItem('ocrData', JSON.stringify(ocrData));");
+            jsCode.append("console.log('📱 OCR data stored in sessionStorage:', ocrData);");
+            
+            // Navigate using window.location (works with BrowserRouter)
             jsCode.append("window.location.href = '/quick-expense';");
             
             String finalJs = jsCode.toString();
             Log.d(TAG, "Navigating to QuickExpense with JS");
+            Log.d(TAG, "OCR Data - Amount: " + (expenseData != null ? expenseData.amount : "N/A") + 
+                      ", Merchant: " + (expenseData != null ? expenseData.merchant : "N/A"));
             
-            // Execute JavaScript on the bridge
+            // Wait a bit for the app to be fully in foreground, then execute JavaScript
             runOnUiThread(() -> {
-                if (bridge != null && bridge.getWebView() != null) {
-                    bridge.getWebView().evaluateJavascript(finalJs, null);
-                    Log.d(TAG, "✅ Navigation JavaScript executed");
-                } else {
-                    Log.e(TAG, "❌ Bridge or WebView is null");
-                }
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    if (bridge != null && bridge.getWebView() != null) {
+                        bridge.getWebView().evaluateJavascript(finalJs, null);
+                        Log.d(TAG, "✅ Navigation JavaScript executed");
+                    } else {
+                        Log.e(TAG, "❌ Bridge or WebView is null");
+                    }
+                }, 500); // Wait 500ms for app to be ready
             });
             
         } catch (Exception e) {
