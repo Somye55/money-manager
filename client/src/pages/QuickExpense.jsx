@@ -16,7 +16,13 @@ import {
   SelectValue,
 } from "../components/ui/select";
 import { Input } from "../components/ui/input";
-import { Loader2, CheckCircle2, XCircle, ArrowLeft } from "lucide-react";
+import {
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  ArrowLeft,
+  AlertCircle,
+} from "lucide-react";
 import { useToast } from "../components/ui/use-toast";
 
 export default function QuickExpense() {
@@ -32,29 +38,60 @@ export default function QuickExpense() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    // Check for data in window (set by MainActivity)
+    // Check for data in window or sessionStorage (set by MainActivity)
     const checkWindowData = () => {
+      // First check window.ocrData
       if (window.ocrData) {
         console.log("📱 Found OCR data in window:", window.ocrData);
         handleOCRData(window.ocrData);
         delete window.ocrData; // Clean up
-      } else {
-        // No data found, redirect to dashboard after 2 seconds
-        setTimeout(() => {
-          console.log("⚠️ No OCR data found, redirecting to dashboard");
-          navigate("/dashboard");
-        }, 2000);
+        sessionStorage.removeItem("ocrData"); // Clean up sessionStorage too
+        return true;
       }
+
+      // Then check sessionStorage (survives page reloads)
+      const storedData = sessionStorage.getItem("ocrData");
+      if (storedData) {
+        try {
+          const ocrData = JSON.parse(storedData);
+          console.log("📱 Found OCR data in sessionStorage:", ocrData);
+          handleOCRData(ocrData);
+          sessionStorage.removeItem("ocrData"); // Clean up
+          return true;
+        } catch (e) {
+          console.error("Error parsing sessionStorage ocrData:", e);
+        }
+      }
+
+      console.log("⏳ Waiting for OCR data...");
+      return false;
     };
 
-    // Check immediately and after short delays
-    checkWindowData();
-    const timer1 = setTimeout(checkWindowData, 500);
-    const timer2 = setTimeout(checkWindowData, 1000);
+    // Check immediately
+    if (checkWindowData()) return;
+
+    // Check multiple times with delays
+    const timer1 = setTimeout(() => checkWindowData(), 300);
+    const timer2 = setTimeout(() => checkWindowData(), 600);
+    const timer3 = setTimeout(() => checkWindowData(), 1000);
+    const timer4 = setTimeout(() => checkWindowData(), 1500);
+
+    // Final timeout - redirect if no data after 3 seconds
+    const timeoutTimer = setTimeout(() => {
+      if (!checkWindowData()) {
+        console.log(
+          "⚠️ No OCR data found after 3 seconds, redirecting to home"
+        );
+        navigate("/");
+      }
+    }, 3000);
 
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
+      clearTimeout(timer3);
+      clearTimeout(timer4);
+      clearTimeout(timeoutTimer);
     };
   }, [navigate]);
 
@@ -70,9 +107,18 @@ export default function QuickExpense() {
 
     if (ocrData.status === "success" && ocrData.data) {
       setExpenseData(ocrData.data);
+      const parsedAmount = parseFloat(ocrData.data.amount);
       setAmount(ocrData.data.amount?.toString() || "");
       setMerchant(ocrData.data.merchant || "");
-      setStatus("ready");
+
+      // Check if amount is zero, invalid, or missing
+      if (!ocrData.data.amount || isNaN(parsedAmount) || parsedAmount <= 0) {
+        console.log("⚠️ Invalid amount detected:", ocrData.data.amount);
+        setStatus("no-amount");
+      } else {
+        console.log("✅ Valid amount detected:", parsedAmount);
+        setStatus("ready");
+      }
 
       // Auto-select first category if available
       if (categories.length > 0) {
@@ -113,9 +159,9 @@ export default function QuickExpense() {
         description: `₹${amount} saved successfully`,
       });
 
-      // Navigate to dashboard after short delay
+      // Navigate to home after short delay
       setTimeout(() => {
-        navigate("/dashboard");
+        navigate("/");
       }, 1000);
     } catch (error) {
       console.error("Error saving expense:", error);
@@ -130,7 +176,7 @@ export default function QuickExpense() {
   };
 
   const handleCancel = () => {
-    navigate("/dashboard");
+    navigate("/");
   };
 
   if (status === "processing") {
@@ -164,8 +210,48 @@ export default function QuickExpense() {
               </p>
               <Button onClick={handleCancel} variant="outline" className="mt-4">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Dashboard
+                Back to Home
               </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (status === "no-amount") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center space-y-4">
+              <AlertCircle className="h-12 w-12 text-amber-600" />
+              <h2 className="text-xl font-semibold">Amount Not Detected</h2>
+              <p className="text-sm text-gray-600 text-center">
+                Unable to extract transaction amount from the image. Please try
+                again with a clearer screenshot.
+              </p>
+              {merchant && (
+                <div className="bg-amber-50 p-3 rounded-lg w-full">
+                  <p className="text-sm text-gray-600 text-center">
+                    Merchant detected:{" "}
+                    <span className="font-medium">{merchant}</span>
+                  </p>
+                </div>
+              )}
+              <div className="flex flex-col space-y-2 w-full pt-2">
+                <Button onClick={handleCancel} variant="outline">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to Home
+                </Button>
+                <Button
+                  onClick={() => setStatus("ready")}
+                  variant="default"
+                  className="bg-amber-600 hover:bg-amber-700"
+                >
+                  Enter Amount Manually
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
