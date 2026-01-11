@@ -94,68 +94,73 @@ public class MainActivity extends BridgeActivity {
         Log.d(TAG, "Processing shared image with OCR...");
         Log.d(TAG, "Image URI: " + imageUri.toString());
 
-        // Try to extract amount from filename as fallback
-        double fallbackAmount = extractAmountFromUri(imageUri);
-        if (fallbackAmount > 0) {
-            Log.d(TAG, "Extracted fallback amount from URI: " + fallbackAmount);
-        }
-
         // Use OCRProcessor to extract expense data
         OCRProcessor ocrProcessor = new OCRProcessor(this);
-        
-        final double finalFallbackAmount = fallbackAmount;
         
         ocrProcessor.processImage(imageUri, new OCRProcessor.OCRCallback() {
             @Override
             public void onSuccess(OCRProcessor.ExpenseData expenseData) {
-                // If OCR didn't find amount but we have fallback, use it
-                if (expenseData.amount == 0.0 && finalFallbackAmount > 0) {
-                    expenseData.amount = finalFallbackAmount;
-                    Log.d(TAG, "Using fallback amount: " + finalFallbackAmount);
-                }
+                Log.d(TAG, "✅ OCR Success - Amount: " + expenseData.amount + ", Merchant: " + expenseData.merchant);
                 
-                Log.d(TAG, "OCR Success - Amount: " + expenseData.amount + ", Merchant: " + expenseData.merchant);
-                
-                // Show overlay with parsed expense data
-                showExpenseOverlay(expenseData);
-                
-                // Show toast notification
-                runOnUiThread(() -> {
-                    android.widget.Toast.makeText(MainActivity.this, 
-                        "Expense detected: ₹" + String.format("%.2f", expenseData.amount), 
-                        android.widget.Toast.LENGTH_SHORT).show();
-                });
+                // Navigate to QuickExpense page with OCR data
+                navigateToQuickExpense(expenseData, "success", null);
             }
 
             @Override
             public void onFailure(String error) {
-                Log.w(TAG, "OCR failed for shared image: " + error);
+                Log.e(TAG, "❌ OCR failed for shared image: " + error);
                 
-                // If we have fallback amount, try to use it anyway
-                if (finalFallbackAmount > 0) {
-                    Log.d(TAG, "OCR failed but using fallback amount: " + finalFallbackAmount);
-                    OCRProcessor.ExpenseData fallbackData = new OCRProcessor.ExpenseData();
-                    fallbackData.amount = finalFallbackAmount;
-                    fallbackData.merchant = "Payment";
-                    fallbackData.type = "debit";
-                    fallbackData.timestamp = System.currentTimeMillis();
-                    
-                    showExpenseOverlay(fallbackData);
-                    
-                    runOnUiThread(() -> {
-                        android.widget.Toast.makeText(MainActivity.this, 
-                            "Expense detected: ₹" + String.format("%.2f", finalFallbackAmount), 
-                            android.widget.Toast.LENGTH_SHORT).show();
-                    });
-                } else {
-                    runOnUiThread(() -> {
-                        android.widget.Toast.makeText(MainActivity.this, 
-                            "Could not extract expense from image", 
-                            android.widget.Toast.LENGTH_SHORT).show();
-                    });
-                }
+                // Navigate to QuickExpense page with error
+                navigateToQuickExpense(null, "error", error);
             }
         });
+    }
+
+    private void navigateToQuickExpense(OCRProcessor.ExpenseData expenseData, String status, String error) {
+        try {
+            // Build JavaScript to set window.ocrData and navigate
+            StringBuilder jsCode = new StringBuilder();
+            jsCode.append("window.ocrData = {");
+            jsCode.append("  status: '").append(status).append("'");
+            
+            if ("success".equals(status) && expenseData != null) {
+                jsCode.append(",  data: {");
+                jsCode.append("    amount: ").append(expenseData.amount).append(",");
+                jsCode.append("    merchant: '").append(escapeJavaScript(expenseData.merchant)).append("',");
+                jsCode.append("    type: '").append(expenseData.type).append("'");
+                jsCode.append("  }");
+            } else if ("error".equals(status)) {
+                jsCode.append(",  error: '").append(escapeJavaScript(error)).append("'");
+            }
+            
+            jsCode.append("};");
+            jsCode.append("window.location.href = '/quick-expense';");
+            
+            String finalJs = jsCode.toString();
+            Log.d(TAG, "Navigating to QuickExpense with JS");
+            
+            // Execute JavaScript on the bridge
+            runOnUiThread(() -> {
+                if (bridge != null && bridge.getWebView() != null) {
+                    bridge.getWebView().evaluateJavascript(finalJs, null);
+                    Log.d(TAG, "✅ Navigation JavaScript executed");
+                } else {
+                    Log.e(TAG, "❌ Bridge or WebView is null");
+                }
+            });
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error navigating to QuickExpense: " + e.getMessage(), e);
+        }
+    }
+
+    private String escapeJavaScript(String str) {
+        if (str == null) return "";
+        return str.replace("\\", "\\\\")
+                  .replace("'", "\\'")
+                  .replace("\"", "\\\"")
+                  .replace("\n", "\\n")
+                  .replace("\r", "\\r");
     }
 
     private double extractAmountFromUri(android.net.Uri uri) {
@@ -194,28 +199,6 @@ public class MainActivity extends BridgeActivity {
         }
         
         return 0.0;
-    }
-
-    private void showExpenseOverlay(OCRProcessor.ExpenseData expenseData) {
-        try {
-            Intent intent = new Intent(this, OverlayService.class);
-            intent.putExtra("source", "shared");
-            intent.putExtra("title", expenseData.merchant);
-            intent.putExtra("amount", expenseData.amount);
-            intent.putExtra("type", expenseData.type);
-            intent.putExtra("timestamp", expenseData.timestamp);
-            intent.putExtra("rawText", expenseData.rawText);
-            
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(intent);
-            } else {
-                startService(intent);
-            }
-            
-            Log.d(TAG, "Overlay service started for shared image expense");
-        } catch (Exception e) {
-            Log.e(TAG, "Error starting overlay service: " + e.getMessage());
-        }
     }
 
     private void createTestNotificationChannel() {

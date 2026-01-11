@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google/generative-ai": "^0.21.0",
     "@prisma/client": "^5.22.0",
     "@supabase/supabase-js": "^2.86.2",
     "cors": "^2.8.5",
