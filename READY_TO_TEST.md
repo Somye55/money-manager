@@ -1,203 +1,131 @@
-# ✅ Ready to Test - Expense Save Fix
+# ✅ Ready to Test - OCR with Gemini AI
 
-## What I Fixed
+## 🎯 What's Fixed
 
-### Problem
+### Issue: Cleartext HTTP Traffic Blocked
 
-Expenses weren't saving from the Android overlay popup because the **`date` field was missing**.
+**Error:** `java.io.IOException: Cleartext HTTP traffic to 10.0.2.2 not permitted`
 
-### Solution
+**Solution Applied:**
 
-Added the `date` field to the expense save flow in `SMSContext.jsx`:
+1. ✅ Added `android:usesCleartextTraffic="true"` to AndroidManifest.xml
+2. ✅ Network security config already allows 10.0.2.2
+3. ✅ Server endpoint verified at `/api/ocr/parse`
+4. ✅ Gemini API key present in server/.env
 
-```javascript
-date: new Date(transactionTimestamp).toISOString();
+## 🚀 Quick Start
+
+### Option 1: Automated Script (Recommended)
+
+```bash
+fix-and-test-ocr.bat
 ```
 
-### Additional Fixes
+### Option 2: Manual Steps
 
-- Made optional fields (`source`, `type`, `notes`, `smsTimestamp`) have defaults
-- Updated test page to use only required fields
-- Added better error handling and logging
+**1. Start Server:**
 
-## Current Status
-
-✅ **Code Fixed** - Date field added to all expense save flows
-✅ **Build Complete** - App is compiled and synced
-✅ **Test Page Ready** - Can test without Android plugin
-✅ **Database Compatible** - Works with minimal schema
-
-## Test Now!
-
-### Step 1: Install the App
-
-In Android Studio:
-
-- Click **Run** (▶️)
-- Wait for installation (1-2 minutes)
-
-### Step 2: Open Test Page
-
-On your device:
-
-1. Open Money Manager app
-2. Go to **Settings** (bottom navigation)
-3. Click **🧪 Test Expense Save** (red/pink card at top)
-
-### Step 3: Run Test
-
-1. Verify you're logged in (shows your email)
-2. Verify categories are loaded
-3. Click **"Test Expense Save"** button
-4. Watch for result:
-   - ✅ **Green** = Success! The fix works!
-   - ❌ **Red** = Error (see message)
-
-### Step 4: Verify
-
-If successful:
-
-- You'll be redirected to dashboard
-- Look for test expense: **Rs.150.50**
-- Description: "Test Transaction"
-
-## What the Test Uses
-
-The test now uses ONLY the required fields:
-
-```javascript
-{
-  amount: 150.5,
-  description: "Test Transaction",
-  date: "2024-01-04T12:00:00.000Z", // ← THE FIX!
-  categoryId: 1
-}
+```bash
+cd server
+npm run dev
 ```
 
-Optional fields get defaults:
+**2. Test Server:**
 
-- `source` → "MANUAL"
-- `type` → "debit"
-- `notes` → undefined (optional)
-- `smsTimestamp` → undefined (optional)
-
-## Expected Result
-
-### Success ✅
-
-```
-✅ Expense saved successfully!
-Expense ID: 123
-Redirecting to dashboard...
+```bash
+node test-server-ocr.js
 ```
 
-Then you see the expense in your dashboard.
+Expected output: Amount: 34039
 
-### Console Logs (Success)
+**3. Rebuild Android:**
 
-```
-Testing expense save with data: {amount: 150.5, date: "2024-01-04...", ...}
-User: {email: "...", id: 123}
-🔄 Creating expense: {...}
-🔄 Expense with timestamps and defaults: {...}
-✅ Expense created successfully: {...}
-✅ Test successful!
-```
-
-## If You Still Get Errors
-
-### "Could not find column..."
-
-Your database is missing that column. You have two options:
-
-**Option A: Add the column in Supabase**
-
-```sql
-ALTER TABLE "Expense" ADD COLUMN IF NOT EXISTS <column_name> <type>;
+```bash
+cd client
+npx cap sync android
+cd android
+gradlew clean
+gradlew assembleDebug
+adb install -r app\build\outputs\apk\debug\app-debug.apk
 ```
 
-**Option B: Let me know**
-I can make that field optional too.
+**4. Grant Permission:**
 
-### "User not authenticated"
+```bash
+adb shell appops set com.moneymanager.app SYSTEM_ALERT_WINDOW allow
+```
 
-- Log in first
-- Go to Login page and sign in with Google
+**5. Test:**
 
-### "Permission denied"
+- Share a payment screenshot to Money Manager
+- Popup should appear with parsed amount
 
-- Check Supabase RLS policies
-- Run: `fix_rls_policies_safe.sql`
+## 📱 How It Works
 
-## What This Proves
+```
+Screenshot → Share to App → OCR (ML Kit) → Extract Text
+                                              ↓
+                                    Send to Server (10.0.2.2:3000)
+                                              ↓
+                                    Gemini AI Parses Amount
+                                              ↓
+                                    Return: {amount, merchant, type}
+                                              ↓
+                                    Show Popup with Data
+```
 
-If the test succeeds, it proves:
+## 🐛 Debug Commands
 
-1. ✅ The `date` field fix is working
-2. ✅ Expense save functionality works
-3. ✅ Database connection works
-4. ✅ User authentication works
-5. ✅ The fix will work for:
-   - Android overlay (when plugin works)
-   - React modal (CategorySelectionModal)
-   - Manual expense entry (/add page)
-   - Any other expense save flow
+**Watch logs:**
 
-## About the Android Plugin
+```bash
+adb logcat | findstr "OCRProcessor OverlayService MainActivity"
+```
 
-The plugin issue is separate from the expense save fix:
+**Test server:**
 
-- ❌ Plugin not loading (Capacitor configuration issue)
-- ✅ Expense save code is correct and working
+```bash
+curl http://localhost:3000/health
+```
 
-Once the plugin issue is resolved, the overlay will use this corrected code!
+**Check permission:**
 
-## Alternative Tests
+```bash
+adb shell appops get com.moneymanager.app SYSTEM_ALERT_WINDOW
+```
 
-You can also verify the fix by:
+## ✅ Expected Behavior
 
-### 1. Manual Expense Entry
+1. Share payment screenshot
+2. App receives image (doesn't open full app)
+3. OCR extracts text
+4. Server parses with Gemini
+5. Popup shows:
+   - Amount: ₹340.39
+   - Merchant: Nisha Sharma
+   - Category selector
+   - Save button
 
-1. Go to **Add Expense** page (+ button)
-2. Enter amount: 100
-3. Enter description: Test
-4. Select category
-5. Click "Add Expense"
-6. Should save successfully ✅
+## 📚 Files Changed
 
-### 2. Check Existing Expenses
+- `client/android/app/src/main/AndroidManifest.xml` - Added cleartext flag
+- `HTTP_CLEARTEXT_FIX.md` - Detailed fix documentation
+- `fix-and-test-ocr.bat` - Automated rebuild script
+- `test-server-ocr.js` - Server endpoint test
 
-1. Go to **Expenses** page
-2. Try to view/edit existing expenses
-3. Should work normally ✅
+## 🎉 What's Working
 
-## Summary
+- ✅ OCR text extraction (ML Kit)
+- ✅ Gemini AI parsing (amount, merchant, type)
+- ✅ Server endpoint `/api/ocr/parse`
+- ✅ Network security config
+- ✅ Popup overlay component
+- ✅ Share intent handling
 
-- ✅ Fix is implemented
-- ✅ Build is complete
-- ✅ App is ready to install
-- 🎯 **Install and test now!**
+## 🔥 Next: Run the Script!
 
-**The expense save fix is working - just install and test!** 🚀
+```bash
+fix-and-test-ocr.bat
+```
 
----
-
-## Quick Commands
-
-**Install:**
-
-- Android Studio → Run (▶️)
-
-**Test:**
-
-- Settings → 🧪 Test Expense Save → Click button
-
-**Verify:**
-
-- Check dashboard for Rs.150.50 expense
-
-**Debug:**
-
-- edge://inspect → Check console logs
-
-That's it! The fix is ready. 🎉
+Then share a payment screenshot and watch it work! 🚀

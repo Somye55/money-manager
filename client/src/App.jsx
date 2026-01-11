@@ -32,6 +32,7 @@ import Settings from "./pages/Settings";
 import SettingsGroup from "./pages/SettingsGroup";
 import Expenses from "./pages/Expenses";
 import ExpenseDetail from "./pages/ExpenseDetail";
+import QuickExpense from "./pages/QuickExpense";
 import TestExpenseSave from "./pages/TestExpenseSave";
 import TestNotificationPopup from "./pages/TestNotificationPopup";
 import DebugExpenses from "./pages/DebugExpenses";
@@ -251,6 +252,14 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <AddExpense />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/quick-expense"
+                      element={
+                        <ProtectedRoute>
+                          <QuickExpense />
                         </ProtectedRoute>
                       }
                     />
