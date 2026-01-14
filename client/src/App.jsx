@@ -32,7 +32,7 @@ import Settings from "./pages/Settings";
 import SettingsGroup from "./pages/SettingsGroup";
 import Expenses from "./pages/Expenses";
 import ExpenseDetail from "./pages/ExpenseDetail";
-import QuickExpense from "./pages/QuickExpense";
+import QuickSave from "./pages/QuickSave";
 import TestExpenseSave from "./pages/TestExpenseSave";
 import TestNotificationPopup from "./pages/TestNotificationPopup";
 import DebugExpenses from "./pages/DebugExpenses";
@@ -134,6 +134,7 @@ const Header = () => {
     if (location.pathname === "/") return "Money Manager";
     if (location.pathname === "/expenses") return "Expenses";
     if (location.pathname === "/add") return "Add Expense";
+    if (location.pathname === "/quick-save") return "Quick Save";
     if (location.pathname === "/settings") return "Settings";
     if (location.pathname.startsWith("/expenses/")) {
       return "Expenses → Details";
@@ -149,7 +150,8 @@ const Header = () => {
   // Show back button for sub-pages
   const showBackButton =
     location.pathname.startsWith("/settings/") ||
-    location.pathname.startsWith("/expenses/");
+    location.pathname.startsWith("/expenses/") ||
+    location.pathname === "/quick-save";
 
   return (
     <Card className="fixed top-0 left-0 right-0 flex items-center justify-between z-50 backdrop-blur-lg bg-opacity-90 rounded-none border-b border-border p-4 w-full">
@@ -256,10 +258,10 @@ function App() {
                       }
                     />
                     <Route
-                      path="/quick-expense"
+                      path="/quick-save"
                       element={
                         <ProtectedRoute>
-                          <QuickExpense />
+                          <QuickSave />
                         </ProtectedRoute>
                       }
                     />

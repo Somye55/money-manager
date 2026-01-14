@@ -22,10 +22,12 @@ import {
   XCircle,
   ArrowLeft,
   AlertCircle,
+  Zap,
 } from "lucide-react";
 import { useToast } from "../components/ui/use-toast";
+import * as Icons from "lucide-react";
 
-export default function QuickExpense() {
+export default function QuickSave() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { categories, addExpense } = useData();
@@ -144,7 +146,7 @@ export default function QuickExpense() {
     try {
       const expense = {
         amount: parseFloat(amount),
-        description: merchant || "Quick Expense",
+        description: merchant || "Quick Save",
         categoryId: parseInt(selectedCategory),
         date: new Date().toISOString(),
         type: expenseData?.type || "debit",
@@ -181,13 +183,20 @@ export default function QuickExpense() {
 
   if (status === "processing") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen bg-page-gradient flex items-center justify-center p-4">
+        <Card className="w-full max-w-md card-elevated">
           <CardContent className="pt-6">
             <div className="flex flex-col items-center space-y-4">
-              <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
-              <h2 className="text-xl font-semibold">Processing Image...</h2>
-              <p className="text-sm text-gray-600 text-center">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-primary rounded-full blur-xl opacity-50 animate-pulse"></div>
+                <div className="relative p-4 rounded-full bg-gradient-primary">
+                  <Loader2 className="h-8 w-8 text-white animate-spin" />
+                </div>
+              </div>
+              <h2 className="text-xl font-semibold text-foreground">
+                Processing Image...
+              </h2>
+              <p className="text-sm text-muted-foreground text-center">
                 Extracting expense details using AI
               </p>
             </div>
@@ -199,13 +208,17 @@ export default function QuickExpense() {
 
   if (status === "error") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-100 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen bg-page-gradient flex items-center justify-center p-4">
+        <Card className="w-full max-w-md card-elevated">
           <CardContent className="pt-6">
             <div className="flex flex-col items-center space-y-4">
-              <XCircle className="h-12 w-12 text-red-600" />
-              <h2 className="text-xl font-semibold">Processing Failed</h2>
-              <p className="text-sm text-gray-600 text-center">
+              <div className="p-4 rounded-full bg-gradient-danger">
+                <XCircle className="h-8 w-8 text-white" />
+              </div>
+              <h2 className="text-xl font-semibold text-foreground">
+                Processing Failed
+              </h2>
+              <p className="text-sm text-muted-foreground text-center">
                 Could not extract expense details from the image
               </p>
               <Button onClick={handleCancel} variant="outline" className="mt-4">
@@ -221,21 +234,33 @@ export default function QuickExpense() {
 
   if (status === "no-amount") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen bg-page-gradient flex items-center justify-center p-4">
+        <Card className="w-full max-w-md card-elevated">
           <CardContent className="pt-6">
             <div className="flex flex-col items-center space-y-4">
-              <AlertCircle className="h-12 w-12 text-amber-600" />
-              <h2 className="text-xl font-semibold">Amount Not Detected</h2>
-              <p className="text-sm text-gray-600 text-center">
+              <div
+                className="p-4 rounded-full"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+                }}
+              >
+                <AlertCircle className="h-8 w-8 text-white" />
+              </div>
+              <h2 className="text-xl font-semibold text-foreground">
+                Amount Not Detected
+              </h2>
+              <p className="text-sm text-muted-foreground text-center">
                 Unable to extract transaction amount from the image. Please try
                 again with a clearer screenshot.
               </p>
               {merchant && (
-                <div className="bg-amber-50 p-3 rounded-lg w-full">
-                  <p className="text-sm text-gray-600 text-center">
+                <div className="bg-secondary p-3 rounded-xl w-full">
+                  <p className="text-sm text-muted-foreground text-center">
                     Merchant detected:{" "}
-                    <span className="font-medium">{merchant}</span>
+                    <span className="font-medium text-foreground">
+                      {merchant}
+                    </span>
                   </p>
                 </div>
               )}
@@ -246,8 +271,7 @@ export default function QuickExpense() {
                 </Button>
                 <Button
                   onClick={() => setStatus("ready")}
-                  variant="default"
-                  className="bg-amber-600 hover:bg-amber-700"
+                  className="btn-gradient-primary"
                 >
                   Enter Amount Manually
                 </Button>
@@ -260,22 +284,27 @@ export default function QuickExpense() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen bg-page-gradient flex items-center justify-center p-4">
+      <Card className="w-full max-w-md card-elevated">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <CheckCircle2 className="h-6 w-6 text-green-600" />
-            <span>Quick Expense</span>
+            <div className="p-2 rounded-xl bg-gradient-primary">
+              <Zap className="h-5 w-5 text-white" />
+            </div>
+            <span className="text-gradient-primary">Quick Save</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Amount */}
           <div className="space-y-2">
-            <label htmlFor="amount" className="text-sm font-medium">
+            <label
+              htmlFor="amount"
+              className="text-sm font-medium text-foreground"
+            >
               Amount
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">
                 ₹
               </span>
               <Input
@@ -292,7 +321,10 @@ export default function QuickExpense() {
 
           {/* Merchant */}
           <div className="space-y-2">
-            <label htmlFor="merchant" className="text-sm font-medium">
+            <label
+              htmlFor="merchant"
+              className="text-sm font-medium text-foreground"
+            >
               Merchant / Description
             </label>
             <Input
@@ -306,7 +338,10 @@ export default function QuickExpense() {
 
           {/* Category */}
           <div className="space-y-2">
-            <label htmlFor="category" className="text-sm font-medium">
+            <label
+              htmlFor="category"
+              className="text-sm font-medium text-foreground"
+            >
               Category
             </label>
             <Select
@@ -317,31 +352,50 @@ export default function QuickExpense() {
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id.toString()}>
-                    <div className="flex items-center space-x-2">
-                      <span>{category.icon}</span>
-                      <span>{category.name}</span>
-                    </div>
-                  </SelectItem>
-                ))}
+                {categories.map((category) => {
+                  const IconComponent = category.icon
+                    ? Icons[category.icon]
+                    : Icons.Circle;
+                  return (
+                    <SelectItem
+                      key={category.id}
+                      value={category.id.toString()}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <div
+                          className="p-1.5 rounded-lg"
+                          style={{ background: `${category.color}20` }}
+                        >
+                          <IconComponent
+                            size={16}
+                            style={{ color: category.color }}
+                            strokeWidth={2.5}
+                          />
+                        </div>
+                        <span>{category.name}</span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
 
           {/* Transaction Type */}
           {expenseData?.type && (
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <p className="text-sm text-gray-600">
+            <div className="bg-secondary p-3 rounded-xl">
+              <p className="text-sm text-muted-foreground">
                 Type:{" "}
-                <span className="font-medium capitalize">
+                <span className="font-medium text-foreground capitalize">
                   {expenseData.type}
                 </span>
               </p>
               {expenseData.confidence && (
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Confidence:{" "}
-                  <span className="font-medium">{expenseData.confidence}%</span>
+                  <span className="font-medium text-foreground">
+                    {expenseData.confidence}%
+                  </span>
                 </p>
               )}
             </div>
@@ -360,7 +414,7 @@ export default function QuickExpense() {
             <Button
               onClick={handleSave}
               disabled={saving || !amount || !selectedCategory}
-              className="flex-1"
+              className="flex-1 btn-gradient-primary"
             >
               {saving ? (
                 <>
@@ -368,7 +422,10 @@ export default function QuickExpense() {
                   Saving...
                 </>
               ) : (
-                "Save Expense"
+                <>
+                  <Zap className="mr-2 h-4 w-4" />
+                  Save
+                </>
               )}
             </Button>
           </div>

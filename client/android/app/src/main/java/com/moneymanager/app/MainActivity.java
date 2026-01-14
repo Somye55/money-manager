@@ -102,21 +102,21 @@ public class MainActivity extends BridgeActivity {
             public void onSuccess(OCRProcessor.ExpenseData expenseData) {
                 Log.d(TAG, "✅ OCR Success - Amount: " + expenseData.amount + ", Merchant: " + expenseData.merchant);
                 
-                // Navigate to QuickExpense page with OCR data
-                navigateToQuickExpense(expenseData, "success", null);
+                // Navigate to QuickSave page with OCR data
+                navigateToQuickSave(expenseData, "success", null);
             }
 
             @Override
             public void onFailure(String error) {
                 Log.e(TAG, "❌ OCR failed for shared image: " + error);
                 
-                // Navigate to QuickExpense page with error
-                navigateToQuickExpense(null, "error", error);
+                // Navigate to QuickSave page with error
+                navigateToQuickSave(null, "error", error);
             }
         });
     }
 
-    private void navigateToQuickExpense(OCRProcessor.ExpenseData expenseData, String status, String error) {
+    private void navigateToQuickSave(OCRProcessor.ExpenseData expenseData, String status, String error) {
         try {
             // Build JavaScript to set sessionStorage (survives page reload) and navigate
             StringBuilder jsCode = new StringBuilder();
@@ -141,11 +141,11 @@ public class MainActivity extends BridgeActivity {
             jsCode.append("sessionStorage.setItem('ocrData', JSON.stringify(ocrData));");
             jsCode.append("console.log('📱 OCR data stored in sessionStorage:', ocrData);");
             
-            // Navigate using window.location (works with BrowserRouter)
-            jsCode.append("window.location.href = '/quick-expense';");
+            // Navigate directly to quick-save page (no dashboard redirect)
+            jsCode.append("window.location.href = '/quick-save';");
             
             String finalJs = jsCode.toString();
-            Log.d(TAG, "Navigating to QuickExpense with JS");
+            Log.d(TAG, "Navigating to QuickSave with JS");
             Log.d(TAG, "OCR Data - Amount: " + (expenseData != null ? expenseData.amount : "N/A") + 
                       ", Merchant: " + (expenseData != null ? expenseData.merchant : "N/A"));
             
@@ -162,7 +162,7 @@ public class MainActivity extends BridgeActivity {
             });
             
         } catch (Exception e) {
-            Log.e(TAG, "Error navigating to QuickExpense: " + e.getMessage(), e);
+            Log.e(TAG, "Error navigating to QuickSave: " + e.getMessage(), e);
         }
     }
 

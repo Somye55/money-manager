@@ -1,8 +1,9 @@
 {
   "name": "money-manager",
   "version": "1.0.0",
-  "description": "Money Manager App with Gemini OCR Integration",
+  "description": "Money Manager App with Groq AI OCR Integration",
   "scripts": {
+    "test:groq": "node test-groq-ocr.js",
     "test:gemini": "node test-gemini-ocr.js",
     "server:dev": "cd server && npm run dev",
     "client:dev": "cd client && npm run dev"
@@ -11,7 +12,8 @@
     "money-manager",
     "expense-tracker",
     "ocr",
-    "gemini"
+    "groq",
+    "ai"
   ],
   "author": "",
   "license": "ISC"

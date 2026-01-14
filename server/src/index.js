@@ -15,8 +15,8 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date() });
 });
 
-// Gemini OCR Parser Endpoint (No auth required for mobile app)
-const geminiParser = require("./services/geminiParser");
+// Groq OCR Parser Endpoint (No auth required for mobile app)
+const groqParser = require("./services/groqParser");
 
 app.post("/api/ocr/parse", async (req, res) => {
   try {
@@ -29,14 +29,14 @@ app.post("/api/ocr/parse", async (req, res) => {
       });
     }
 
-    if (!geminiParser.isAvailable()) {
+    if (!groqParser.isAvailable()) {
       return res.status(503).json({
         error: "Service unavailable",
-        message: "Gemini API not configured",
+        message: "Groq API not configured",
       });
     }
 
-    const result = await geminiParser.parseExpenseFromText(text);
+    const result = await groqParser.parseExpenseFromText(text);
 
     res.json({
       success: true,

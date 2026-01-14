@@ -16,8 +16,10 @@ android {
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         
-        // Gemini API Key for production OCR parsing
-        buildConfigField "String", "GEMINI_API_KEY", "\"AIzaSyBnlyCQwvFjMQJeLFUkT4hHBlhtuaxBcOk\""
+        // Server URL for Groq AI parsing
+        // For emulator: use "http://10.0.2.2:3000"
+        // For physical device: use "http://YOUR_IP:3000" (replace YOUR_IP with your computer's IP)
+        buildConfigField "String", "SERVER_URL", "\"http://10.5.48.113:3000\""
         
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -51,7 +53,7 @@ dependencies {
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')
     
-    // ML Kit for OCR
+    // ML Kit for OCR (text extraction only)
     implementation 'com.google.android.gms:play-services-mlkit-text-recognition:19.0.0'
 }
 
