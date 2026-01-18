@@ -20,13 +20,16 @@ public class BackgroundService extends Service {
     private static final String TAG = "BackgroundService";
     private static final String CHANNEL_ID = "background_service_channel";
     private static final int FOREGROUND_ID = 1001;
-    private static final long CHECK_INTERVAL = 15000; // 15 seconds - more frequent checks
-    private static final long REBIND_DELAY = 5000; // 5 seconds delay for rebind attempts
+    private static final long CHECK_INTERVAL = 300000; // 5 minutes - battery efficient
+    private static final long INITIAL_CHECK_DELAY = 10000; // 10 seconds initial delay
+    private static final long REBIND_DELAY = 30000; // 30 seconds between rebind attempts
 
     private Handler handler;
     private Runnable connectionChecker;
     private int rebindAttempts = 0;
-    private static final int MAX_REBIND_ATTEMPTS = 5;
+    private static final int MAX_REBIND_ATTEMPTS = 3;
+    private boolean wasConnectedBefore = false;
+    private Notification foregroundNotification;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -37,7 +40,11 @@ public class BackgroundService extends Service {
     public void onCreate() {
         super.onCreate();
         createNotificationChannel();
-        Log.d(TAG, "=== BackgroundService CREATED ===");
+        
+        // Create notification once
+        foregroundNotification = createForegroundNotification();
+        
+        Log.d(TAG, "BackgroundService created");
 
         // Initialize handler for periodic checks
         handler = new Handler(Looper.getMainLooper());
@@ -76,21 +83,18 @@ public class BackgroundService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "=== BackgroundService onStartCommand called ===");
-
-        // Start as foreground service
+        // Start as foreground service with pre-created notification
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             try {
-                startForeground(FOREGROUND_ID, createForegroundNotification());
-                Log.d(TAG, "Started as foreground service");
+                startForeground(FOREGROUND_ID, foregroundNotification);
             } catch (Exception e) {
                 Log.e(TAG, "Error starting foreground: " + e.getMessage());
             }
         }
 
-        // Start periodic connection checking
-        handler.postDelayed(connectionChecker, CHECK_INTERVAL);
-        Log.d(TAG, "Started periodic notification listener connection checking");
+        // Start periodic connection checking with initial delay
+        handler.removeCallbacks(connectionChecker); // Remove any existing callbacks
+        handler.postDelayed(connectionChecker, INITIAL_CHECK_DELAY);
 
         return START_STICKY;
     }
@@ -110,63 +114,63 @@ public class BackgroundService extends Service {
         try {
             boolean isConnected = NotificationListener.isServiceConnected();
             boolean isCreated = NotificationListener.isServiceCreated();
-            Log.d(TAG, "Notification listener connected: " + isConnected + ", created: " + isCreated);
 
-            if (!isConnected) {
-                Log.d(TAG, "Notification listener not connected - checking permission and attempting to enable");
+            if (isConnected) {
+                // Service is healthy
+                if (!wasConnectedBefore) {
+                    Log.i(TAG, "Notification listener connected successfully");
+                    wasConnectedBefore = true;
+                }
+                rebindAttempts = 0;
+                return;
+            }
 
-                // Check if permission is granted
-                boolean hasPermission = isNotificationListenerEnabled();
-                Log.d(TAG, "Notification listener permission granted: " + hasPermission);
+            // Only log when state changes or on errors
+            if (wasConnectedBefore) {
+                Log.w(TAG, "Notification listener disconnected - attempting recovery");
+                wasConnectedBefore = false;
+            }
 
-                if (!hasPermission) {
-                    Log.d(TAG, "Permission not granted, opening notification listener settings...");
-                    openNotificationListenerSettings();
-                    rebindAttempts = 0; // Reset attempts when permission issue
-                } else {
-                    if (!isCreated) {
-                        Log.d(TAG, "Service not even created - Android hasn't bound it yet");
-                        // Try to force rebind the service
-                        forceRebindNotificationListener();
-                    } else {
-                        Log.d(TAG, "Service created but not connected - Android may have unbound it");
-                        // Try to reconnect the existing service
-                        attemptServiceReconnection();
+            // Check if permission is granted
+            boolean hasPermission = isNotificationListenerEnabled();
+
+            if (!hasPermission) {
+                if (rebindAttempts == 0) {
+                    Log.w(TAG, "Notification listener permission not granted");
+                }
+                rebindAttempts = 0; // Reset attempts when permission issue
+                return;
+            }
+
+            // Permission granted but service not connected
+            if (!isCreated) {
+                // Service hasn't been created by Android yet
+                if (rebindAttempts < MAX_REBIND_ATTEMPTS) {
+                    rebindAttempts++;
+                    if (rebindAttempts == 1) {
+                        Log.i(TAG, "Waiting for Android to bind notification listener...");
                     }
+                    // Schedule a retry with exponential backoff
+                    handler.postDelayed(() -> checkAndMaintainNotificationListener(), 
+                        REBIND_DELAY * rebindAttempts);
+                } else if (rebindAttempts == MAX_REBIND_ATTEMPTS) {
+                    Log.w(TAG, "Notification listener not binding - may need manual toggle in settings");
+                    rebindAttempts++; // Increment to avoid repeated logging
                 }
             } else {
-                // Service is connected, reset rebind attempts
-                rebindAttempts = 0;
-                Log.d(TAG, "Notification listener is healthy and connected");
+                // Service created but not connected - try reconnection
+                attemptServiceReconnection();
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error checking notification listener status: " + e.getMessage(), e);
+            Log.e(TAG, "Error checking notification listener: " + e.getMessage());
         }
-    }
-
-    private void forceRebindNotificationListener() {
-        if (rebindAttempts >= MAX_REBIND_ATTEMPTS) {
-            Log.w(TAG, "Max rebind attempts reached - user should manually enable from app settings");
-            rebindAttempts = 0;
-            return;
-        }
-
-        rebindAttempts++;
-        Log.d(TAG, "Notification listener not bound (attempt " + rebindAttempts + "/" + MAX_REBIND_ATTEMPTS + ")");
-
-        // Don't automatically open settings - it interrupts user flows like OCR
-        // User can manually enable from app settings page if needed
-        Log.d(TAG, "Notification listener not connected - will retry in background");
     }
 
     private void attemptServiceReconnection() {
-        Log.d(TAG, "Attempting to reconnect existing notification listener service");
-        
         try {
             // Signal the existing service to attempt reconnection
             Intent reconnectIntent = new Intent("com.moneymanager.app.RECONNECT_LISTENER");
             sendBroadcast(reconnectIntent);
-            Log.d(TAG, "Sent reconnection broadcast to notification listener");
         } catch (Exception e) {
             Log.e(TAG, "Error sending reconnection broadcast: " + e.getMessage());
         }
@@ -182,19 +186,8 @@ public class BackgroundService extends Service {
                 return enabledListeners.contains(myListener);
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error checking notification listener permission: " + e.getMessage(), e);
+            Log.e(TAG, "Error checking notification listener permission: " + e.getMessage());
         }
         return false;
-    }
-
-    private void openNotificationListenerSettings() {
-        try {
-            Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-            Log.d(TAG, "Opened notification listener settings");
-        } catch (Exception e) {
-            Log.e(TAG, "Error opening notification listener settings: " + e.getMessage(), e);
-        }
     }
 }
