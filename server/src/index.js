@@ -111,7 +111,7 @@ app.post("/api/expenses/sync", async (req, res) => {
     return res.status(400).json({ error: "Invalid messages format" });
 
   console.log(
-    `Processing ${messages.length} SMS messages for user ${req.dbUser.id}`
+    `Processing ${messages.length} SMS messages for user ${req.dbUser.id}`,
   );
 
   let addedCount = 0;
@@ -175,6 +175,10 @@ app.post("/api/expenses/sync", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// For local development, uncomment the following:
+// app.listen(PORT, () => {
+//   console.log(`Server running on port ${PORT}`);
+// });
+
+// Export for Vercel serverless deployment
+module.exports = app;
