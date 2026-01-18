@@ -16,10 +16,8 @@ android {
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         
-        // Server URL for Groq AI parsing
-        // For emulator: use "http://10.0.2.2:3000"
-        // For physical device: use "http://YOUR_IP:3000" (replace YOUR_IP with your computer's IP)
-        buildConfigField "String", "SERVER_URL", "\"http://10.5.48.113:3000\""
+        // Server URL for Groq AI parsing (Vercel deployment)
+        buildConfigField "String", "SERVER_URL", "\"https://money-manager-55.vercel.app\""
         
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
