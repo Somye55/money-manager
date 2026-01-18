@@ -84,7 +84,7 @@ export default function QuickSave() {
         console.log(
           "⚠️ No OCR data found after 3 seconds, redirecting to home"
         );
-        navigate("/");
+        navigate("/", { replace: true });
       }
     }, 3000);
 
@@ -161,9 +161,9 @@ export default function QuickSave() {
         description: `₹${amount} saved successfully`,
       });
 
-      // Navigate to home after short delay
+      // Navigate to home after short delay and replace history
       setTimeout(() => {
-        navigate("/");
+        navigate("/", { replace: true });
       }, 1000);
     } catch (error) {
       console.error("Error saving expense:", error);
@@ -178,7 +178,14 @@ export default function QuickSave() {
   };
 
   const handleCancel = () => {
-    navigate("/");
+    // Clear any OCR data
+    sessionStorage.removeItem("ocrData");
+    if (window.ocrData) {
+      delete window.ocrData;
+    }
+
+    // Navigate to dashboard and replace history to prevent back button loop
+    navigate("/", { replace: true });
   };
 
   if (status === "processing") {

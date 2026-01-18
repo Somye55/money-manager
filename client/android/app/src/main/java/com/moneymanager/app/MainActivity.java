@@ -141,8 +141,8 @@ public class MainActivity extends BridgeActivity {
             jsCode.append("sessionStorage.setItem('ocrData', JSON.stringify(ocrData));");
             jsCode.append("console.log('📱 OCR data stored in sessionStorage:', ocrData);");
             
-            // Navigate directly to quick-save page (no dashboard redirect)
-            jsCode.append("window.location.href = '/quick-save';");
+            // Navigate directly to quick-save page using replace to avoid back button issues
+            jsCode.append("window.location.replace('/quick-save');");
             
             String finalJs = jsCode.toString();
             Log.d(TAG, "Navigating to QuickSave with JS");
