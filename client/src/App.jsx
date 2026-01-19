@@ -14,6 +14,7 @@ import { DataProvider } from "./context/DataContext";
 import { SMSProvider, useSMS } from "./context/SMSContext";
 import { ScreenshotProvider } from "./context/ScreenshotContext";
 import { Capacitor } from "@capacitor/core";
+import { CapacitorShareTarget } from "@capgo/capacitor-share-target";
 import { initializeDeepLinks } from "./lib/deepLinks";
 import {
   Smartphone,
@@ -43,6 +44,32 @@ import { Toaster } from "./components/ui/toaster";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // CRITICAL: Check for pending share intent IMMEDIATELY using useLayoutEffect
+  React.useLayoutEffect(() => {
+    if (Capacitor.isNativePlatform() && location.pathname === "/") {
+      // Check if there's a share intent pending
+      const shareIntentPending = sessionStorage.getItem("shareIntentPending");
+      const sharedImage = sessionStorage.getItem("sharedImage");
+      const ocrData = sessionStorage.getItem("ocrData");
+
+      if (
+        shareIntentPending === "true" ||
+        sharedImage ||
+        ocrData ||
+        window.ocrData
+      ) {
+        console.log(
+          "🚀 IMMEDIATE REDIRECT: Share intent detected, navigating to /quick-save",
+        );
+        // Use window.location for immediate redirect (faster than React Router)
+        window.location.replace("/quick-save");
+        return;
+      }
+    }
+  }, [location.pathname, navigate]);
 
   if (loading) {
     return (
@@ -220,6 +247,67 @@ const ScrollToTop = () => {
   return null;
 };
 
+// Component to handle shared image intent using Capacitor Share Target plugin
+const ShareIntentHandler = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    console.log("🎯 Initializing Share Target listener");
+
+    // Listen for shared content
+    const listener = CapacitorShareTarget.addListener(
+      "shareReceived",
+      (event) => {
+        console.log("📱 Share received:", event);
+
+        // Handle shared files (images)
+        if (event.files && event.files.length > 0) {
+          const imageFile = event.files[0];
+          console.log("🖼️ Shared image:", imageFile);
+
+          // Store the image URI for processing
+          const shareData = {
+            uri: imageFile.uri,
+            name: imageFile.name,
+            mimeType: imageFile.mimeType,
+            timestamp: Date.now(),
+          };
+
+          // Store in sessionStorage for QuickSave page to pick up
+          sessionStorage.setItem("sharedImage", JSON.stringify(shareData));
+          sessionStorage.setItem("shareIntentPending", "true");
+
+          // Navigate directly to quick-save page
+          console.log("🔄 Navigating to /quick-save");
+          navigate("/quick-save", { replace: true });
+        }
+      },
+    );
+
+    // Check if we have a pending share intent on mount
+    if (
+      sessionStorage.getItem("shareIntentPending") === "true" &&
+      location.pathname !== "/quick-save"
+    ) {
+      console.log(
+        "🔄 Pending share intent detected, redirecting to /quick-save",
+      );
+      navigate("/quick-save", { replace: true });
+    }
+
+    // Cleanup listener on unmount
+    return () => {
+      console.log("🧹 Cleaning up Share Target listener");
+      listener.remove();
+    };
+  }, [navigate, location.pathname]);
+
+  return null;
+};
+
 function App() {
   useEffect(() => {
     // Initialize deep links for Capacitor
@@ -235,6 +323,7 @@ function App() {
         <SMSProvider>
           <ScreenshotProvider>
             <Router>
+              <ShareIntentHandler />
               <ScrollToTop />
               <div className="flex flex-col h-screen overflow-hidden">
                 <Header />

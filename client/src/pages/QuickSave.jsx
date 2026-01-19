@@ -40,9 +40,9 @@ export default function QuickSave() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    // Check for data in window or sessionStorage (set by MainActivity)
+    // Check for data in window or sessionStorage (set by MainActivity or Share Target plugin)
     const checkWindowData = () => {
-      // First check window.ocrData
+      // First check window.ocrData (from MainActivity OCR processing)
       if (window.ocrData) {
         console.log("📱 Found OCR data in window:", window.ocrData);
         handleOCRData(window.ocrData);
@@ -51,7 +51,7 @@ export default function QuickSave() {
         return true;
       }
 
-      // Then check sessionStorage (survives page reloads)
+      // Then check sessionStorage for OCR data (survives page reloads)
       const storedData = sessionStorage.getItem("ocrData");
       if (storedData) {
         try {
@@ -62,6 +62,22 @@ export default function QuickSave() {
           return true;
         } catch (e) {
           console.error("Error parsing sessionStorage ocrData:", e);
+        }
+      }
+
+      // Check for shared image from Share Target plugin
+      const sharedImageData = sessionStorage.getItem("sharedImage");
+      if (sharedImageData) {
+        try {
+          const imageData = JSON.parse(sharedImageData);
+          console.log("📱 Found shared image from plugin:", imageData);
+          // Process the shared image with OCR
+          processSharedImage(imageData);
+          sessionStorage.removeItem("sharedImage"); // Clean up
+          sessionStorage.removeItem("shareIntentPending"); // Clean up
+          return true;
+        } catch (e) {
+          console.error("Error parsing shared image data:", e);
         }
       }
 
@@ -82,7 +98,7 @@ export default function QuickSave() {
     const timeoutTimer = setTimeout(() => {
       if (!checkWindowData()) {
         console.log(
-          "⚠️ No OCR data found after 3 seconds, redirecting to home"
+          "⚠️ No OCR data found after 3 seconds, redirecting to home",
         );
         navigate("/", { replace: true });
       }
@@ -127,6 +143,35 @@ export default function QuickSave() {
         setSelectedCategory(categories[0].id.toString());
       }
     } else if (ocrData.status === "error") {
+      setStatus("error");
+    }
+  };
+
+  const processSharedImage = async (imageData) => {
+    console.log("🖼️ Processing shared image:", imageData);
+    setStatus("processing");
+
+    try {
+      // The image URI from the plugin needs to be processed by MainActivity's OCR
+      // For now, we'll trigger the OCR processing through the native layer
+      // The MainActivity should have already processed it, but if not, we show an error
+
+      // Since MainActivity handles OCR, we should have received ocrData already
+      // If we're here, it means the plugin intercepted before MainActivity could process
+      // So we'll wait a bit more for MainActivity to process
+
+      setTimeout(() => {
+        const ocrData = sessionStorage.getItem("ocrData");
+        if (ocrData) {
+          handleOCRData(JSON.parse(ocrData));
+          sessionStorage.removeItem("ocrData");
+        } else {
+          console.error("❌ No OCR data received from MainActivity");
+          setStatus("error");
+        }
+      }, 1000);
+    } catch (error) {
+      console.error("Error processing shared image:", error);
       setStatus("error");
     }
   };
@@ -180,6 +225,8 @@ export default function QuickSave() {
   const handleCancel = () => {
     // Clear any OCR data
     sessionStorage.removeItem("ocrData");
+    sessionStorage.removeItem("sharedImage");
+    sessionStorage.removeItem("shareIntentPending");
     if (window.ocrData) {
       delete window.ocrData;
     }

@@ -1,15 +1,39 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=TikTok+Sans:opsz,wght@12..36,300..900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=TikTok+Sans:opsz,wght@12..36,300..900&display=swap"
+      rel="stylesheet"
+    />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Money Manager</title>
   </head>
   <body>
+    <!-- Check for share intent BEFORE React loads -->
+    <script>
+      (function () {
+        // Check if we're on native platform and have a share intent
+        if (window.Capacitor && window.Capacitor.isNativePlatform) {
+          // Check URL hash for share intent marker
+          if (
+            window.location.hash === "#share-intent" ||
+            sessionStorage.getItem("shareIntentPending") === "true"
+          ) {
+            console.log(
+              "🚀 Share intent detected in HTML, redirecting immediately",
+            );
+            // Redirect BEFORE React loads
+            if (window.location.pathname !== "/quick-save") {
+              window.location.replace("/quick-save");
+            }
+          }
+        }
+      })();
+    </script>
     <div id="root"></div>
     <div id="modal-root"></div>
     <script type="module" src="/src/main.jsx"></script>

@@ -25,6 +25,23 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Check for share intent BEFORE calling super.onCreate
+        Intent intent = getIntent();
+        boolean isShareIntent = false;
+        
+        if (intent != null) {
+            String action = intent.getAction();
+            String type = intent.getType();
+            
+            if (Intent.ACTION_SEND.equals(action) && type != null && type.startsWith("image/")) {
+                isShareIntent = true;
+                Log.d(TAG, "🚀 Share intent detected, will load /quick-save directly");
+            } else if (Intent.ACTION_SEND_MULTIPLE.equals(action) && type != null && type.startsWith("image/")) {
+                isShareIntent = true;
+                Log.d(TAG, "🚀 Multiple share intent detected, will load /quick-save directly");
+            }
+        }
+        
         registerPlugin(SettingsHelper.class);
         registerPlugin(NotificationListenerPlugin.class);
         registerPlugin(ScreenshotListenerPlugin.class);
@@ -34,6 +51,11 @@ public class MainActivity extends BridgeActivity {
         Log.d(TAG, "Plugins registered: SettingsHelper, NotificationListenerPlugin, ScreenshotListenerPlugin");
 
         serviceMonitorHandler = new Handler(Looper.getMainLooper());
+
+        // If share intent, load quick-save page directly
+        if (isShareIntent) {
+            loadQuickSavePage();
+        }
 
         // Create notification channel for test notifications
         createTestNotificationChannel();
@@ -57,6 +79,19 @@ public class MainActivity extends BridgeActivity {
         handleSharedImage(getIntent());
     }
 
+    private void loadQuickSavePage() {
+        // Load the quick-save page directly instead of the default route
+        runOnUiThread(() -> {
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                if (bridge != null && bridge.getWebView() != null) {
+                    String js = "window.location.replace('/quick-save'); console.log('🚀 Loading /quick-save directly');";
+                    bridge.getWebView().evaluateJavascript(js, null);
+                    Log.d(TAG, "✅ Loaded /quick-save page directly");
+                }
+            }, 100); // Small delay to ensure WebView is ready
+        });
+    }
+
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -78,16 +113,36 @@ public class MainActivity extends BridgeActivity {
             android.net.Uri imageUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
             if (imageUri != null) {
                 Log.d(TAG, "Shared image received: " + imageUri);
+                
+                // Set flag IMMEDIATELY before any processing
+                setShareIntentFlag();
+                
+                // Process the image
                 processSharedImage(imageUri);
             }
         } else if (Intent.ACTION_SEND_MULTIPLE.equals(action) && type != null && type.startsWith("image/")) {
             java.util.ArrayList<android.net.Uri> imageUris = intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
             if (imageUris != null && !imageUris.isEmpty()) {
                 Log.d(TAG, "Multiple shared images received: " + imageUris.size());
+                
+                // Set flag IMMEDIATELY before any processing
+                setShareIntentFlag();
+                
                 // Process the first image
                 processSharedImage(imageUris.get(0));
             }
         }
+    }
+
+    private void setShareIntentFlag() {
+        // Set the flag immediately so React can redirect before rendering dashboard
+        runOnUiThread(() -> {
+            if (bridge != null && bridge.getWebView() != null) {
+                String js = "sessionStorage.setItem('shareIntentPending', 'true'); console.log('🚀 Share intent flag set');";
+                bridge.getWebView().evaluateJavascript(js, null);
+                Log.d(TAG, "✅ Share intent flag set in sessionStorage");
+            }
+        });
     }
 
     private void processSharedImage(android.net.Uri imageUri) {
@@ -118,7 +173,7 @@ public class MainActivity extends BridgeActivity {
 
     private void navigateToQuickSave(OCRProcessor.ExpenseData expenseData, String status, String error) {
         try {
-            // Build JavaScript to set sessionStorage (survives page reload) and navigate
+            // Build JavaScript to set sessionStorage and navigate
             StringBuilder jsCode = new StringBuilder();
             
             // Create OCR data object (use var to allow redeclaration)
@@ -141,24 +196,27 @@ public class MainActivity extends BridgeActivity {
             jsCode.append("sessionStorage.setItem('ocrData', JSON.stringify(ocrData));");
             jsCode.append("console.log('📱 OCR data stored in sessionStorage:', ocrData);");
             
-            // Navigate directly to quick-save page using replace to avoid back button issues
-            jsCode.append("window.location.replace('/quick-save');");
+            // Navigate to quick-save if not already there
+            jsCode.append("if (window.location.pathname !== '/quick-save') {");
+            jsCode.append("  window.location.replace('/quick-save');");
+            jsCode.append("  console.log('🔄 Navigating to /quick-save');");
+            jsCode.append("} else {");
+            jsCode.append("  console.log('✅ Already on /quick-save');");
+            jsCode.append("}");
             
             String finalJs = jsCode.toString();
-            Log.d(TAG, "Navigating to QuickSave with JS");
+            Log.d(TAG, "Storing OCR data and navigating to QuickSave");
             Log.d(TAG, "OCR Data - Amount: " + (expenseData != null ? expenseData.amount : "N/A") + 
                       ", Merchant: " + (expenseData != null ? expenseData.merchant : "N/A"));
             
-            // Wait a bit for the app to be fully in foreground, then execute JavaScript
+            // Execute JavaScript immediately
             runOnUiThread(() -> {
-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    if (bridge != null && bridge.getWebView() != null) {
-                        bridge.getWebView().evaluateJavascript(finalJs, null);
-                        Log.d(TAG, "✅ Navigation JavaScript executed");
-                    } else {
-                        Log.e(TAG, "❌ Bridge or WebView is null");
-                    }
-                }, 500); // Wait 500ms for app to be ready
+                if (bridge != null && bridge.getWebView() != null) {
+                    bridge.getWebView().evaluateJavascript(finalJs, null);
+                    Log.d(TAG, "✅ OCR data stored and navigation triggered");
+                } else {
+                    Log.e(TAG, "❌ Bridge or WebView is null");
+                }
             });
             
         } catch (Exception e) {
