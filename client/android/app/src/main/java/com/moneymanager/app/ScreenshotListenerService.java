@@ -3,6 +3,7 @@ package com.moneymanager.app;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ContentResolver;
 import android.content.Intent;
@@ -62,10 +63,13 @@ public class ScreenshotListenerService extends Service {
             NotificationChannel channel = new NotificationChannel(
                     PROCESSING_CHANNEL_ID,
                     "Expense Processing",
-                    NotificationManager.IMPORTANCE_LOW
+                    NotificationManager.IMPORTANCE_HIGH
             );
             channel.setDescription("Shows real-time status when processing expenses");
-            channel.setSound(null, null); // Silent
+            channel.setSound(null, null); // Silent but visible
+            channel.setShowBadge(true);
+            channel.enableLights(false);
+            channel.enableVibration(false);
             if (notificationManager != null) {
                 notificationManager.createNotificationChannel(channel);
             }
@@ -290,18 +294,36 @@ public class ScreenshotListenerService extends Service {
     }
     
     private void showProcessingNotification(String title, String message, int progress) {
+        // Create a dummy intent for heads-up display
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, flags);
+        
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, PROCESSING_CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_menu_camera)
                 .setContentTitle(title)
                 .setContentText(message)
-                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
+                .setCategory(NotificationCompat.CATEGORY_STATUS)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setContentIntent(pendingIntent)
+                .setFullScreenIntent(pendingIntent, true)
                 .setOngoing(true)
-                .setAutoCancel(false);
+                .setAutoCancel(false)
+                .setShowWhen(true)
+                .setWhen(System.currentTimeMillis())
+                .setDefaults(0)
+                .setOnlyAlertOnce(true);
         
         if (progress > 0 && progress < 100) {
             builder.setProgress(100, progress, false);
         } else if (progress == 0) {
-            builder.setProgress(100, 0, true); // Indeterminate
+            builder.setProgress(100, 0, true);
         }
         
         if (notificationManager != null) {
@@ -310,13 +332,31 @@ public class ScreenshotListenerService extends Service {
     }
     
     private void updateProcessingNotification(String title, String message, int progress) {
+        // Create a dummy intent for heads-up display
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, flags);
+        
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, PROCESSING_CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.stat_notify_sync)
                 .setContentTitle(title)
                 .setContentText(message)
-                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
+                .setCategory(NotificationCompat.CATEGORY_STATUS)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setContentIntent(pendingIntent)
+                .setFullScreenIntent(pendingIntent, true)
                 .setOngoing(false)
-                .setAutoCancel(true);
+                .setAutoCancel(true)
+                .setShowWhen(true)
+                .setWhen(System.currentTimeMillis())
+                .setDefaults(0)
+                .setTimeoutAfter(3000);
         
         if (progress > 0 && progress <= 100) {
             builder.setProgress(100, progress, false);
@@ -332,9 +372,15 @@ public class ScreenshotListenerService extends Service {
                 .setSmallIcon(android.R.drawable.stat_notify_error)
                 .setContentTitle(title)
                 .setContentText(message)
-                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_ERROR)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setOngoing(false)
-                .setAutoCancel(true);
+                .setAutoCancel(true)
+                .setShowWhen(true)
+                .setWhen(System.currentTimeMillis())
+                .setDefaults(0) // No sound, vibration, or lights
+                .setTimeoutAfter(3000); // Auto-dismiss after 3 seconds
         
         if (notificationManager != null) {
             notificationManager.notify(PROCESSING_NOTIFICATION_ID, builder.build());

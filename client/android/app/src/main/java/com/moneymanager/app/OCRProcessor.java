@@ -66,8 +66,21 @@ public class OCRProcessor {
 
     public void processImage(Uri imageUri, OCRCallback callback) {
         try {
-            InputImage image = InputImage.fromFilePath(context, imageUri);
+            // Load the original bitmap
+            Bitmap originalBitmap = android.provider.MediaStore.Images.Media.getBitmap(
+                context.getContentResolver(), imageUri);
+            
+            // Crop status bar from the bitmap
+            Bitmap croppedBitmap = cropStatusBar(originalBitmap);
+            
+            // Process the cropped image
+            InputImage image = InputImage.fromBitmap(croppedBitmap, 0);
             processInputImage(image, callback);
+            
+            // Clean up
+            if (croppedBitmap != originalBitmap) {
+                originalBitmap.recycle();
+            }
         } catch (IOException e) {
             Log.e(TAG, "Error loading image: " + e.getMessage());
             callback.onFailure("Failed to load image: " + e.getMessage());
@@ -76,12 +89,92 @@ public class OCRProcessor {
 
     public void processImage(Bitmap bitmap, OCRCallback callback) {
         try {
-            InputImage image = InputImage.fromBitmap(bitmap, 0);
+            // Crop status bar from the bitmap
+            Bitmap croppedBitmap = cropStatusBar(bitmap);
+            
+            // Process the cropped image
+            InputImage image = InputImage.fromBitmap(croppedBitmap, 0);
             processInputImage(image, callback);
+            
+            // Clean up if we created a new bitmap
+            if (croppedBitmap != bitmap) {
+                bitmap.recycle();
+            }
         } catch (Exception e) {
             Log.e(TAG, "Error processing bitmap: " + e.getMessage());
             callback.onFailure("Failed to process image: " + e.getMessage());
         }
+    }
+    
+    /**
+     * Crop the status bar (notification bar) from the top of the screenshot
+     * Status bar height is typically 24-48dp depending on device
+     * We calculate it dynamically based on system resources
+     */
+    private Bitmap cropStatusBar(Bitmap original) {
+        if (original == null) {
+            return original;
+        }
+        
+        try {
+            // Get status bar height from system resources
+            int statusBarHeight = getStatusBarHeight();
+            
+            if (statusBarHeight <= 0 || statusBarHeight >= original.getHeight()) {
+                Log.d(TAG, "Status bar height invalid or too large, using original image");
+                return original;
+            }
+            
+            // Create cropped bitmap without the status bar
+            Bitmap cropped = Bitmap.createBitmap(
+                original,
+                0,                              // x: start from left edge
+                statusBarHeight,                // y: start below status bar
+                original.getWidth(),            // width: full width
+                original.getHeight() - statusBarHeight  // height: remaining height
+            );
+            
+            Log.d(TAG, "✂️ Cropped status bar (" + statusBarHeight + "px) from screenshot");
+            Log.d(TAG, "Original: " + original.getWidth() + "x" + original.getHeight() + 
+                  " → Cropped: " + cropped.getWidth() + "x" + cropped.getHeight());
+            
+            return cropped;
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error cropping status bar: " + e.getMessage());
+            return original; // Return original if cropping fails
+        }
+    }
+    
+    /**
+     * Get the status bar height from system resources
+     * This works across different devices and Android versions
+     */
+    private int getStatusBarHeight() {
+        int result = 0;
+        try {
+            int resourceId = context.getResources().getIdentifier(
+                "status_bar_height", "dimen", "android");
+            
+            if (resourceId > 0) {
+                result = context.getResources().getDimensionPixelSize(resourceId);
+            }
+            
+            // Fallback: typical status bar is 24dp
+            if (result == 0) {
+                float density = context.getResources().getDisplayMetrics().density;
+                result = (int) (24 * density); // 24dp in pixels
+                Log.d(TAG, "Using fallback status bar height: " + result + "px");
+            }
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting status bar height: " + e.getMessage());
+            // Fallback to 24dp
+            float density = context.getResources().getDisplayMetrics().density;
+            result = (int) (24 * density);
+        }
+        
+        return result;
     }
     
 
