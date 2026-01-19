@@ -115,4 +115,43 @@ public class ScreenshotListenerPlugin extends Plugin {
             }
         }
     }
+    
+    @PluginMethod
+    public void setScreenshotMonitoring(PluginCall call) {
+        Log.d(TAG, "setScreenshotMonitoring called");
+        
+        boolean enabled = call.getBoolean("enabled", false);
+        
+        try {
+            android.content.SharedPreferences prefs = getContext().getSharedPreferences("app_settings", android.content.Context.MODE_PRIVATE);
+            prefs.edit().putBoolean("screenshot_monitoring_enabled", enabled).apply();
+            
+            Log.d(TAG, "Screenshot monitoring set to: " + enabled);
+            
+            JSObject ret = new JSObject();
+            ret.put("success", true);
+            ret.put("enabled", enabled);
+            call.resolve(ret);
+        } catch (Exception e) {
+            Log.e(TAG, "Error setting screenshot monitoring: " + e.getMessage());
+            call.reject("Failed to set screenshot monitoring: " + e.getMessage());
+        }
+    }
+    
+    @PluginMethod
+    public void getScreenshotMonitoring(PluginCall call) {
+        Log.d(TAG, "getScreenshotMonitoring called");
+        
+        try {
+            android.content.SharedPreferences prefs = getContext().getSharedPreferences("app_settings", android.content.Context.MODE_PRIVATE);
+            boolean enabled = prefs.getBoolean("screenshot_monitoring_enabled", false);
+            
+            JSObject ret = new JSObject();
+            ret.put("enabled", enabled);
+            call.resolve(ret);
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting screenshot monitoring: " + e.getMessage());
+            call.reject("Failed to get screenshot monitoring: " + e.getMessage());
+        }
+    }
 }

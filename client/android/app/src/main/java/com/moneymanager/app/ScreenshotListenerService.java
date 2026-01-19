@@ -37,7 +37,8 @@ public class ScreenshotListenerService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "ScreenshotListenerService created");
+        Log.d(TAG, "=== ScreenshotListenerService CREATED ===");
+        Log.d(TAG, "Service will monitor screenshots when enabled in settings");
         
         mainHandler = new Handler(Looper.getMainLooper());
         ocrProcessor = new OCRProcessor(this);
@@ -46,6 +47,8 @@ public class ScreenshotListenerService extends Service {
         startForeground(FOREGROUND_ID, createForegroundNotification());
         
         registerScreenshotObserver();
+        
+        Log.d(TAG, "✅ Screenshot listener ready and monitoring MediaStore");
     }
 
     private void createNotificationChannel() {
@@ -106,6 +109,12 @@ public class ScreenshotListenerService extends Service {
 
     private void checkForNewScreenshot(Uri uri) {
         try {
+            // Check if screenshot monitoring is enabled in settings
+            if (!isScreenshotMonitoringEnabled()) {
+                Log.d(TAG, "Screenshot monitoring is disabled in settings");
+                return;
+            }
+            
             // Check if we have permission
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 if (checkSelfPermission(android.Manifest.permission.READ_MEDIA_IMAGES) 
@@ -130,6 +139,21 @@ public class ScreenshotListenerService extends Service {
             }
         } catch (Exception e) {
             Log.e(TAG, "Error checking for screenshot: " + e.getMessage());
+        }
+    }
+    
+    private boolean isScreenshotMonitoringEnabled() {
+        try {
+            android.content.SharedPreferences prefs = getSharedPreferences("app_settings", MODE_PRIVATE);
+            boolean enabled = prefs.getBoolean("screenshot_monitoring_enabled", false);
+            Log.d(TAG, "📸 Screenshot monitoring enabled in settings: " + enabled);
+            if (!enabled) {
+                Log.d(TAG, "⚠️ Screenshot monitoring is DISABLED - enable it in Settings → Automation");
+            }
+            return enabled;
+        } catch (Exception e) {
+            Log.e(TAG, "Error checking screenshot monitoring setting: " + e.getMessage());
+            return false;
         }
     }
 

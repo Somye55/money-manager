@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useSMS } from "../../context/SMSContext";
-import { Smartphone, RefreshCw, Loader, Check } from "lucide-react";
+import { Smartphone, RefreshCw, Loader, Check, Camera } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { useData } from "../../context/DataContext";
 import { useToast } from "../ui/use-toast";
+import screenshotService from "../../lib/screenshotService";
 
 const AutomationSettings = () => {
   const {
@@ -19,6 +20,9 @@ const AutomationSettings = () => {
   const { toast } = useToast();
   const [serviceConnected, setServiceConnected] = useState(false);
   const [selectedApps, setSelectedApps] = useState([]);
+  const [screenshotEnabled, setScreenshotEnabled] = useState(false);
+  const [screenshotPermission, setScreenshotPermission] = useState(false);
+  const [screenshotAvailable, setScreenshotAvailable] = useState(false);
 
   useEffect(() => {
     if (settings) {
@@ -26,7 +30,7 @@ const AutomationSettings = () => {
         settings.selectedApps || [
           "com.whatsapp",
           "com.google.android.apps.messaging",
-        ]
+        ],
       );
     }
   }, [settings]);
@@ -44,6 +48,21 @@ const AutomationSettings = () => {
       }
     };
     checkConnection();
+
+    // Initialize screenshot monitoring
+    const initScreenshot = async () => {
+      const available = await screenshotService.isAvailable();
+      setScreenshotAvailable(available);
+
+      if (available) {
+        const hasPermission = await screenshotService.checkPermissions();
+        setScreenshotPermission(hasPermission);
+
+        const enabled = await screenshotService.getScreenshotMonitoring();
+        setScreenshotEnabled(enabled);
+      }
+    };
+    initScreenshot();
   }, [isSupported, notifPermissionGranted]);
 
   const handleSMSRequest = async () => {
@@ -435,10 +454,154 @@ const AutomationSettings = () => {
         </div>
       </div>
 
+      {/* Screenshot Monitoring */}
+      {screenshotAvailable && (
+        <div
+          className="animate-slide-up card-elevated rounded-2xl overflow-hidden bg-white dark:bg-card"
+          style={{ animationDelay: "0.15s" }}
+        >
+          <div className="p-6 border-b border-border">
+            <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <Camera size={20} />
+              Screenshot Monitoring
+              {screenshotEnabled ? (
+                <span className="text-xs bg-emerald-500/20 text-emerald-600 px-3 py-1.5 rounded-full font-bold">
+                  ✓ Enabled
+                </span>
+              ) : (
+                <span className="text-xs bg-rose-500/20 text-rose-600 px-3 py-1.5 rounded-full font-bold">
+                  ✗ Disabled
+                </span>
+              )}
+            </h3>
+          </div>
+          <div className="p-6">
+            <p className="text-sm text-muted-foreground mb-4">
+              Automatically detect and process screenshots for expense
+              extraction
+            </p>
+            <div className="text-xs bg-blue-500/10 border border-blue-500/30 p-4 rounded-xl mb-4">
+              <p className="font-semibold mb-2 text-blue-700 dark:text-blue-400">
+                📸 How it works:
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-blue-600 dark:text-blue-300">
+                <li>Take a screenshot of any payment screen</li>
+                <li>App automatically extracts text using ML Kit</li>
+                <li>Groq AI parses amount and merchant</li>
+                <li>Popup appears for category selection</li>
+              </ul>
+            </div>
+            {!screenshotPermission ? (
+              <>
+                <div className="text-xs bg-secondary/50 border border-border p-4 rounded-xl mb-4">
+                  <p className="font-semibold mb-2 text-foreground">
+                    Permission required:
+                  </p>
+                  <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                    <li>Tap "Grant Permission" below</li>
+                    <li>Allow storage/media access</li>
+                    <li>Enable screenshot monitoring</li>
+                  </ol>
+                </div>
+                <button
+                  onClick={async () => {
+                    try {
+                      const granted =
+                        await screenshotService.requestPermissions();
+                      if (granted) {
+                        setScreenshotPermission(true);
+                        toast({
+                          variant: "success",
+                          title: "Permission granted",
+                          description:
+                            "You can now enable screenshot monitoring",
+                        });
+                      } else {
+                        toast({
+                          variant: "error",
+                          title: "Permission denied",
+                          description:
+                            "Storage permission is required for screenshot monitoring",
+                        });
+                      }
+                    } catch (e) {
+                      toast({
+                        variant: "error",
+                        title: "Error",
+                        description: e.message,
+                      });
+                    }
+                  }}
+                  className="w-full py-3 px-6 rounded-xl btn-gradient-primary font-semibold"
+                >
+                  Grant Permission
+                </button>
+              </>
+            ) : (
+              <div className="flex items-center justify-between p-4 rounded-xl bg-secondary/50 border border-border">
+                <div>
+                  <p className="font-semibold text-foreground">
+                    {screenshotEnabled
+                      ? "Monitoring Active"
+                      : "Enable Monitoring"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {screenshotEnabled
+                      ? "Screenshots will be processed automatically"
+                      : "Turn on to start monitoring screenshots"}
+                  </p>
+                </div>
+                <button
+                  onClick={async () => {
+                    try {
+                      const newState = !screenshotEnabled;
+                      const success =
+                        await screenshotService.setScreenshotMonitoring(
+                          newState,
+                        );
+                      if (success) {
+                        setScreenshotEnabled(newState);
+                        if (newState) {
+                          await screenshotService.startListener();
+                        } else {
+                          await screenshotService.stopListener();
+                        }
+                        toast({
+                          variant: "success",
+                          title: newState ? "Enabled" : "Disabled",
+                          description: newState
+                            ? "Screenshot monitoring is now active"
+                            : "Screenshot monitoring is now disabled",
+                        });
+                      }
+                    } catch (e) {
+                      toast({
+                        variant: "error",
+                        title: "Error",
+                        description: e.message,
+                      });
+                    }
+                  }}
+                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+                    screenshotEnabled ? "bg-primary" : "bg-gray-300"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                      screenshotEnabled ? "translate-x-7" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Display Over Other Apps Permission */}
       <div
         className="animate-slide-up card-elevated rounded-2xl overflow-hidden bg-white dark:bg-card"
-        style={{ animationDelay: "0.15s" }}
+        style={{ animationDelay: "0.2s" }}
       >
         <div className="p-6 border-b border-border">
           <h3 className="text-lg font-semibold text-foreground">

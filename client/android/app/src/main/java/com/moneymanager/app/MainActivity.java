@@ -74,6 +74,9 @@ public class MainActivity extends BridgeActivity {
 
         // Start proactive service monitoring
         startServiceMonitoring();
+        
+        // Start screenshot listener if enabled
+        startScreenshotListenerIfEnabled();
 
         // Handle shared images (from GPay, PhonePe, etc.)
         handleSharedImage(getIntent());
@@ -386,6 +389,33 @@ public class MainActivity extends BridgeActivity {
         
         // Check notification listener status
         checkNotificationListenerStatus();
+        
+        // Restart screenshot listener if enabled
+        startScreenshotListenerIfEnabled();
+    }
+    
+    private void startScreenshotListenerIfEnabled() {
+        try {
+            android.content.SharedPreferences prefs = getSharedPreferences("app_settings", MODE_PRIVATE);
+            boolean enabled = prefs.getBoolean("screenshot_monitoring_enabled", false);
+            
+            Log.d(TAG, "=== Screenshot Monitoring Check ===");
+            Log.d(TAG, "Screenshot monitoring enabled in settings: " + enabled);
+            
+            if (enabled) {
+                Intent intent = new Intent(this, ScreenshotListenerService.class);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startForegroundService(intent);
+                } else {
+                    startService(intent);
+                }
+                Log.d(TAG, "✅ Screenshot listener service started (enabled in settings)");
+            } else {
+                Log.d(TAG, "❌ Screenshot monitoring disabled in settings - enable it in Settings → Automation");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error starting screenshot listener: " + e.getMessage());
+        }
     }
 
     private void checkNotificationListenerStatus() {
