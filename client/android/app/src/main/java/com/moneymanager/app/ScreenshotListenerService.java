@@ -16,18 +16,22 @@ import android.os.Looper;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.util.Log;
+import android.widget.Toast;
 import androidx.core.app.NotificationCompat;
 
 public class ScreenshotListenerService extends Service {
     private static final String TAG = "ScreenshotListener";
     private static final String CHANNEL_ID = "screenshot_listener_channel";
+    private static final String PROCESSING_CHANNEL_ID = "expense_processing_channel";
     private static final int FOREGROUND_ID = 1003;
+    private static final int PROCESSING_NOTIFICATION_ID = 2001;
 
     private ContentObserver screenshotObserver;
     private OCRProcessor ocrProcessor;
     private Handler mainHandler;
     private long lastProcessedTime = 0;
     private static final long MIN_PROCESS_INTERVAL = 2000; // 2 seconds between processing
+    private NotificationManager notificationManager;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -42,13 +46,30 @@ public class ScreenshotListenerService extends Service {
         
         mainHandler = new Handler(Looper.getMainLooper());
         ocrProcessor = new OCRProcessor(this);
+        notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         
         createNotificationChannel();
+        createProcessingNotificationChannel();
         startForeground(FOREGROUND_ID, createForegroundNotification());
         
         registerScreenshotObserver();
         
         Log.d(TAG, "✅ Screenshot listener ready and monitoring MediaStore");
+    }
+    
+    private void createProcessingNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    PROCESSING_CHANNEL_ID,
+                    "Expense Processing",
+                    NotificationManager.IMPORTANCE_LOW
+            );
+            channel.setDescription("Shows real-time status when processing expenses");
+            channel.setSound(null, null); // Silent
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(channel);
+            }
+        }
     }
 
     private void createNotificationChannel() {
@@ -230,18 +251,30 @@ public class ScreenshotListenerService extends Service {
     private void processScreenshot(Uri imageUri) {
         Log.d(TAG, "Processing screenshot with OCR...");
         
+        // Show processing notification
+        showProcessingNotification("📸 Detected screenshot", "Extracting text...", 0);
+        
         ocrProcessor.processImage(imageUri, new OCRProcessor.OCRCallback() {
             @Override
             public void onSuccess(OCRProcessor.ExpenseData expenseData) {
                 Log.d(TAG, "OCR Success - Amount: " + expenseData.amount + ", Merchant: " + expenseData.merchant);
                 
+                // Update notification
+                updateProcessingNotification("✅ Expense extracted", 
+                    "Amount: ₹" + expenseData.amount + " • " + expenseData.merchant, 100);
+                
                 // Check if overlay permission is granted
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     if (!Settings.canDrawOverlays(ScreenshotListenerService.this)) {
                         Log.w(TAG, "No overlay permission, cannot show popup");
+                        showErrorNotification("⚠️ Permission needed", 
+                            "Enable 'Display over other apps' to see expense popup");
                         return;
                     }
                 }
+                
+                // Dismiss processing notification after a short delay
+                mainHandler.postDelayed(() -> dismissProcessingNotification(), 1000);
                 
                 // Show overlay with parsed expense data
                 showExpenseOverlay(expenseData);
@@ -250,7 +283,76 @@ public class ScreenshotListenerService extends Service {
             @Override
             public void onFailure(String error) {
                 Log.w(TAG, "OCR failed: " + error);
+                showErrorNotification("❌ Processing failed", 
+                    "Could not extract expense from screenshot");
             }
+        });
+    }
+    
+    private void showProcessingNotification(String title, String message, int progress) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, PROCESSING_CHANNEL_ID)
+                .setSmallIcon(android.R.drawable.ic_menu_camera)
+                .setContentTitle(title)
+                .setContentText(message)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setOngoing(true)
+                .setAutoCancel(false);
+        
+        if (progress > 0 && progress < 100) {
+            builder.setProgress(100, progress, false);
+        } else if (progress == 0) {
+            builder.setProgress(100, 0, true); // Indeterminate
+        }
+        
+        if (notificationManager != null) {
+            notificationManager.notify(PROCESSING_NOTIFICATION_ID, builder.build());
+        }
+    }
+    
+    private void updateProcessingNotification(String title, String message, int progress) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, PROCESSING_CHANNEL_ID)
+                .setSmallIcon(android.R.drawable.stat_notify_sync)
+                .setContentTitle(title)
+                .setContentText(message)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setOngoing(false)
+                .setAutoCancel(true);
+        
+        if (progress > 0 && progress <= 100) {
+            builder.setProgress(100, progress, false);
+        }
+        
+        if (notificationManager != null) {
+            notificationManager.notify(PROCESSING_NOTIFICATION_ID, builder.build());
+        }
+    }
+    
+    private void showErrorNotification(String title, String message) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, PROCESSING_CHANNEL_ID)
+                .setSmallIcon(android.R.drawable.stat_notify_error)
+                .setContentTitle(title)
+                .setContentText(message)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setOngoing(false)
+                .setAutoCancel(true);
+        
+        if (notificationManager != null) {
+            notificationManager.notify(PROCESSING_NOTIFICATION_ID, builder.build());
+        }
+        
+        // Auto-dismiss after 3 seconds
+        mainHandler.postDelayed(() -> dismissProcessingNotification(), 3000);
+    }
+    
+    private void dismissProcessingNotification() {
+        if (notificationManager != null) {
+            notificationManager.cancel(PROCESSING_NOTIFICATION_ID);
+        }
+    }
+    
+    private void showProcessingToast(final String message) {
+        mainHandler.post(() -> {
+            Toast.makeText(ScreenshotListenerService.this, message, Toast.LENGTH_SHORT).show();
         });
     }
 

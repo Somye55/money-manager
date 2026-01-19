@@ -1,6 +1,8 @@
 package com.moneymanager.app;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -21,18 +23,25 @@ import org.json.JSONArray;
 public class NotificationListener extends NotificationListenerService {
     private static final String TAG = "NotificationListener";
     public static final String NOTIFICATION_BROADCAST = "com.moneymanager.app.NOTIFICATION_RECEIVED";
+    private static final String PROCESSING_CHANNEL_ID = "expense_processing_channel";
+    private static final int PROCESSING_NOTIFICATION_ID = 2001;
     private static boolean isConnected = false;
     private static NotificationListener instance = null;
     private Handler reconnectionHandler;
     private BroadcastReceiver reconnectionReceiver;
+    private NotificationManager notificationManager;
 
     @Override
     public void onCreate() {
         super.onCreate();
         instance = this;
         reconnectionHandler = new Handler(Looper.getMainLooper());
+        notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         Log.d(TAG, "=== NotificationListener service CREATED ===");
         Log.d(TAG, "Service instance created: " + instance.hashCode());
+
+        // Create processing notification channel
+        createProcessingNotificationChannel();
 
         // Register broadcast receiver for reconnection attempts
         setupReconnectionReceiver();
@@ -44,6 +53,21 @@ public class NotificationListener extends NotificationListenerService {
         if (!hasPermission) {
             Log.e(TAG, "!!! NOTIFICATION LISTENER PERMISSION NOT GRANTED !!!");
             Log.e(TAG, "Please enable notification access in Settings > Apps > Special app access > Notification access");
+        }
+    }
+    
+    private void createProcessingNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    PROCESSING_CHANNEL_ID,
+                    "Expense Processing",
+                    NotificationManager.IMPORTANCE_LOW
+            );
+            channel.setDescription("Shows real-time status when processing expenses");
+            channel.setSound(null, null); // Silent
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(channel);
+            }
         }
     }
 
@@ -284,17 +308,92 @@ public class NotificationListener extends NotificationListenerService {
         // Show Android popup for notifications matching the specific SMS format
         if (matchesSMSFormat(fullText)) {
             Log.d(TAG, ">>> SMS FORMAT MATCHED - Showing Android overlay...");
+            
+            // Show processing notification
+            showProcessingNotification("💳 Transaction detected", "Parsing notification...");
 
             try {
                 // Show Android overlay (works when app is open or closed)
                 showOverlayPopup(title, fullText, packageName);
                 Log.d(TAG, "showOverlayPopup() completed");
+                
+                // Update notification to success
+                updateProcessingNotification("✅ Expense ready", "Tap popup to save");
+                
+                // Auto-dismiss after 2 seconds
+                reconnectionHandler.postDelayed(() -> dismissProcessingNotification(), 2000);
             } catch (Exception e) {
                 Log.e(TAG, "Exception in showOverlayPopup: " + e.getMessage(), e);
+                showErrorNotification("❌ Processing failed", "Could not show expense popup");
             }
         } else {
             Log.d(TAG, "Skipping notification - doesn't match SMS format");
         }
+    }
+    
+    private void showProcessingNotification(String title, String message) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            androidx.core.app.NotificationCompat.Builder builder = new androidx.core.app.NotificationCompat.Builder(this, PROCESSING_CHANNEL_ID)
+                    .setSmallIcon(android.R.drawable.ic_dialog_info)
+                    .setContentTitle(title)
+                    .setContentText(message)
+                    .setPriority(androidx.core.app.NotificationCompat.PRIORITY_LOW)
+                    .setOngoing(true)
+                    .setAutoCancel(false)
+                    .setProgress(100, 0, true); // Indeterminate progress
+            
+            if (notificationManager != null) {
+                notificationManager.notify(PROCESSING_NOTIFICATION_ID, builder.build());
+            }
+        }
+    }
+    
+    private void updateProcessingNotification(String title, String message) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            androidx.core.app.NotificationCompat.Builder builder = new androidx.core.app.NotificationCompat.Builder(this, PROCESSING_CHANNEL_ID)
+                    .setSmallIcon(android.R.drawable.stat_notify_sync)
+                    .setContentTitle(title)
+                    .setContentText(message)
+                    .setPriority(androidx.core.app.NotificationCompat.PRIORITY_LOW)
+                    .setOngoing(false)
+                    .setAutoCancel(true);
+            
+            if (notificationManager != null) {
+                notificationManager.notify(PROCESSING_NOTIFICATION_ID, builder.build());
+            }
+        }
+    }
+    
+    private void showErrorNotification(String title, String message) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            androidx.core.app.NotificationCompat.Builder builder = new androidx.core.app.NotificationCompat.Builder(this, PROCESSING_CHANNEL_ID)
+                    .setSmallIcon(android.R.drawable.stat_notify_error)
+                    .setContentTitle(title)
+                    .setContentText(message)
+                    .setPriority(androidx.core.app.NotificationCompat.PRIORITY_LOW)
+                    .setOngoing(false)
+                    .setAutoCancel(true);
+            
+            if (notificationManager != null) {
+                notificationManager.notify(PROCESSING_NOTIFICATION_ID, builder.build());
+            }
+            
+            // Auto-dismiss after 3 seconds
+            reconnectionHandler.postDelayed(() -> dismissProcessingNotification(), 3000);
+        }
+    }
+    
+    private void dismissProcessingNotification() {
+        if (notificationManager != null) {
+            notificationManager.cancel(PROCESSING_NOTIFICATION_ID);
+        }
+    }
+    
+    private void showProcessingToast(final String message) {
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+        mainHandler.post(() -> {
+            Toast.makeText(NotificationListener.this, message, Toast.LENGTH_SHORT).show();
+        });
     }
 
     private void showOverlayPopup(String title, String text, String packageName) {
