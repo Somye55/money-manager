@@ -23,6 +23,7 @@ const AutomationSettings = () => {
   const [screenshotEnabled, setScreenshotEnabled] = useState(false);
   const [screenshotPermission, setScreenshotPermission] = useState(false);
   const [screenshotAvailable, setScreenshotAvailable] = useState(false);
+  const [overlayPermission, setOverlayPermission] = useState(false);
 
   useEffect(() => {
     if (settings) {
@@ -49,6 +50,22 @@ const AutomationSettings = () => {
     };
     checkConnection();
 
+    // Check overlay permission
+    const checkOverlay = async () => {
+      if (isSupported) {
+        try {
+          const NotificationListenerPlugin = (
+            await import("../../lib/notificationPlugin")
+          ).default;
+          const status = await NotificationListenerPlugin.getPermissionStatus();
+          setOverlayPermission(status.overlayPermission || false);
+        } catch (error) {
+          console.error("Error checking overlay permission:", error);
+        }
+      }
+    };
+    checkOverlay();
+
     // Initialize screenshot monitoring
     const initScreenshot = async () => {
       const available = await screenshotService.isAvailable();
@@ -63,6 +80,21 @@ const AutomationSettings = () => {
       }
     };
     initScreenshot();
+
+    // Recheck permissions when app becomes visible
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        checkConnection();
+        checkOverlay();
+        initScreenshot();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [isSupported, notifPermissionGranted]);
 
   const handleSMSRequest = async () => {
@@ -604,51 +636,82 @@ const AutomationSettings = () => {
         style={{ animationDelay: "0.2s" }}
       >
         <div className="p-6 border-b border-border">
-          <h3 className="text-lg font-semibold text-foreground">
+          <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
             Display Over Other Apps
+            {overlayPermission ? (
+              <span className="text-xs bg-emerald-500/20 text-emerald-600 px-3 py-1.5 rounded-full font-bold">
+                ✓ Enabled
+              </span>
+            ) : (
+              <span className="text-xs bg-rose-500/20 text-rose-600 px-3 py-1.5 rounded-full font-bold">
+                ✗ Disabled
+              </span>
+            )}
           </h3>
         </div>
         <div className="p-6">
           <p className="text-sm text-muted-foreground mb-4">
             Show expense popups when transactions are detected
           </p>
-          <div className="text-xs bg-secondary/50 border border-border p-4 rounded-xl mb-4">
-            <p className="font-semibold mb-2 text-foreground">How to enable:</p>
-            <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-              <li>Go to Settings → Apps → Money Manager</li>
-              <li>Find "Display over other apps" or "Draw over other apps"</li>
-              <li>Toggle ON the permission</li>
-              <li>Return to app and test</li>
-            </ol>
-          </div>
-          <button
-            onClick={async () => {
-              try {
-                const NotificationListenerPlugin = (
-                  await import("../../lib/notificationPlugin")
-                ).default;
-                const result =
-                  await NotificationListenerPlugin.requestOverlayPermission();
-                if (result?.opened) {
+          {!overlayPermission && (
+            <div className="text-xs bg-secondary/50 border border-border p-4 rounded-xl mb-4">
+              <p className="font-semibold mb-2 text-foreground">
+                How to enable:
+              </p>
+              <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                <li>Tap "Open Settings" below</li>
+                <li>Toggle ON "Display over other apps"</li>
+                <li>Return to app</li>
+              </ol>
+            </div>
+          )}
+          {overlayPermission ? (
+            <div className="flex items-center justify-between p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
+              <div>
+                <p className="font-semibold text-emerald-700 dark:text-emerald-400">
+                  ✓ Permission Granted
+                </p>
+                <p className="text-xs text-emerald-600 dark:text-emerald-300 mt-1">
+                  Popups will appear when expenses are detected
+                </p>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={async () => {
+                try {
+                  const NotificationListenerPlugin = (
+                    await import("../../lib/notificationPlugin")
+                  ).default;
+                  const result =
+                    await NotificationListenerPlugin.requestOverlayPermission();
+                  if (result?.opened) {
+                    toast({
+                      variant: "success",
+                      title: "Opening settings",
+                      description:
+                        "Toggle ON 'Display over other apps' permission",
+                    });
+                    // Recheck permission after a delay
+                    setTimeout(async () => {
+                      const status =
+                        await NotificationListenerPlugin.getPermissionStatus();
+                      setOverlayPermission(status.overlayPermission || false);
+                    }, 2000);
+                  }
+                } catch (e) {
                   toast({
-                    variant: "success",
-                    title: "Opening settings",
-                    description:
-                      "Find 'Display over other apps' and enable it for Money Manager",
+                    variant: "error",
+                    title: "Error",
+                    description: e.message,
                   });
                 }
-              } catch (e) {
-                toast({
-                  variant: "error",
-                  title: "Error",
-                  description: e.message,
-                });
-              }
-            }}
-            className="w-full py-3 px-6 rounded-xl btn-gradient-primary font-semibold"
-          >
-            Open Settings
-          </button>
+              }}
+              className="w-full py-3 px-6 rounded-xl btn-gradient-primary font-semibold"
+            >
+              Open Settings
+            </button>
+          )}
         </div>
       </div>
     </div>

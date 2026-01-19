@@ -1,6 +1,7 @@
 package com.moneymanager.app;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.provider.Settings;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -58,7 +59,8 @@ public class SettingsHelper extends Plugin {
     @PluginMethod
     public void openOverlaySettings(PluginCall call) {
         try {
-            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    android.net.Uri.parse("package:" + getContext().getPackageName()));
             getActivity().startActivity(intent);
             
             JSObject ret = new JSObject();

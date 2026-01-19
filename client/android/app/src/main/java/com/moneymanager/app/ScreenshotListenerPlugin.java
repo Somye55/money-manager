@@ -3,7 +3,9 @@ package com.moneymanager.app;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
+import android.provider.Settings;
 import android.util.Log;
 import androidx.core.content.ContextCompat;
 import com.getcapacitor.JSObject;
@@ -152,6 +154,25 @@ public class ScreenshotListenerPlugin extends Plugin {
         } catch (Exception e) {
             Log.e(TAG, "Error getting screenshot monitoring: " + e.getMessage());
             call.reject("Failed to get screenshot monitoring: " + e.getMessage());
+        }
+    }
+    
+    @PluginMethod
+    public void openAppSettings(PluginCall call) {
+        Log.d(TAG, "openAppSettings called");
+        
+        try {
+            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.setData(Uri.parse("package:" + getContext().getPackageName()));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getActivity().startActivity(intent);
+            
+            JSObject ret = new JSObject();
+            ret.put("success", true);
+            call.resolve(ret);
+        } catch (Exception e) {
+            Log.e(TAG, "Error opening app settings: " + e.getMessage());
+            call.reject("Failed to open app settings: " + e.getMessage());
         }
     }
 }
