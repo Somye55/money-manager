@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <!-- Premium Ivory/Green Gradients -->
+    <linearGradient id="greenPrimary" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34D399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="greyCeramicFront" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#F1F5F9" />
+    </linearGradient>
+    <radialGradient id="greenSphereVol" cx="30%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#6EE7B7" />
+      <stop offset="35%" stop-color="#10B981" />
+      <stop offset="80%" stop-color="#047857" />
+      <stop offset="100%" stop-color="#064E3B" />
+    </radialGradient>
+    
+    <!-- 3D Shadows -->
+    <filter id="iconShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#64748B" flood-opacity="0.25" />
+    </filter>
+    <filter id="iconShadowTight" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#475569" flood-opacity="0.2" />
+    </filter>
+  </defs>
+
+  <style>
+    /* Explicitly set transform origin to the center coordinate of the canvas */
+    .coin-anim, .inner-anim, .outer-anim, .shockwave-anim {
+      transform-origin: 0px 0px;
+    }
+
+    /* Use 'ease-in-out' so both the floating and ripple expansions are smooth */
+    .coin-anim { animation: coin-seq 5s ease-in-out infinite; }
+    .inner-anim { animation: inner-seq 5s ease-in-out infinite; }
+    .outer-anim { animation: outer-seq 5s ease-in-out infinite; }
+    .shockwave-anim { animation: shockwave-seq 5s cubic-bezier(0.2, 0.8, 0.2, 1) infinite; }
+
+    /* 1. Center Droplet/Coin */
+    @keyframes coin-seq {
+      /* Enter */
+      0%   { transform: scale(0) translateY(20px); opacity: 0; }
+      8%   { transform: scale(1.2) translateY(-5px); opacity: 1; }
+      15%  { transform: scale(1) translateY(0); }
+      /* Float */
+      45%  { transform: scale(1) translateY(-6px); }
+      75%  { transform: scale(1) translateY(0); opacity: 1; }
+      /* Drop & Splash (Plunges downwards and shrinks) */
+      80%  { transform: scale(0) translateY(15px); opacity: 0; }
+      100% { transform: scale(0) translateY(15px); opacity: 0; }
+    }
+
+    /* 2. Inner Green Ring (First Ripple) */
+    @keyframes inner-seq {
+      /* Enter */
+      0%, 4% { transform: scale(0.5) translateY(10px); opacity: 0; }
+      14% { transform: scale(1.05) translateY(0); opacity: 1; }
+      20% { transform: scale(1) translateY(0); }
+      /* Float */
+      48% { transform: scale(1) translateY(-4px); }
+      75% { transform: scale(1) translateY(0); opacity: 1; }
+      /* Wait for ball to hit, then ripple outwards & fade */
+      80% { transform: scale(1) translateY(0); opacity: 1; }
+      90% { transform: scale(2) translateY(0); opacity: 0; }
+      100%{ transform: scale(2) translateY(0); opacity: 0; }
+    }
+
+    /* 3. Outer Ceramic Ring (Second Ripple) */
+    @keyframes outer-seq {
+      /* Enter */
+      0%, 8% { transform: scale(0.7) translateY(5px); opacity: 0; }
+      17% { transform: scale(1.02) translateY(0); opacity: 1; }
+      22% { transform: scale(1) translateY(0); }
+      /* Float */
+      51% { transform: scale(1) translateY(-3px); }
+      75% { transform: scale(1) translateY(0); opacity: 1; }
+      /* Slightly delayed, ripples outwards even further & fades */
+      82% { transform: scale(1) translateY(0); opacity: 1; }
+      94% { transform: scale(1.8) translateY(0); opacity: 0; }
+      100%{ transform: scale(1.8) translateY(0); opacity: 0; }
+    }
+
+    /* 4. Sharp 2D Shockwave Line */
+    @keyframes shockwave-seq {
+      0%, 79% { transform: scale(0); opacity: 0; stroke-width: 0px; }
+      /* Explodes precisely as the center coin drops */
+      80% { transform: scale(0.5); opacity: 1; stroke-width: 6px; }
+      92% { transform: scale(2.5); opacity: 0; stroke-width: 1px; }
+      100% { transform: scale(2.5); opacity: 0; stroke-width: 0px; }
+    }
+  </style>
+
+  <!-- Container offsets everything to the absolute center of the 200x200 canvas -->
+  <g transform="translate(100, 100)">
+    
+    <!-- Outer 3D Ripple Ring (Grey) -->
+    <g class="outer-anim">
+      <!-- Rotation inside the scaled group keeps the expansion symmetric -->
+      <g transform="rotate(10)">
+        <ellipse cx="0" cy="12" rx="45" ry="45" fill="none" stroke="#CBD5E1" stroke-width="10" filter="url(#iconShadowTight)" opacity="0.6"/>
+        <ellipse cx="0" cy="0" rx="45" ry="45" fill="none" stroke="url(#greyCeramicFront)" stroke-width="10" />
+        <ellipse cx="0" cy="-2" rx="44" ry="44" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.9"/>
+      </g>
+    </g>
+    
+    <!-- Inner 3D Ripple Ring (Green) -->
+    <g class="inner-anim">
+      <g transform="rotate(-5)">
+        <ellipse cx="0" cy="8" rx="28" ry="28" fill="none" stroke="#047857" stroke-width="6" filter="url(#iconShadowTight)" opacity="0.4"/>
+        <ellipse cx="0" cy="0" rx="28" ry="28" fill="none" stroke="url(#greenPrimary)" stroke-width="6" />
+        <ellipse cx="0" cy="-1" rx="27" ry="27" fill="none" stroke="#FFFFFF" stroke-width="1.5" opacity="0.5"/>
+      </g>
+    </g>
+
+    <!-- Center 3D Droplet/Coin (Green) -->
+    <g class="coin-anim">
+      <circle cx="0" cy="0" r="14" fill="url(#greenSphereVol)" filter="url(#iconShadow)" />
+      <!-- Glossy Specular Highlights -->
+      <ellipse cx="-4" cy="-5" rx="6" ry="4" fill="#FFFFFF" opacity="0.9" transform="rotate(-30 -4 -5)" />
+      <circle cx="5" cy="6" r="2.5" fill="#FFFFFF" opacity="0.6" />
+    </g>
+
+    <!-- Shockwave line firing at the end -->
+    <circle class="shockwave-anim" cx="0" cy="0" r="40" fill="none" stroke="url(#greenPrimary)" />
+  </g>
+</svg>

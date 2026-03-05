@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <style>
+    /* -----------------------------------
+       1. CHECKMARK STYLES & ANIMATION
+       ----------------------------------- */
+    .checkmark {
+      stroke: #22C55E;
+      stroke-width: 10;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      
+      stroke-dasharray: 110;
+      stroke-dashoffset: 110;
+      
+      animation: draw 2.5s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+      transform-origin: 50px 47.5px;
+    }
+
+    @keyframes draw {
+      0% { stroke-dashoffset: 110; opacity: 1; transform: scale(1); }
+      30% { stroke-dashoffset: 0; opacity: 1; transform: scale(1); }
+      40% { stroke-dashoffset: 0; opacity: 1; transform: scale(1.15); }
+      50% { stroke-dashoffset: 0; opacity: 1; transform: scale(1); }
+      80% { stroke-dashoffset: 0; opacity: 1; transform: scale(1); }
+      90% { stroke-dashoffset: 0; opacity: 0; transform: scale(1); }
+      100% { stroke-dashoffset: 110; opacity: 0; transform: scale(1); }
+    }
+
+    /* -----------------------------------
+       2. RIPPLE STYLES & ANIMATIONS
+       ----------------------------------- */
+    .ripple {
+      fill: none;
+      stroke: #22C55E;
+      /* Center the scaling perfectly on the checkmark */
+      transform-origin: 50px 47.5px;
+      /* Keeps the stroke width true to the CSS even when scaled */
+      vector-effect: non-scaling-stroke;
+    }
+
+    .ripple-1 {
+      animation: ripple-anim-1 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
+
+    .ripple-2 {
+      animation: ripple-anim-2 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
+
+    /* First ripple bursts immediately when the checkmark is done drawing (30%) */
+    @keyframes ripple-anim-1 {
+      0%, 28% {
+        transform: scale(0.3);
+        opacity: 0;
+        stroke-width: 4px;
+      }
+      30% {
+        transform: scale(0.5);
+        opacity: 0.8;
+        stroke-width: 6px;
+      }
+      50% {
+        transform: scale(1.5);
+        opacity: 0;
+        stroke-width: 1px;
+      }
+      100% {
+        transform: scale(1.5);
+        opacity: 0;
+        stroke-width: 0px;
+      }
+    }
+
+    /* Second ripple follows shortly after for a cool shockwave effect */
+    @keyframes ripple-anim-2 {
+      0%, 34% {
+        transform: scale(0.3);
+        opacity: 0;
+        stroke-width: 4px;
+      }
+      36% {
+        transform: scale(0.5);
+        opacity: 0.5;
+        stroke-width: 5px;
+      }
+      56% {
+        transform: scale(1.7);
+        opacity: 0;
+        stroke-width: 1px;
+      }
+      100% {
+        transform: scale(1.7);
+        opacity: 0;
+        stroke-width: 0px;
+      }
+    }
+  </style>
+
+  <!-- Ripples: placed behind the checkmark -->
+  <!-- Base radius is 30, it will be scaled up and out by the animation -->
+  <circle class="ripple ripple-1" cx="50" cy="47.5" r="30" />
+  <circle class="ripple ripple-2" cx="50" cy="47.5" r="30" />
+
+  <!-- The checkmark path -->
+  <path class="checkmark" d="M 15 50 L 40 75 L 85 20" />
+</svg>

@@ -24,6 +24,7 @@ const AutomationSettings = () => {
   const [screenshotPermission, setScreenshotPermission] = useState(false);
   const [screenshotAvailable, setScreenshotAvailable] = useState(false);
   const [overlayPermission, setOverlayPermission] = useState(false);
+  const [hasValidApiKey, setHasValidApiKey] = useState(false);
 
   useEffect(() => {
     if (settings) {
@@ -77,6 +78,16 @@ const AutomationSettings = () => {
 
         const enabled = await screenshotService.getScreenshotMonitoring();
         setScreenshotEnabled(enabled);
+
+        // Check if user has valid API key
+        try {
+          const { keyManager } = await import("../../lib/keyManager");
+          const canEnable = await keyManager.canEnableScreenshotMonitoring();
+          setHasValidApiKey(canEnable);
+        } catch (error) {
+          console.error("Error checking API key status:", error);
+          setHasValidApiKey(false);
+        }
       }
     };
     initScreenshot();
@@ -512,16 +523,20 @@ const AutomationSettings = () => {
               Automatically detect and process screenshots for expense
               extraction
             </p>
-            <div className="text-xs bg-blue-500/10 border border-blue-500/30 p-4 rounded-xl mb-4">
-              <p className="font-semibold mb-2 text-blue-700 dark:text-blue-400">
-                📸 How it works:
+            <div className="text-xs bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl mb-4">
+              <p className="font-semibold mb-2 text-amber-700 dark:text-amber-400">
+                ⚠ AI API Key Required
               </p>
-              <ul className="list-disc list-inside space-y-1 text-blue-600 dark:text-blue-300">
-                <li>Take a screenshot of any payment screen</li>
-                <li>App automatically extracts text using ML Kit</li>
-                <li>Groq AI parses amount and merchant</li>
-                <li>Popup appears for category selection</li>
-              </ul>
+              <p className="text-amber-600 dark:text-amber-300 mb-2">
+                Screenshot monitoring requires at least one valid AI API key
+                (ChatGPT, Groq, or Gemini) to process expenses.
+              </p>
+              <button
+                onClick={() => (window.location.href = "/settings/ai-keys")}
+                className="text-xs font-semibold text-amber-700 dark:text-amber-400 underline hover:no-underline"
+              >
+                Configure API Keys →
+              </button>
             </div>
             {!screenshotPermission ? (
               <>
@@ -565,13 +580,19 @@ const AutomationSettings = () => {
                     }
                   }}
                   className="w-full py-3 px-6 rounded-xl btn-gradient-primary font-semibold"
+                  disabled={!hasValidApiKey}
                 >
-                  Grant Permission
+                  Grant Storage Permission
                 </button>
+                {!hasValidApiKey && (
+                  <p className="text-xs text-muted-foreground text-center mt-2">
+                    Add an API key first to enable this feature
+                  </p>
+                )}
               </>
             ) : (
               <div className="flex items-center justify-between p-4 rounded-xl bg-secondary/50 border border-border">
-                <div>
+                <div className="flex-1">
                   <p className="font-semibold text-foreground">
                     {screenshotEnabled
                       ? "Monitoring Active"
@@ -580,13 +601,48 @@ const AutomationSettings = () => {
                   <p className="text-xs text-muted-foreground mt-1">
                     {screenshotEnabled
                       ? "Screenshots will be processed automatically"
-                      : "Turn on to start monitoring screenshots"}
+                      : hasValidApiKey
+                        ? "Turn on to start monitoring screenshots"
+                        : "Add an API key to enable this feature"}
                   </p>
                 </div>
                 <button
                   onClick={async () => {
                     try {
+                      // Check if user has valid API key
+                      if (!hasValidApiKey && !screenshotEnabled) {
+                        toast({
+                          variant: "error",
+                          title: "AI API Key Required",
+                          description:
+                            "Please add at least one valid AI API key in Settings → AI API Keys before enabling screenshot monitoring",
+                        });
+                        return;
+                      }
+
                       const newState = !screenshotEnabled;
+
+                      // If enabling, double-check permissions
+                      if (newState) {
+                        const hasPermission =
+                          await screenshotService.checkPermissions();
+                        if (!hasPermission) {
+                          const granted =
+                            await screenshotService.requestPermissions();
+                          if (!granted) {
+                            toast({
+                              variant: "error",
+                              title: "Permission Required",
+                              description:
+                                "Storage permission is required for screenshot monitoring. Please grant it in the previous step.",
+                            });
+                            setScreenshotPermission(false);
+                            return;
+                          }
+                          setScreenshotPermission(true);
+                        }
+                      }
+
                       const success =
                         await screenshotService.setScreenshotMonitoring(
                           newState,
@@ -607,15 +663,22 @@ const AutomationSettings = () => {
                         });
                       }
                     } catch (e) {
+                      console.error("Screenshot toggle error:", e);
                       toast({
                         variant: "error",
                         title: "Error",
-                        description: e.message,
+                        description:
+                          e.message || "Failed to toggle screenshot monitoring",
                       });
                     }
                   }}
+                  disabled={!hasValidApiKey}
                   className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
-                    screenshotEnabled ? "bg-primary" : "bg-gray-300"
+                    !hasValidApiKey
+                      ? "bg-gray-200 cursor-not-allowed opacity-50"
+                      : screenshotEnabled
+                        ? "bg-primary"
+                        : "bg-gray-300"
                   }`}
                 >
                   <span

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="100%" height="100%" style="cursor: pointer;">
+  <defs>
+    <linearGradient id="greyCeramicFront" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FFFFFF" /><stop offset="100%" stop-color="#F1F5F9" /></linearGradient>
+    <linearGradient id="greyCeramicDepth" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#E2E8F0" /><stop offset="100%" stop-color="#94A3B8" /></linearGradient>
+    <radialGradient id="greenSphereVol" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="#6EE7B7" /><stop offset="35%" stop-color="#10B981" /><stop offset="80%" stop-color="#047857" /><stop offset="100%" stop-color="#064E3B" /></radialGradient>
+    <filter id="iconShadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#64748B" flood-opacity="0.25" /></filter>
+  </defs>
+  <style>
+    .receipt { transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+    .coin { transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    svg:hover .receipt, svg.selected .receipt { transform: translate(0, -4px); }
+    svg:hover .coin, svg.selected .coin { transform: translate(6px, 10px); }
+  </style>
+  <g transform="translate(40, 40)">
+    <g class="receipt">
+      <path d="M -16,-20 L 16,-20 L 16,16 Q 8,22 0,16 T -16,16 Z" fill="url(#greyCeramicDepth)" transform="translate(0,4)" filter="url(#iconShadow)" />
+      <path d="M -16,-20 L 16,-20 L 16,16 Q 8,22 0,16 T -16,16 Z" fill="url(#greyCeramicFront)" />
+      <line x1="-15" y1="-19" x2="15" y2="-19" stroke="#FFFFFF" stroke-width="2" />
+      <line x1="-8" y1="-10" x2="8" y2="-10" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" />
+      <line x1="-8" y1="-4" x2="2" y2="-4" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" />
+      <line x1="-8" y1="-9" x2="8" y2="-9" stroke="#FFFFFF" stroke-width="1" stroke-linecap="round" />
+    </g>
+    <g class="coin" transform="translate(8, 4)">
+      <circle cx="0" cy="3" r="9" fill="#047857" filter="url(#iconShadow)" />
+      <circle cx="0" cy="0" r="9" fill="url(#greenSphereVol)" />
+      <circle cx="-2.5" cy="-2.5" r="3" fill="#FFFFFF" opacity="0.6" />
+      <path d="M -3,-2 Q 0,-5 3,-2" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" />
+    </g>
+  </g>
+</svg>

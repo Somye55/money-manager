@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -31,6 +31,7 @@ import Login from "./pages/Login";
 import AddExpense from "./pages/AddExpense";
 import Settings from "./pages/Settings";
 import SettingsGroup from "./pages/SettingsGroup";
+import AIKeySettings from "./components/settings/AIKeySettings";
 import Expenses from "./pages/Expenses";
 import ExpenseDetail from "./pages/ExpenseDetail";
 import QuickSave from "./pages/QuickSave";
@@ -41,6 +42,8 @@ import AuthDebug from "./components/AuthDebug";
 import ThemeDebug from "./components/ThemeDebug";
 import CategorySelectionModal from "./components/CategorySelectionModal";
 import { Toaster } from "./components/ui/toaster";
+import StartupLogo from "./components/StartupLogo";
+import NavIcon from "./components/NavIcon";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -93,10 +96,10 @@ const Navigation = () => {
   if (location.pathname === "/login") return null;
 
   const navItems = [
-    { icon: LayoutDashboard, label: "Home", path: "/" },
-    { icon: Receipt, label: "Expenses", path: "/expenses" },
-    { icon: PlusCircle, label: "Add", path: "/add" },
-    { icon: SettingsIcon, label: "Settings", path: "/settings" },
+    { svg: "dashboard-interactive.svg", label: "Home", path: "/" },
+    { svg: "expenses-interactive.svg", label: "Expenses", path: "/expenses" },
+    { svg: "add-expense-interactive.svg", label: "Add", path: "/add" },
+    { svg: "settings-interactive.svg", label: "Settings", path: "/settings" },
   ];
 
   return (
@@ -109,42 +112,23 @@ const Navigation = () => {
       aria-label="Main navigation"
     >
       <div className="flex justify-around items-center px-3 py-3">
-        {navItems.map((item) => (
-          <Link
-            key={item.path}
-            to={item.path}
-            className={`flex flex-col items-center p-3 rounded-xl transition-all duration-200 min-w-0 flex-1 min-h-[44px] ${
-              location.pathname === item.path
-                ? "text-indigo-600 dark:text-indigo-400"
-                : "text-gray-500 dark:text-gray-400"
-            }`}
-            style={{
-              textDecoration: "none",
-              background:
-                location.pathname === item.path
-                  ? "rgba(99, 102, 241, 0.12)"
-                  : "transparent",
-            }}
-            aria-label={item.label}
-            aria-current={location.pathname === item.path ? "page" : undefined}
-          >
-            <item.icon
-              size={24}
-              strokeWidth={location.pathname === item.path ? 2.5 : 2}
-              aria-hidden="true"
-            />
-            {location.pathname === item.path && (
-              <div
-                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 rounded-t-full"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                }}
-                aria-hidden="true"
-              />
-            )}
-          </Link>
-        ))}
+        {navItems.map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              className="flex flex-col items-center p-3 rounded-xl transition-all duration-200 min-w-0 flex-1 min-h-[44px]"
+              style={{
+                textDecoration: "none",
+              }}
+              aria-label={item.label}
+              aria-current={isActive ? "page" : undefined}
+            >
+              <NavIcon svg={item.svg} isActive={isActive} label={item.label} />
+            </Link>
+          );
+        })}
       </div>
     </nav>
   );
@@ -163,6 +147,7 @@ const Header = () => {
     if (location.pathname === "/add") return "Add Expense";
     if (location.pathname === "/quick-save") return "Quick Save";
     if (location.pathname === "/settings") return "Settings";
+    if (location.pathname === "/settings/ai-keys") return "Settings → AI Keys";
     if (location.pathname.startsWith("/expenses/")) {
       return "Expenses → Details";
     }
@@ -309,6 +294,13 @@ const ShareIntentHandler = () => {
 };
 
 function App() {
+  // Only show startup logo on first load (not on subsequent navigations)
+  const [showStartup, setShowStartup] = useState(() => {
+    // Check if we've already shown the startup screen in this session
+    const hasShownStartup = sessionStorage.getItem("hasShownStartup");
+    return !hasShownStartup;
+  });
+
   useEffect(() => {
     // Initialize deep links for Capacitor
     if (Capacitor.isNativePlatform()) {
@@ -317,12 +309,20 @@ function App() {
     }
   }, []);
 
+  const handleStartupComplete = () => {
+    setShowStartup(false);
+    sessionStorage.setItem("hasShownStartup", "true");
+  };
+
   return (
     <AuthProvider>
       <DataProvider>
         <SMSProvider>
           <ScreenshotProvider>
             <Router>
+              {showStartup && (
+                <StartupLogo onComplete={handleStartupComplete} />
+              )}
               <ShareIntentHandler />
               <ScrollToTop />
               <div className="flex flex-col h-screen overflow-hidden">
@@ -383,6 +383,14 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <SettingsGroup />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/settings/ai-keys"
+                      element={
+                        <ProtectedRoute>
+                          <AIKeySettings />
                         </ProtectedRoute>
                       }
                     />

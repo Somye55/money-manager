@@ -59,14 +59,14 @@
 
   /* Enhanced Shadows for Depth */
   --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.08);
-  --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.08),
-    0 2px 6px -2px rgb(0 0 0 / 0.05);
-  --shadow-lg: 0 12px 24px -4px rgb(0 0 0 / 0.12),
-    0 4px 12px -4px rgb(0 0 0 / 0.08);
-  --shadow-xl: 0 24px 48px -8px rgb(0 0 0 / 0.16),
-    0 8px 16px -6px rgb(0 0 0 / 0.1);
-  --shadow-2xl: 0 32px 64px -12px rgb(0 0 0 / 0.2),
-    0 12px 24px -8px rgb(0 0 0 / 0.12);
+  --shadow-md:
+    0 4px 12px -2px rgb(0 0 0 / 0.08), 0 2px 6px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg:
+    0 12px 24px -4px rgb(0 0 0 / 0.12), 0 4px 12px -4px rgb(0 0 0 / 0.08);
+  --shadow-xl:
+    0 24px 48px -8px rgb(0 0 0 / 0.16), 0 8px 16px -6px rgb(0 0 0 / 0.1);
+  --shadow-2xl:
+    0 32px 64px -12px rgb(0 0 0 / 0.2), 0 12px 24px -8px rgb(0 0 0 / 0.12);
 
   /* Glassmorphism */
   --glass-bg: rgba(255, 255, 255, 0.85);
@@ -113,8 +113,13 @@
   }
 
   body {
-    font-family: "TikTok Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
-      "Roboto", sans-serif;
+    font-family:
+      "TikTok Sans",
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      "Roboto",
+      sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background-color: var(--color-background);
@@ -257,12 +262,16 @@
 
   /* Premium Card Shadows */
   .card-elevated {
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+    box-shadow:
+      0 4px 20px rgba(0, 0, 0, 0.08),
+      0 2px 8px rgba(0, 0, 0, 0.04);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .card-elevated:hover {
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.12),
+      0 4px 16px rgba(0, 0, 0, 0.08);
     transform: translateY(-2px);
   }
 
@@ -413,7 +422,9 @@
 
 /* Toast stacking styles */
 .toast-stacked {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease,
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s ease,
     scale 0.3s ease;
 }
 
@@ -621,4 +632,16 @@
     margin-right: 0;
     max-width: 100%;
   }
+}
+
+/* Navigation SVG Interactive Styles */
+nav a.selected svg,
+nav a:hover svg {
+  /* Trigger the SVG's internal animations via CSS class */
+}
+
+/* Ensure SVG animations work properly */
+nav a img {
+  pointer-events: none;
+  user-select: none;
 }

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <defs>
+    <linearGradient id="greenPrimary" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#34D399" /><stop offset="100%" stop-color="#059669" /></linearGradient>
+    <linearGradient id="greyCeramicFront" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FFFFFF" /><stop offset="100%" stop-color="#F1F5F9" /></linearGradient>
+    <radialGradient id="greenSphereVol" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="#6EE7B7" /><stop offset="35%" stop-color="#10B981" /><stop offset="80%" stop-color="#047857" /><stop offset="100%" stop-color="#064E3B" /></radialGradient>
+    <filter id="iconShadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#64748B" flood-opacity="0.25" /></filter>
+    <filter id="iconShadowTight" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#475569" flood-opacity="0.2" /></filter>
+  </defs>
+  <g transform="translate(60, 60)">
+    <g transform="rotate(10)">
+      <ellipse cx="0" cy="12" rx="45" ry="45" fill="none" stroke="#CBD5E1" stroke-width="10" filter="url(#iconShadowTight)" opacity="0.6"/>
+      <ellipse cx="0" cy="0" rx="45" ry="45" fill="none" stroke="url(#greyCeramicFront)" stroke-width="10" />
+      <ellipse cx="0" cy="-2" rx="44" ry="44" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.9"/>
+    </g>
+    <g transform="rotate(-5)">
+      <ellipse cx="0" cy="8" rx="28" ry="28" fill="none" stroke="#047857" stroke-width="6" filter="url(#iconShadowTight)" opacity="0.4"/>
+      <ellipse cx="0" cy="0" rx="28" ry="28" fill="none" stroke="url(#greenPrimary)" stroke-width="6" />
+      <ellipse cx="0" cy="-1" rx="27" ry="27" fill="none" stroke="#FFFFFF" stroke-width="1.5" opacity="0.5"/>
+    </g>
+    <circle cx="0" cy="0" r="14" fill="url(#greenSphereVol)" filter="url(#iconShadow)" />
+    <ellipse cx="-4" cy="-5" rx="6" ry="4" fill="#FFFFFF" opacity="0.9" transform="rotate(-30 -4 -5)" />
+    <circle cx="5" cy="6" r="2.5" fill="#FFFFFF" opacity="0.6" />
+  </g>
+</svg>

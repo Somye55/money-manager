@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="100%" height="100%" style="cursor: pointer;">
+  <defs>
+    <linearGradient id="greenPrimary" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#34D399" /><stop offset="100%" stop-color="#059669" /></linearGradient>
+    <linearGradient id="greyCeramicFront" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FFFFFF" /><stop offset="100%" stop-color="#F1F5F9" /></linearGradient>
+    <linearGradient id="greyCeramicDepth" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#E2E8F0" /><stop offset="100%" stop-color="#94A3B8" /></linearGradient>
+    <filter id="iconShadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#64748B" flood-opacity="0.25" /></filter>
+  </defs>
+  <style>
+    .knob, .track, .indicator { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    
+    /* Top Toggle Animation (Active -> Inactive) */
+    svg:hover .top-knob, svg.selected .top-knob { transform: translate(-20px, 0); }
+    svg:hover .top-track-green, svg.selected .top-track-green { opacity: 0; }
+    svg:hover .top-indicator, svg.selected .top-indicator { fill: #94A3B8; }
+    
+    /* Bottom Toggle Animation (Inactive -> Active) */
+    svg:hover .bot-knob, svg.selected .bot-knob { transform: translate(20px, 0); }
+    svg:hover .bot-track-green, svg.selected .bot-track-green { opacity: 1; }
+    svg:hover .bot-indicator, svg.selected .bot-indicator { fill: #10B981; }
+  </style>
+  <g transform="translate(40, 40)">
+    
+    <!-- TOP TOGGLE -->
+    <g transform="translate(0, -10)">
+      <!-- Base Grey Track -->
+      <rect x="-18" y="-4" width="36" height="8" rx="4" fill="#CBD5E1" />
+      <rect x="-17" y="-3" width="34" height="6" rx="3" fill="#F1F5F9" />
+      <rect x="-17" y="-3" width="34" height="1.5" fill="#E2E8F0" />
+      <!-- Green Active Overlay -->
+      <g class="track top-track-green">
+        <rect x="-18" y="-4" width="36" height="8" rx="4" fill="#A7F3D0" />
+        <rect x="-17" y="-3" width="34" height="6" rx="3" fill="url(#greenPrimary)" />
+      </g>
+      <!-- Top Knob -->
+      <g class="knob top-knob" transform="translate(10, 0)">
+        <circle cx="0" cy="1" r="8" fill="url(#greyCeramicDepth)" filter="url(#iconShadow)" />
+        <circle cx="0" cy="0" r="8" fill="url(#greyCeramicFront)" />
+        <circle cx="0" cy="0" r="3" class="indicator top-indicator" fill="#10B981" />
+        <circle cx="0" cy="0" r="7" fill="none" stroke="#FFFFFF" stroke-width="1.5" />
+      </g>
+    </g>
+
+    <!-- BOTTOM TOGGLE -->
+    <g transform="translate(0, 10)">
+      <!-- Base Grey Track -->
+      <rect x="-18" y="-4" width="36" height="8" rx="4" fill="#CBD5E1" />
+      <rect x="-17" y="-3" width="34" height="6" rx="3" fill="#F1F5F9" />
+      <rect x="-17" y="-3" width="34" height="1.5" fill="#E2E8F0" />
+      <!-- Green Active Overlay -->
+      <g class="track bot-track-green" style="opacity: 0;">
+        <rect x="-18" y="-4" width="36" height="8" rx="4" fill="#A7F3D0" />
+        <rect x="-17" y="-3" width="34" height="6" rx="3" fill="url(#greenPrimary)" />
+      </g>
+      <!-- Bottom Knob -->
+      <g class="knob bot-knob" transform="translate(-10, 0)">
+        <circle cx="0" cy="1" r="8" fill="url(#greyCeramicDepth)" filter="url(#iconShadow)" />
+        <circle cx="0" cy="0" r="8" fill="url(#greyCeramicFront)" />
+        <circle cx="0" cy="0" r="3" class="indicator bot-indicator" fill="#94A3B8" />
+        <circle cx="0" cy="0" r="7" fill="none" stroke="#FFFFFF" stroke-width="1.5" />
+      </g>
+    </g>
+
+  </g>
+</svg>

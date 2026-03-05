@@ -8,6 +8,7 @@ import {
   Database,
   ChevronRight,
   TestTube,
+  Key,
 } from "lucide-react";
 
 const Settings = () => {
@@ -20,6 +21,14 @@ const Settings = () => {
       description: "Manage your account information",
       icon: User,
       color: "from-purple-500 to-indigo-600",
+    },
+    {
+      id: "ai-keys",
+      title: "AI API Keys",
+      description: "Configure AI providers for expense parsing",
+      icon: Key,
+      color: "from-violet-500 to-purple-600",
+      badge: true, // Show badge if no keys configured
     },
     {
       id: "categories",

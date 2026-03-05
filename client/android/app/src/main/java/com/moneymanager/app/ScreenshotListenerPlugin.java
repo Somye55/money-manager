@@ -14,6 +14,7 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
+import com.getcapacitor.annotation.PermissionCallback;
 
 @CapacitorPlugin(
     name = "ScreenshotListener",
@@ -116,6 +117,33 @@ public class ScreenshotListenerPlugin extends Plugin {
                 call.resolve(ret);
             }
         }
+    }
+    
+    @PermissionCallback
+    private void permissionCallback(PluginCall call) {
+        Log.d(TAG, "permissionCallback called");
+        
+        JSObject ret = new JSObject();
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            boolean granted = ContextCompat.checkSelfPermission(
+                getContext(), 
+                Manifest.permission.READ_MEDIA_IMAGES
+            ) == PackageManager.PERMISSION_GRANTED;
+            
+            ret.put("granted", granted);
+            ret.put("permission", "READ_MEDIA_IMAGES");
+        } else {
+            boolean granted = ContextCompat.checkSelfPermission(
+                getContext(), 
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED;
+            
+            ret.put("granted", granted);
+            ret.put("permission", "READ_EXTERNAL_STORAGE");
+        }
+        
+        call.resolve(ret);
     }
     
     @PluginMethod

@@ -6,7 +6,9 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
@@ -404,6 +406,17 @@ public class ScreenshotListenerService extends Service {
 
     private void showExpenseOverlay(OCRProcessor.ExpenseData expenseData) {
         try {
+            // Check if screenshot monitoring is enabled
+            android.content.SharedPreferences prefs = getSharedPreferences("moneymanager_settings", Context.MODE_PRIVATE);
+            boolean screenshotMonitoringEnabled = prefs.getBoolean("screenshot_monitoring_enabled", false);
+            
+            if (!screenshotMonitoringEnabled) {
+                Log.d(TAG, "Screenshot monitoring is disabled, skipping overlay");
+                showErrorNotification("📸 Screenshot monitoring disabled", 
+                    "Enable it in Settings → AI API Keys to process screenshots");
+                return;
+            }
+            
             Intent intent = new Intent(this, OverlayService.class);
             intent.putExtra("source", "screenshot");
             intent.putExtra("title", expenseData.merchant);

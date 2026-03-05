@@ -45,10 +45,11 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(SettingsHelper.class);
         registerPlugin(NotificationListenerPlugin.class);
         registerPlugin(ScreenshotListenerPlugin.class);
+        registerPlugin(SecureStoragePlugin.class);
         
         super.onCreate(savedInstanceState);
         
-        Log.d(TAG, "Plugins registered: SettingsHelper, NotificationListenerPlugin, ScreenshotListenerPlugin");
+        Log.d(TAG, "Plugins registered: SettingsHelper, NotificationListenerPlugin, ScreenshotListenerPlugin, SecureStoragePlugin");
 
         serviceMonitorHandler = new Handler(Looper.getMainLooper());
 
