@@ -91,6 +91,7 @@ const ProtectedRoute = ({ children }) => {
 
 const Navigation = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Hide nav on login page
   if (location.pathname === "/login") return null;
@@ -115,18 +116,21 @@ const Navigation = () => {
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
-            <Link
+            <div
               key={item.path}
-              to={item.path}
               className="flex flex-col items-center p-3 rounded-xl transition-all duration-200 min-w-0 flex-1 min-h-[44px]"
-              style={{
-                textDecoration: "none",
-              }}
+              role="button"
+              tabIndex={0}
               aria-label={item.label}
               aria-current={isActive ? "page" : undefined}
             >
-              <NavIcon svg={item.svg} isActive={isActive} label={item.label} />
-            </Link>
+              <NavIcon
+                svg={item.svg}
+                isActive={isActive}
+                label={item.label}
+                onAnimationTrigger={() => navigate(item.path)}
+              />
+            </div>
           );
         })}
       </div>
