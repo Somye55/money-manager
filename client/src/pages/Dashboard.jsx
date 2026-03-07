@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { TrendingUp, ArrowRight, RefreshCw } from "lucide-react";
 import { useData } from "../context/DataContext";
+import { useSavings } from "../context/SavingsContext";
 import { useSMS } from "../context/SMSContext";
 import { useNavigate } from "react-router-dom";
 import * as Icons from "lucide-react";
@@ -22,6 +23,7 @@ import DashboardSkeleton from "../components/ui/DashboardSkeleton";
 
 const Dashboard = () => {
   const { expenses, categories, settings, loading, refreshAllData } = useData();
+  const { calculateSavings } = useSavings(); // Verify SavingsContext is accessible
   const { scanSMS, isSupported, permissionGranted } = useSMS();
   const navigate = useNavigate();
   const [analytics, setAnalytics] = useState(null);
@@ -34,6 +36,13 @@ const Dashboard = () => {
   const lastY = useRef(0);
   const lastTime = useRef(0);
   const containerRef = useRef(null);
+
+  // Verify SavingsContext integration
+  useEffect(() => {
+    if (calculateSavings) {
+      console.log("✅ SavingsContext is accessible in Dashboard");
+    }
+  }, [calculateSavings]);
 
   // Auto-scan on load if permitted
   useEffect(() => {
@@ -212,12 +221,12 @@ const Dashboard = () => {
     settings?.currency === "USD"
       ? "$"
       : settings?.currency === "EUR"
-      ? "€"
-      : settings?.currency === "GBP"
-      ? "£"
-      : settings?.currency === "JPY"
-      ? "¥"
-      : "₹";
+        ? "€"
+        : settings?.currency === "GBP"
+          ? "£"
+          : settings?.currency === "JPY"
+            ? "¥"
+            : "₹";
 
   const pieChartData = useMemo(() => {
     if (!analytics?.categoryTotals) {
@@ -338,7 +347,7 @@ const Dashboard = () => {
                       {
                         minimumFractionDigits: 0,
                         maximumFractionDigits: balance % 1 === 0 ? 0 : 2,
-                      }
+                      },
                     )}`;
                     const len = formatted.length;
                     if (len > 12) return "0.875rem";
@@ -379,7 +388,7 @@ const Dashboard = () => {
                       {
                         minimumFractionDigits: 0,
                         maximumFractionDigits: totalExpense % 1 === 0 ? 0 : 2,
-                      }
+                      },
                     )}`;
                     const len = formatted.length;
                     if (len > 12) return "0.875rem";

@@ -19,9 +19,12 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
-  expenses   Expense[]
-  categories Category[]
-  settings   UserSettings?
+  expenses      Expense[]
+  categories    Category[]
+  settings      UserSettings?
+  notifications SavingsNotification[]
+  streaks       SavingsStreak[]
+  achievements  UserAchievement[]
 }
 
 model UserSettings {
@@ -45,10 +48,12 @@ model Category {
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
   expenses  Expense[]
+  budget    Decimal? @db.Decimal(10, 2)  // Monthly budget for this category
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([name, userId])
+  @@index([userId, budget])
 }
 
 model Expense {
@@ -70,4 +75,77 @@ model Expense {
 enum Source {
   MANUAL
   SMS
+}
+
+model SavingsNotification {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        NotificationType
+  title       String
+  message     String
+  data        Json?
+  isRead      Boolean  @default(false)
+  sentAt      DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+}
+
+enum NotificationType {
+  DAILY_SUMMARY
+  WEEKLY_SUMMARY
+  MILESTONE
+  STREAK
+  CHALLENGE_COMPLETE
+  CHALLENGE_FAILED
+  BUDGET_WARNING_75
+  BUDGET_WARNING_90
+  BUDGET_EXCEEDED
+  JAR_GOAL_REACHED
+}
+
+model SavingsStreak {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currentStreak   Int      @default(0)
+  longestStreak   Int      @default(0)
+  lastUpdated     DateTime @default(now())
+  streakStartDate DateTime @default(now())
+
+  @@unique([userId])
+}
+
+model Achievement {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String
+  type        AchievementType
+  threshold   Decimal  @db.Decimal(10, 2)
+  icon        String
+  color       String
+  createdAt   DateTime @default(now())
+
+  userAchievements UserAchievement[]
+}
+
+enum AchievementType {
+  MILESTONE      // Total savings milestones
+  STREAK         // Consecutive periods under budget
+  CHALLENGE      // Challenge completion
+  CATEGORY       // Category-specific achievements
+}
+
+model UserAchievement {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId Int
+  achievement   Achievement @relation(fields: [achievementId], references: [id])
+  earnedAt      DateTime @default(now())
+
+  @@unique([userId, achievementId])
+  @@index([userId, earnedAt])
 }

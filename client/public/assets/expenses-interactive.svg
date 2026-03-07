@@ -1,30 +1,58 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="100%" height="100%" style="cursor: pointer;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="100%" height="100%" style="cursor: pointer; overflow: visible;">
   <defs>
-    <linearGradient id="greyCeramicFront" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FFFFFF" /><stop offset="100%" stop-color="#F1F5F9" /></linearGradient>
-    <linearGradient id="greyCeramicDepth" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#E2E8F0" /><stop offset="100%" stop-color="#94A3B8" /></linearGradient>
-    <radialGradient id="greenSphereVol" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="#6EE7B7" /><stop offset="35%" stop-color="#10B981" /><stop offset="80%" stop-color="#047857" /><stop offset="100%" stop-color="#064E3B" /></radialGradient>
-    <filter id="iconShadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#64748B" flood-opacity="0.25" /></filter>
+    <linearGradient id="greenPrimary" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34D399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <filter id="navShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#10B981" flood-opacity="0.4" />
+    </filter>
   </defs>
   <style>
-    .receipt { transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
-    .coin { transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
-    svg:hover .receipt, svg.selected .receipt { transform: translate(0, -4px); }
-    svg:hover .coin, svg.selected .coin { transform: translate(6px, 10px); }
+    .doc-bg { 
+      fill: #94A3B8; 
+      transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); 
+      /* Fixed anchor to exact center prevents the icon from jumping around */
+      transform-origin: 12px 12px; 
+    }
+    .doc-line {
+      fill: #F1F5F9; 
+      transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .line-1 { transform-origin: 7px 12px; } /* Anchor left edge */
+    .line-2 { transform-origin: 7px 16px; } /* Anchor left edge */
+    
+    .doc-fold {
+      fill: #F8FAFC;
+      opacity: 0.4;
+      transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    /* Hover/Active State */
+    svg:hover .doc-bg, svg.selected .doc-bg {
+      fill: url(#greenPrimary);
+      /* Removed translateY to prevent dislocation. Uses a subtle scale instead */
+      transform: scale(1.04); 
+      filter: url(#navShadow);
+    }
+    
+    /* Instead of sliding out of place, lines expand like text filling the page */
+    svg:hover .line-1, svg.selected .line-1 { transform: scaleX(1.05); }
+    svg:hover .line-2, svg.selected .line-2 { transform: scaleX(1.3); }
+
+    /* The fold becomes more vivid/pronounced to add depth */
+    svg:hover .doc-fold, svg.selected .doc-fold {
+      opacity: 0.95;
+    }
   </style>
-  <g transform="translate(40, 40)">
-    <g class="receipt">
-      <path d="M -16,-20 L 16,-20 L 16,16 Q 8,22 0,16 T -16,16 Z" fill="url(#greyCeramicDepth)" transform="translate(0,4)" filter="url(#iconShadow)" />
-      <path d="M -16,-20 L 16,-20 L 16,16 Q 8,22 0,16 T -16,16 Z" fill="url(#greyCeramicFront)" />
-      <line x1="-15" y1="-19" x2="15" y2="-19" stroke="#FFFFFF" stroke-width="2" />
-      <line x1="-8" y1="-10" x2="8" y2="-10" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" />
-      <line x1="-8" y1="-4" x2="2" y2="-4" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" />
-      <line x1="-8" y1="-9" x2="8" y2="-9" stroke="#FFFFFF" stroke-width="1" stroke-linecap="round" />
-    </g>
-    <g class="coin" transform="translate(8, 4)">
-      <circle cx="0" cy="3" r="9" fill="#047857" filter="url(#iconShadow)" />
-      <circle cx="0" cy="0" r="9" fill="url(#greenSphereVol)" />
-      <circle cx="-2.5" cy="-2.5" r="3" fill="#FFFFFF" opacity="0.6" />
-      <path d="M -3,-2 Q 0,-5 3,-2" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" />
-    </g>
+  
+  <g class="doc-bg">
+    <!-- Main Shape -->
+    <path d="M 6,2 C 4.9,2 4,2.9 4,4 L 4,20 C 4,21.1 4.9,22 6,22 L 18,22 C 19.1,22 20,21.1 20,20 L 20,8 L 14,2 L 6,2 Z" />
+    <!-- Detail Lines -->
+    <rect class="doc-line line-1" x="7" y="12" width="10" height="2" rx="1" />
+    <rect class="doc-line line-2" x="7" y="16" width="7" height="2" rx="1" />
+    <!-- Fold -->
+    <path class="doc-fold" d="M 13,3.5 L 18.5,9 L 13,9 Z" />
   </g>
 </svg>

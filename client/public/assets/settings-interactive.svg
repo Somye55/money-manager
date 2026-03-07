@@ -1,64 +1,47 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="100%" height="100%" style="cursor: pointer;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="100%" height="100%" style="cursor: pointer; overflow: visible;">
   <defs>
-    <linearGradient id="greenPrimary" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#34D399" /><stop offset="100%" stop-color="#059669" /></linearGradient>
-    <linearGradient id="greyCeramicFront" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FFFFFF" /><stop offset="100%" stop-color="#F1F5F9" /></linearGradient>
-    <linearGradient id="greyCeramicDepth" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#E2E8F0" /><stop offset="100%" stop-color="#94A3B8" /></linearGradient>
-    <filter id="iconShadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#64748B" flood-opacity="0.25" /></filter>
+    <linearGradient id="greenPrimary" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34D399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <filter id="navShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#10B981" flood-opacity="0.4" />
+    </filter>
   </defs>
   <style>
-    .knob, .track, .indicator { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .gear { 
+      fill: #94A3B8; 
+      transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); 
+      /* Replaced 'center' with exact pixel coordinates to prevent cross-browser wobble */
+      transform-origin: 12px 12px; 
+    }
     
-    /* Top Toggle Animation (Active -> Inactive) */
-    svg:hover .top-knob, svg.selected .top-knob { transform: translate(-20px, 0); }
-    svg:hover .top-track-green, svg.selected .top-track-green { opacity: 0; }
-    svg:hover .top-indicator, svg.selected .top-indicator { fill: #94A3B8; }
+    .axle {
+      fill: #FFFFFF;
+      transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transform-origin: 12px 12px;
+      transform: scale(0);
+      opacity: 0;
+    }
+
+    /* Hover/Active State */
+    svg:hover .gear, svg.selected .gear {
+      fill: url(#greenPrimary);
+      /* Increased rotation to 180deg for a more satisfying mechanical spin. 
+         Reduced scale slightly to 1.05 to keep it contained. */
+      transform: rotate(180deg) scale(1.05);
+      filter: url(#navShadow);
+    }
     
-    /* Bottom Toggle Animation (Inactive -> Active) */
-    svg:hover .bot-knob, svg.selected .bot-knob { transform: translate(20px, 0); }
-    svg:hover .bot-track-green, svg.selected .bot-track-green { opacity: 1; }
-    svg:hover .bot-indicator, svg.selected .bot-indicator { fill: #10B981; }
+    /* The axle pops into place as the gear spins, creating depth */
+    svg:hover .axle, svg.selected .axle {
+      opacity: 1;
+      transform: scale(1);
+    }
   </style>
-  <g transform="translate(40, 40)">
-    
-    <!-- TOP TOGGLE -->
-    <g transform="translate(0, -10)">
-      <!-- Base Grey Track -->
-      <rect x="-18" y="-4" width="36" height="8" rx="4" fill="#CBD5E1" />
-      <rect x="-17" y="-3" width="34" height="6" rx="3" fill="#F1F5F9" />
-      <rect x="-17" y="-3" width="34" height="1.5" fill="#E2E8F0" />
-      <!-- Green Active Overlay -->
-      <g class="track top-track-green">
-        <rect x="-18" y="-4" width="36" height="8" rx="4" fill="#A7F3D0" />
-        <rect x="-17" y="-3" width="34" height="6" rx="3" fill="url(#greenPrimary)" />
-      </g>
-      <!-- Top Knob -->
-      <g class="knob top-knob" transform="translate(10, 0)">
-        <circle cx="0" cy="1" r="8" fill="url(#greyCeramicDepth)" filter="url(#iconShadow)" />
-        <circle cx="0" cy="0" r="8" fill="url(#greyCeramicFront)" />
-        <circle cx="0" cy="0" r="3" class="indicator top-indicator" fill="#10B981" />
-        <circle cx="0" cy="0" r="7" fill="none" stroke="#FFFFFF" stroke-width="1.5" />
-      </g>
-    </g>
-
-    <!-- BOTTOM TOGGLE -->
-    <g transform="translate(0, 10)">
-      <!-- Base Grey Track -->
-      <rect x="-18" y="-4" width="36" height="8" rx="4" fill="#CBD5E1" />
-      <rect x="-17" y="-3" width="34" height="6" rx="3" fill="#F1F5F9" />
-      <rect x="-17" y="-3" width="34" height="1.5" fill="#E2E8F0" />
-      <!-- Green Active Overlay -->
-      <g class="track bot-track-green" style="opacity: 0;">
-        <rect x="-18" y="-4" width="36" height="8" rx="4" fill="#A7F3D0" />
-        <rect x="-17" y="-3" width="34" height="6" rx="3" fill="url(#greenPrimary)" />
-      </g>
-      <!-- Bottom Knob -->
-      <g class="knob bot-knob" transform="translate(-10, 0)">
-        <circle cx="0" cy="1" r="8" fill="url(#greyCeramicDepth)" filter="url(#iconShadow)" />
-        <circle cx="0" cy="0" r="8" fill="url(#greyCeramicFront)" />
-        <circle cx="0" cy="0" r="3" class="indicator bot-indicator" fill="#94A3B8" />
-        <circle cx="0" cy="0" r="7" fill="none" stroke="#FFFFFF" stroke-width="1.5" />
-      </g>
-    </g>
-
-  </g>
+  
+  <path class="gear" d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z" />
+  
+  <!-- Added an inner axle detail -->
+  <circle class="axle" cx="12" cy="12" r="2" />
 </svg>

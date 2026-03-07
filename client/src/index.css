@@ -318,6 +318,35 @@
     }
   }
 
+  /* Shine Effect for Progress Bars */
+  .animate-shine {
+    animation: shine 2s ease-in-out infinite;
+  }
+
+  @keyframes shine {
+    0% {
+      transform: translateX(-100%);
+    }
+    50%,
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  /* Shimmer Effect for Progress Bars */
+  .animate-shimmer {
+    animation: shimmer-bg 3s ease-in-out infinite;
+  }
+
+  @keyframes shimmer-bg {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
   /* Smooth Transitions */
   .transition-smooth {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -472,6 +501,27 @@
 .animate-fade-in {
   animation: fade-in 0.5s ease-out forwards;
   opacity: 0;
+}
+
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
 }
 
 /* Accessibility Utilities */

@@ -11,6 +11,7 @@ import {
 import { useTheme } from "next-themes";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { DataProvider } from "./context/DataContext";
+import { SavingsProvider } from "./context/SavingsContext";
 import { SMSProvider, useSMS } from "./context/SMSContext";
 import { ScreenshotProvider } from "./context/ScreenshotContext";
 import { Capacitor } from "@capacitor/core";
@@ -35,6 +36,7 @@ import AIKeySettings from "./components/settings/AIKeySettings";
 import Expenses from "./pages/Expenses";
 import ExpenseDetail from "./pages/ExpenseDetail";
 import QuickSave from "./pages/QuickSave";
+import SavingsDashboard from "./pages/SavingsDashboard";
 import TestExpenseSave from "./pages/TestExpenseSave";
 import TestNotificationPopup from "./pages/TestNotificationPopup";
 import DebugExpenses from "./pages/DebugExpenses";
@@ -44,6 +46,7 @@ import CategorySelectionModal from "./components/CategorySelectionModal";
 import { Toaster } from "./components/ui/toaster";
 import StartupLogo from "./components/StartupLogo";
 import NavIcon from "./components/NavIcon";
+import WelcomePopup from "./components/WelcomePopup";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -99,6 +102,7 @@ const Navigation = () => {
   const navItems = [
     { svg: "dashboard-interactive.svg", label: "Home", path: "/" },
     { svg: "expenses-interactive.svg", label: "Expenses", path: "/expenses" },
+    { icon: "TrendingUp", label: "Savings", path: "/savings" },
     { svg: "add-expense-interactive.svg", label: "Add", path: "/add" },
     { svg: "settings-interactive.svg", label: "Settings", path: "/settings" },
   ];
@@ -112,25 +116,71 @@ const Navigation = () => {
       role="navigation"
       aria-label="Main navigation"
     >
-      <div className="flex justify-around items-center px-3 py-3">
+      <div className="flex justify-around items-center px-2 py-2">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
-            <div
+            <button
               key={item.path}
-              className="flex flex-col items-center p-3 rounded-xl transition-all duration-200 min-w-0 flex-1 min-h-[44px]"
+              onClick={() => navigate(item.path)}
+              className="flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-200 min-w-0 flex-1 min-h-[56px] active:scale-95"
               role="button"
               tabIndex={0}
               aria-label={item.label}
               aria-current={isActive ? "page" : undefined}
             >
-              <NavIcon
-                svg={item.svg}
-                isActive={isActive}
-                label={item.label}
-                onAnimationTrigger={() => navigate(item.path)}
-              />
-            </div>
+              {item.svg ? (
+                <>
+                  <NavIcon
+                    svg={item.svg}
+                    isActive={isActive}
+                    label={item.label}
+                    onAnimationTrigger={() => {}}
+                  />
+                  <span
+                    className={`text-[10px] font-medium transition-colors ${
+                      isActive ? "text-primary" : "text-muted-foreground"
+                    }`}
+                  >
+                    {item.label}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <div
+                    className={`p-1.5 rounded-lg transition-all ${
+                      isActive
+                        ? "bg-gradient-primary text-white"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    {item.icon === "TrendingUp" && (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+                        <polyline points="16 7 22 7 22 13" />
+                      </svg>
+                    )}
+                  </div>
+                  <span
+                    className={`text-[10px] font-medium transition-colors ${
+                      isActive ? "text-primary" : "text-muted-foreground"
+                    }`}
+                  >
+                    {item.label}
+                  </span>
+                </>
+              )}
+            </button>
           );
         })}
       </div>
@@ -150,6 +200,7 @@ const Header = () => {
     if (location.pathname === "/expenses") return "Expenses";
     if (location.pathname === "/add") return "Add Expense";
     if (location.pathname === "/quick-save") return "Quick Save";
+    if (location.pathname === "/savings") return "Savings Dashboard";
     if (location.pathname === "/settings") return "Settings";
     if (location.pathname === "/settings/ai-keys") return "Settings → AI Keys";
     if (location.pathname.startsWith("/expenses/")) {
@@ -321,118 +372,129 @@ function App() {
   return (
     <AuthProvider>
       <DataProvider>
-        <SMSProvider>
-          <ScreenshotProvider>
-            <Router>
-              {showStartup && (
-                <StartupLogo onComplete={handleStartupComplete} />
-              )}
-              <ShareIntentHandler />
-              <ScrollToTop />
-              <div className="flex flex-col h-screen overflow-hidden">
-                <Header />
-                <main className="flex-1 overflow-y-auto w-full pb-20 pt-[72px]">
-                  <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route
-                      path="/"
-                      element={
-                        <ProtectedRoute>
-                          <Dashboard />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/add"
-                      element={
-                        <ProtectedRoute>
-                          <AddExpense />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/quick-save"
-                      element={
-                        <ProtectedRoute>
-                          <QuickSave />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/expenses"
-                      element={
-                        <ProtectedRoute>
-                          <Expenses />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/expenses/:id"
-                      element={
-                        <ProtectedRoute>
-                          <ExpenseDetail />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/settings"
-                      element={
-                        <ProtectedRoute>
-                          <Settings />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/settings/:group"
-                      element={
-                        <ProtectedRoute>
-                          <SettingsGroup />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/settings/ai-keys"
-                      element={
-                        <ProtectedRoute>
-                          <AIKeySettings />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/test-expense-save"
-                      element={
-                        <ProtectedRoute>
-                          <TestExpenseSave />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/test-notification-popup"
-                      element={
-                        <ProtectedRoute>
-                          <TestNotificationPopup />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/debug-expenses"
-                      element={
-                        <ProtectedRoute>
-                          <DebugExpenses />
-                        </ProtectedRoute>
-                      }
-                    />
-                  </Routes>
-                </main>
-                <Navigation />
-                <NotificationPopup />
-                <AuthDebug />
-                <ThemeDebug />
-                <Toaster />
-              </div>
-            </Router>
-          </ScreenshotProvider>
-        </SMSProvider>
+        <SavingsProvider>
+          <SMSProvider>
+            <ScreenshotProvider>
+              <Router>
+                {showStartup && (
+                  <StartupLogo onComplete={handleStartupComplete} />
+                )}
+                <ShareIntentHandler />
+                <ScrollToTop />
+                <div className="flex flex-col h-screen overflow-hidden">
+                  <Header />
+                  <main className="flex-1 overflow-y-auto w-full pb-20 pt-[72px]">
+                    <Routes>
+                      <Route path="/login" element={<Login />} />
+                      <Route
+                        path="/"
+                        element={
+                          <ProtectedRoute>
+                            <Dashboard />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/add"
+                        element={
+                          <ProtectedRoute>
+                            <AddExpense />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/quick-save"
+                        element={
+                          <ProtectedRoute>
+                            <QuickSave />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/expenses"
+                        element={
+                          <ProtectedRoute>
+                            <Expenses />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/expenses/:id"
+                        element={
+                          <ProtectedRoute>
+                            <ExpenseDetail />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/savings"
+                        element={
+                          <ProtectedRoute>
+                            <SavingsDashboard />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/settings"
+                        element={
+                          <ProtectedRoute>
+                            <Settings />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/settings/:group"
+                        element={
+                          <ProtectedRoute>
+                            <SettingsGroup />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/settings/ai-keys"
+                        element={
+                          <ProtectedRoute>
+                            <AIKeySettings />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/test-expense-save"
+                        element={
+                          <ProtectedRoute>
+                            <TestExpenseSave />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/test-notification-popup"
+                        element={
+                          <ProtectedRoute>
+                            <TestNotificationPopup />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/debug-expenses"
+                        element={
+                          <ProtectedRoute>
+                            <DebugExpenses />
+                          </ProtectedRoute>
+                        }
+                      />
+                    </Routes>
+                  </main>
+                  <Navigation />
+                  <NotificationPopup />
+                  <WelcomePopup />
+                  <AuthDebug />
+                  <ThemeDebug />
+                  <Toaster />
+                </div>
+              </Router>
+            </ScreenshotProvider>
+          </SMSProvider>
+        </SavingsProvider>
       </DataProvider>
     </AuthProvider>
   );

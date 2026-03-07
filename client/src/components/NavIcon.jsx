@@ -63,7 +63,7 @@ const NavIcon = ({ svg, isActive, onAnimationTrigger }) => {
   return (
     <div
       ref={containerRef}
-      className="w-12 h-12"
+      className="w-6 h-6"
       aria-hidden="true"
       onClick={handleClick}
       style={{ cursor: "pointer" }}

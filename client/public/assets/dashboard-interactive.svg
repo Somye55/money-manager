@@ -1,44 +1,41 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="100%" height="100%" style="cursor: pointer;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="100%" height="100%" style="cursor: pointer;">
   <defs>
-    <linearGradient id="greenPrimary" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#34D399" /><stop offset="100%" stop-color="#059669" /></linearGradient>
-    <linearGradient id="greenVibrant" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#10B981" /><stop offset="100%" stop-color="#047857" /></linearGradient>
-    <linearGradient id="greyCeramicFront" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FFFFFF" /><stop offset="100%" stop-color="#F1F5F9" /></linearGradient>
-    <linearGradient id="greyCeramicDepth" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#E2E8F0" /><stop offset="100%" stop-color="#94A3B8" /></linearGradient>
-    <filter id="iconShadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#64748B" flood-opacity="0.25" /></filter>
-    <filter id="iconShadowTight" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#475569" flood-opacity="0.2" /></filter>
+    <!-- Changed to userSpaceOnUse to ensure the gradient flows seamlessly across both shapes -->
+    <linearGradient id="greenPrimary" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#34D399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <filter id="navShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#10B981" flood-opacity="0.4" />
+    </filter>
   </defs>
   <style>
-    .anim { transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); transform-box: fill-box; transform-origin: bottom center; }
-    .wave { transition: transform 0.5s ease-in-out, opacity 0.5s ease; }
-    svg:hover .bar1, svg.selected .bar1 { transform: scaleY(0.5); }
-    svg:hover .bar2, svg.selected .bar2 { transform: scaleY(1.3); }
-    svg:hover .bar3, svg.selected .bar3 { transform: scaleY(0.8); }
-    svg:hover .wave, svg.selected .wave { transform: translateY(-3px) scale(1.05); opacity: 0.8; }
+    /* Shared styles for smooth color transition */
+    .house-part { 
+      fill: #94A3B8; 
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); 
+    }
+    
+    /* Roof-specific animation logic */
+    .roof {
+      transform-origin: center bottom;
+    }
+
+    /* Hover/Active State */
+    svg:hover .house-part, svg.selected .house-part {
+      fill: url(#greenPrimary);
+      filter: url(#navShadow);
+    }
+
+    /* Animate only the roof upwards */
+    svg:hover .roof, svg.selected .roof {
+      transform: translateY(-3px);
+    }
   </style>
-  <g transform="translate(40, 40)">
-    <!-- Right Bar -->
-    <g class="anim bar3">
-      <path d="M 10,-8 L 22,-8 L 22,18 L 10,18 Z" fill="url(#greyCeramicDepth)" filter="url(#iconShadow)" />
-      <path d="M 10,-8 L 22,-8 L 22,18 L 10,18 Z" fill="url(#greyCeramicFront)" />
-      <path d="M 10,-12 L 22,-12 L 22,-8 L 10,-8 Z" fill="#FFFFFF" />
-    </g>
-    <!-- Mid Bar -->
-    <g class="anim bar2">
-      <path d="M -6,-2 L 6,-2 L 6,18 L -6,18 Z" fill="#047857" filter="url(#iconShadow)" />
-      <path d="M -6,-2 L 6,-2 L 6,18 L -6,18 Z" fill="url(#greenPrimary)" />
-      <path d="M -6,-6 L 6,-6 L 6,-2 L -6,-2 Z" fill="#6EE7B7" /> 
-      <line x1="-6" y1="-6" x2="-6" y2="18" stroke="#FFFFFF" stroke-width="1" opacity="0.6" />
-    </g>
-    <!-- Left Bar -->
-    <g class="anim bar1">
-      <path d="M -22,6 L -10,6 L -10,18 L -22,18 Z" fill="url(#greyCeramicDepth)" filter="url(#iconShadow)" />
-      <path d="M -22,6 L -10,6 L -10,18 L -22,18 Z" fill="url(#greyCeramicFront)" />
-      <path d="M -22,2 L -10,2 L -10,6 L -22,6 Z" fill="#FFFFFF" />
-    </g>
-    <!-- Wave Trendline -->
-    <g class="wave">
-      <path d="M -28,8 Q -10,14 -2,-6 T 28,-14" fill="none" stroke="url(#greenVibrant)" stroke-width="4" filter="url(#iconShadowTight)" />
-      <path d="M -28,8 Q -10,14 -2,-6 T 28,-14" fill="none" stroke="#FFFFFF" stroke-width="1.5" opacity="0.6" />
-    </g>
-  </g>
+
+  <!-- Part 1: The Roof (The Lid) -->
+  <path class="house-part roof" d="M 12,3 L 2,11 L 4,11 L 12,6 L 20,11 L 22,11 Z" />
+  
+  <!-- Part 2: The Body (Walls + Door merged into one solid base) -->
+  <path class="house-part body" d="M 4,11 L 4,21 L 10,21 L 10,14 L 14,14 L 14,21 L 20,21 L 20,11 L 18,11 L 18,19 L 6,19 L 6,11 Z" />
 </svg>
